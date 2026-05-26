@@ -1,2 +1,25 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Editor: VS Code
+.vscode/
+
+# Editor: JetBrains
+.idea/
+
+# Editor: Vim / Emacs
+*.swp
+*.swo
+*~
+\#*\#
+
+# Custom
 # Claude Code personal settings (do not commit)
 .claude/settings.local.json
+.playwright-mcp/
