@@ -85,13 +85,54 @@
 └── 各門市資訊
 ```
 
-共 **4 個頁面** + 全站共用元素。
+### 頁面數量總覽
+
+| 類別 | 頁面 | 數量 |
+|------|------|------|
+| 前台 | 首頁、行程列表頁、行程詳情頁、服務據點頁 | 4 頁 |
+| 後台 | 登入頁、行程管理頁、帳號管理頁 | 3 頁 |
+| **合計** | | **7 頁** |
 
 ---
 
 ## 四、設計風格方向
 
-（待補）
+提供 **4 種風格方向**，各具備首頁與行程詳情頁的完整版面設計，供貴小組選擇。  
+互動版預覽請開啟以下 HTML 檔案（以瀏覽器開啟即可）：
+
+| 版本 | 風格名稱 | 首頁預覽 | 行程詳情預覽 |
+|------|----------|----------|--------------|
+| A | 編輯雜誌風 | `designs/Discovered_index_files/v2-a-magazine.html` | `designs/Discovered_tour_files/tour-a-magazine.html` |
+| B | 側邊直書 | `designs/Discovered_index_files/v2-b-vertical.html` | `designs/Discovered_tour_files/tour-b-vertical.html` |
+| C | 數字主張 | `designs/Discovered_index_files/v2-c-numbers.html` | `designs/Discovered_tour_files/tour-c-numbers.html` |
+| D | Lookbook | `designs/Discovered_index_files/v2-d-lookbook.html` | `designs/Discovered_tour_files/tour-d-lookbook.html` |
+
+### 風格說明
+
+**A · 編輯雜誌風**
+- 報紙分欄排版，文字與圖片並重
+- 深酒紅配色，質感典雅
+- 行程詳情呈現：詩意標題、多圖橫排、逐日行程列表、費用含不含清單
+
+**B · 側邊直書**
+- 全版大圖 Hero，側邊直書文字裝飾
+- 日系侘寂美學，暗色系為主
+- 行程詳情呈現：大圖開場、清晰的 N 日行程表、底部黑底報價欄
+
+**C · 數字主張**
+- 用數字說話（國家數、路線數、方案數）
+- 深色系，專業信賴感強
+- 行程詳情呈現：大數字統計欄、全寬 Hero、數據化行程表
+
+**D · Lookbook**
+- 全螢幕沉浸式，目的地以大圖依序滾動呈現
+- 極簡奢華，圖片主導
+- 行程詳情呈現：全版圖片疊字，沉浸式閱讀體驗
+
+### 共同設計元素（四款通用）
+- 品牌色：深玫瑰紅（`#D12351`）
+- 字體：Noto Sans TC（繁體中文優化）
+- 版面與現有 discovered.tw 明顯區隔
 
 ---
 
