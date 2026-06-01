@@ -8,15 +8,8 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("session_token")?.value;
 
-  if (pathname === "/admin/login") {
-    if (!token) return NextResponse.next();
-    try {
-      await jwtVerify(token, JWT_SECRET);
-      return NextResponse.redirect(new URL("/admin", request.url));
-    } catch {
-      return NextResponse.next();
-    }
-  }
+  // Always let the login page through — session check is done in the page itself
+  if (pathname === "/admin/login") return NextResponse.next();
 
   if (!token) {
     return NextResponse.redirect(new URL("/admin/login", request.url));

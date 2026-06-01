@@ -4,13 +4,14 @@ import { db } from "./db";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 const COOKIE_NAME = "session_token";
-const SESSION_MAX_AGE = 60 * 60 * 8; // 8 hours
+const SESSION_IDLE_TIMEOUT = 15 * 60; // 15 minutes — DB session TTL, extended by heartbeat
+const COOKIE_MAX_AGE = 8 * 60 * 60; // 8 hours — keep cookie alive across heartbeats
 
 export async function signToken(payload: { userId: string; role: string }) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(`${SESSION_MAX_AGE}s`)
+    .setExpirationTime(`${COOKIE_MAX_AGE}s`)
     .sign(JWT_SECRET);
 }
 
@@ -21,7 +22,7 @@ export async function verifyToken(token: string) {
 
 export async function createSession(userId: string, role: string) {
   const token = await signToken({ userId, role });
-  const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000);
+  const expiresAt = new Date(Date.now() + SESSION_IDLE_TIMEOUT * 1000);
 
   // Single concurrent login: upsert replaces any existing session for this user
   await db.session.upsert({
@@ -34,7 +35,7 @@ export async function createSession(userId: string, role: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    expires: expiresAt,
+    maxAge: COOKIE_MAX_AGE,
     path: "/",
   });
 
@@ -54,6 +55,27 @@ export async function getSession() {
   } catch {
     return null;
   }
+}
+
+export async function extendSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return false;
+
+  try {
+    await verifyToken(token);
+  } catch {
+    return false;
+  }
+
+  const session = await db.session.findUnique({ where: { token } });
+  if (!session || session.expiresAt < new Date()) return false;
+
+  await db.session.update({
+    where: { token },
+    data: { expiresAt: new Date(Date.now() + SESSION_IDLE_TIMEOUT * 1000) },
+  });
+  return true;
 }
 
 export async function deleteSession() {
