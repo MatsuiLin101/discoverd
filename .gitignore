@@ -25,3 +25,10 @@
 .playwright-mcp/
 memory/
 designs/
+
+# Next.js app
+web/.next/
+web/node_modules/
+web/.env.local
+web/.env
+web/src/generated/

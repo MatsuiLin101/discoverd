@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  role      Role      @default(STAFF)
+  sessions  Session[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Single concurrent login: each login invalidates previous sessions via userId uniqueness
+model Session {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Region {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  slug       String      @unique
+  thumbnail  String?
+  sortOrder  Int         @default(0)
+  subRegions SubRegion[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model SubRegion {
+  id        String   @id @default(cuid())
+  regionId  String
+  region    Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  name      String
+  slug      String   @unique
+  thumbnail String?
+  sortOrder Int      @default(0)
+  tours     Tour[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  tours Tour[] @relation("TourTags")
+}
+
+model Tour {
+  id          String     @id @default(cuid())
+  subRegionId String
+  subRegion   SubRegion  @relation(fields: [subRegionId], references: [id], onDelete: Restrict)
+  name        String
+  slug        String     @unique
+  thumbnail   String?
+  price       Int
+  tags        Tag[]      @relation("TourTags")
+  files       TourFile[]
+  published   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Plan A: uploaded PDF or image files stored on Cloudinary
+model TourFile {
+  id        String   @id @default(cuid())
+  tourId    String
+  tour      Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  url       String
+  publicId  String
+  mimeType  String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  tourId    String?
+  name      String
+  phone     String
+  email     String?
+  lineId    String?
+  content   String
+  createdAt DateTime @default(now())
+}
