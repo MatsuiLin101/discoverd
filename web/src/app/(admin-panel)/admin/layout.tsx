@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getSession, deleteSession } from "@/lib/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 export default async function AdminPanelLayout({
@@ -8,7 +8,10 @@ export default async function AdminPanelLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) {
+    await deleteSession(); // clear stale cookie to break proxy.ts redirect loop
+    redirect("/admin/login");
+  }
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: "#fffcfd" }}>
