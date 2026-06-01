@@ -35,27 +35,31 @@ model Session {
 }
 
 model Region {
-  id         String      @id @default(cuid())
-  name       String      @unique
-  slug       String      @unique
-  thumbnail  String?
-  sortOrder  Int         @default(0)
-  subRegions SubRegion[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id                String      @id @default(cuid())
+  name              String      @unique
+  slug              String      @unique
+  thumbnail         String?
+  thumbnailPublicId String?
+  sortOrder         Int         @default(0)
+  subRegions        SubRegion[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 }
 
 model SubRegion {
-  id        String   @id @default(cuid())
-  regionId  String
-  region    Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
-  name      String
-  slug      String   @unique
-  thumbnail String?
-  sortOrder Int      @default(0)
-  tours     Tour[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(cuid())
+  regionId          String
+  region            Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  name              String
+  slug              String
+  thumbnail         String?
+  thumbnailPublicId String?
+  sortOrder         Int      @default(0)
+  tours             Tour[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([regionId, slug])
 }
 
 model Tag {
