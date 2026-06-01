@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>找到了旅遊 — UI Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #2A2233;
+    --ink-2: #5A4F66;
+    --ink-3: #8B8197;
+    --accent: #E0506B;
+    --accent-2: #7166D6;
+    --line: rgba(42,34,51,0.12);
+    --sans: "Noto Sans","Noto Sans TC",sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100vh; }
+  body {
+    font-family: var(--sans);
+    background: linear-gradient(160deg, #FFECEF 0%, #F2E8F4 50%, #E0E0FF 100%);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 0;
+  }
+
+  .badge {
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge::before, .badge::after {
+    content: "";
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: var(--ink-3);
+    opacity: 0.4;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .logo-mark {
+    width: 52px; height: 52px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 12px 32px -12px rgba(224,80,107,0.55);
+  }
+  .logo-mark svg { width: 27px; height: 27px; }
+  .logo-name {
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+  }
+  .logo-name em { font-style: normal; color: var(--accent); }
+
+  .tagline {
+    font-size: 15px;
+    color: var(--ink-2);
+    letter-spacing: 0.06em;
+    margin-bottom: 56px;
+    text-align: center;
+  }
+
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    max-width: 860px;
+    width: 100%;
+  }
+
+  .step {
+    flex: 1;
+    position: relative;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(42,34,51,0.14);
+    border-radius: 20px;
+    padding: 32px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+    backdrop-filter: blur(12px);
+  }
+  .step:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 28px 56px -24px rgba(42,34,51,0.35);
+    background: rgba(255,255,255,0.9);
+  }
+
+  .arrow-sep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    flex-shrink: 0;
+    color: var(--accent-2);
+    opacity: 0.5;
+  }
+  .arrow-sep svg { width: 22px; height: 22px; }
+
+  .step-num {
+    font-size: 10px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+    font-weight: 500;
+  }
+  .step-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #d8cfe0;
+    margin-bottom: 4px;
+  }
+  .step-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .6s ease;
+  }
+  .step:hover .step-thumb img { transform: scale(1.06); }
+
+  .step-title {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    margin: 0;
+  }
+  .step-title em { font-style: normal; color: var(--accent); }
+
+  .step-desc {
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--ink-2);
+    margin: 0;
+    flex: 1;
+  }
+
+  .step-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .step-cta svg { width: 14px; height: 14px; transition: transform .2s; }
+  .step:hover .step-cta svg { transform: translateX(3px); }
+
+  .note {
+    margin-top: 44px;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: center;
+    line-height: 2;
+  }
+  .note a { color: var(--accent-2); text-decoration: underline; text-underline-offset: 3px; }
+
+  @media (max-width: 700px) {
+    .flow {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .arrow-sep { transform: rotate(90deg); padding: 0; }
+    .step-thumb { aspect-ratio: 16/7; }
+  }
+</style>
+</head>
+<body>
+
+<div class="badge">UI Demo</div>
+
+<div class="logo">
+  <span class="logo-mark">
+    <svg viewBox="0 0 24 24"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg>
+  </span>
+  <span class="logo-name">找到了<em>旅遊</em></span>
+</div>
+
+<p class="tagline">為您而寫的旅程 — FOUND HOLIDAY</p>
+
+<div class="flow">
+
+  <!-- Step 1 -->
+  <a class="step" href="index-c-fullbleed.html">
+    <span class="step-num">Step 01</span>
+    <div class="step-thumb">
+      <img src="https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=600&q=75" alt="首頁">
+    </div>
+    <h2 class="step-title">首頁</h2>
+    <p class="step-desc">全版英雄輪播、搜尋列，以及依地區分類的行程入口。</p>
+    <span class="step-cta">
+      前往
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </span>
+  </a>
+
+  <div class="arrow-sep">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </div>
+
+  <!-- Step 2 -->
+  <a class="step" href="category.html">
+    <span class="step-num">Step 02</span>
+    <div class="step-thumb">
+      <img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&q=75" alt="日本分類">
+    </div>
+    <h2 class="step-title">地區分類 <em>— 日本</em></h2>
+    <p class="step-desc">進入日本後，依北海道、東京、關西等子地區再次篩選。</p>
+    <span class="step-cta">
+      前往
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </span>
+  </a>
+
+  <div class="arrow-sep">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </div>
+
+  <!-- Step 3 -->
+  <a class="step" href="region-tours-generic.html?sub=hokkaido">
+    <span class="step-num">Step 03</span>
+    <div class="step-thumb">
+      <img src="https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=600&q=75" alt="行程列表">
+    </div>
+    <h2 class="step-title">行程列表 <em>— 北海道</em></h2>
+    <p class="step-desc">行程卡片列表、點擊開啟詳情 modal，內含圖片輪播與線上諮詢表單。</p>
+    <span class="step-cta">
+      前往
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </span>
+  </a>
+
+</div>
+
+<p class="note">
+  所有頁面均使用相對路徑，可直接部署至 GitHub Pages<br>
+  依存資源：<a href="search-suggest.css">search-suggest.css</a> ・ <a href="search-suggest.js">search-suggest.js</a> ・ Google Fonts CDN ・ Unsplash CDN
+</p>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>v2 變化 — 4 個方向</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body {
+    margin: 0;
+    font-family: "Noto Sans TC", sans-serif;
+    background: #1F1416;
+  }
+  .ab-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+    display: block;
+  }
+  /* Open-new-tab link sticker, shown inside each artboard */
+  .ab-open {
+    position: absolute;
+    top: 10px; right: 10px;
+    z-index: 10;
+    background: rgba(31, 20, 22, 0.85);
+    color: #FFC9D1;
+    font-family: "DM Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    padding: 6px 10px;
+    border-radius: 999px;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .ab-open:hover { background: #E63E51; color: #fff; }
+  .ab-wrap { position: relative; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+  function Variant({ src }) {
+    return (
+      <div className="ab-wrap">
+        <a className="ab-open" href={src} target="_blank" rel="noopener">OPEN ↗</a>
+        <iframe className="ab-frame" src={src} title={src}></iframe>
+      </div>
+    );
+  }
+
+  function App() {
+    return (
+      <DesignCanvas>
+        <DCSection
+          id="v2-explore"
+          title="找到了旅遊 ・ Homepage v2"
+          subtitle="保留大 hero 照、酒紅 header/footer ・ 換版面架構與文案語氣"
+        >
+          <DCArtboard id="a" label="A · 編輯雜誌風 ／ Editorial" width={1280} height={1800}>
+            <Variant src="v2-a-magazine.html" />
+          </DCArtboard>
+          <DCArtboard id="b" label="B · 側邊直書導覽 ／ Vertical Sidebar" width={1280} height={1800}>
+            <Variant src="v2-b-vertical.html" />
+          </DCArtboard>
+          <DCArtboard id="c" label="C · 數字主張型 ／ Numbers Manifesto" width={1280} height={1800}>
+            <Variant src="v2-c-numbers.html" />
+          </DCArtboard>
+          <DCArtboard id="d" label="D · Lookbook 分頁式 ／ Lookbook Pages" width={1280} height={1800}>
+            <Variant src="v2-d-lookbook.html" />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>

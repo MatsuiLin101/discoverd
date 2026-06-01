@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>關於 ・ 服務據點 — 找到了旅遊 FOUND HOLIDAY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* About hero */
+  .ab-hero {
+    padding: clamp(56px, 9vw, 120px) var(--gutter);
+    max-width: var(--max); margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(40px, 6vw, 96px);
+    align-items: center;
+    border-bottom: 1px solid var(--ink);
+  }
+  .ab-hero .label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; margin-bottom: 24px; }
+  .ab-hero h1 { font-family: "Noto Serif TC", serif; font-size: clamp(40px, 6.5vw, 80px); line-height: 1.0; margin: 0; font-weight: 400; letter-spacing: -0.01em; }
+  .ab-hero h1 .em { color: var(--accent); font-style: italic; }
+  .ab-hero p.lede { font-size: 18px; line-height: 1.7; color: var(--ink-2); margin: 32px 0 0; max-width: 520px; }
+  .ab-hero .visual {
+    aspect-ratio: 4/5;
+    background: var(--paper-2);
+    overflow: hidden;
+    position: relative;
+  }
+  .ab-hero .visual img { width: 100%; height: 100%; object-fit: cover; }
+  .ab-hero .visual .stamp {
+    position: absolute; top: 24px; right: 24px;
+    width: 110px; height: 110px;
+    border: 1px solid var(--paper);
+    border-radius: 50%;
+    color: var(--paper);
+    display: grid; place-items: center;
+    font-family: "Noto Serif TC", serif;
+    font-size: 14px; line-height: 1.3;
+    text-align: center;
+    background: rgba(28,26,23,0.4);
+    backdrop-filter: blur(4px);
+  }
+  .ab-hero .visual .stamp .big { font-size: 28px; display: block; }
+
+  /* Manifesto: pull quote */
+  .manifesto {
+    padding: clamp(64px, 10vw, 140px) var(--gutter);
+    max-width: 1100px; margin: 0 auto;
+    text-align: center;
+    border-bottom: 1px solid var(--rule);
+  }
+  .manifesto .quote {
+    font-family: "Noto Serif TC", serif;
+    font-size: clamp(28px, 4vw, 52px);
+    line-height: 1.35;
+    margin: 0 0 36px;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+  }
+  .manifesto .quote .em { color: var(--accent); font-style: italic; }
+  .manifesto .by {
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-3);
+  }
+
+  /* Timeline / numbers band */
+  .stats-band {
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    background: var(--paper-2);
+  }
+  .stats-band .inner {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(40px, 5vw, 64px) var(--gutter);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  .stats-band .col { text-align: left; border-left: 1px solid var(--rule); padding-left: 24px; }
+  .stats-band .col:first-child { border-left: 0; padding-left: 0; }
+  .stats-band .col .n {
+    font-family: "Noto Serif TC", serif;
+    font-size: clamp(40px, 5vw, 64px);
+    line-height: 1;
+  }
+  .stats-band .col .n sup {
+    font-family: "JetBrains Mono", monospace; font-size: 13px;
+    color: var(--accent); vertical-align: top; margin-left: 4px;
+  }
+  .stats-band .col .lbl {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3);
+    margin-top: 14px;
+  }
+
+  /* Three pillars */
+  .pillars {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(56px, 8vw, 100px) var(--gutter);
+  }
+  .pillars-head {
+    display: grid; grid-template-columns: 1fr auto; gap: 24px;
+    margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--ink);
+  }
+  .pillars-head .label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  .pillars-head h2 { font-family: "Noto Serif TC", serif; font-size: var(--fs-h2); line-height: 1.05; margin: 0; font-weight: 400; }
+  .pillars-head .right { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; color: var(--ink-3); text-transform: uppercase; white-space: nowrap; align-self: end; }
+  .pillars-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+  .pillar { padding: 32px; border-left: 1px solid var(--rule); }
+  .pillar:first-child { border-left: 0; padding-left: 0; }
+  .pillar:last-child { padding-right: 0; }
+  .pillar .num {
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    letter-spacing: 0.22em; color: var(--accent); margin-bottom: 18px;
+  }
+  .pillar h3 {
+    font-family: "Noto Serif TC", serif;
+    font-size: 30px; line-height: 1.2;
+    margin: 0 0 18px;
+    font-weight: 400;
+  }
+  .pillar p { font-size: 15px; color: var(--ink-2); line-height: 1.65; margin: 0; }
+
+  /* Timeline */
+  .timeline {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(56px, 8vw, 100px) var(--gutter);
+    border-top: 1px solid var(--rule);
+  }
+  .timeline-head {
+    display: grid; grid-template-columns: 1fr auto; gap: 24px;
+    margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--ink);
+  }
+  .timeline-head .label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  .timeline-head h2 { font-family: "Noto Serif TC", serif; font-size: var(--fs-h2); line-height: 1.05; margin: 0; font-weight: 400; }
+  .timeline-list { display: grid; gap: 0; }
+  .tl-item {
+    display: grid;
+    grid-template-columns: 140px 1fr 200px;
+    gap: 40px;
+    padding: 28px 0;
+    border-top: 1px solid var(--rule);
+    align-items: center;
+  }
+  .tl-item:last-child { border-bottom: 1px solid var(--rule); }
+  .tl-item .yr {
+    font-family: "Noto Serif TC", serif;
+    font-size: 36px; line-height: 1;
+  }
+  .tl-item .yr small { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--ink-3); display: block; letter-spacing: 0.18em; margin-top: 6px; }
+  .tl-item h4 { font-family: "Noto Serif TC", serif; font-size: 22px; line-height: 1.3; margin: 0 0 6px; font-weight: 400; }
+  .tl-item p { color: var(--ink-2); font-size: 14px; margin: 0; max-width: 540px; }
+  .tl-item .tag-side { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; color: var(--ink-3); text-transform: uppercase; text-align: right; }
+
+  /* Stores */
+  .stores {
+    background: var(--ink); color: var(--paper);
+    padding: clamp(60px, 9vw, 120px) var(--gutter);
+  }
+  .stores .inner { max-width: var(--max); margin: 0 auto; }
+  .stores-head { display: grid; grid-template-columns: 1fr auto; gap: 24px; margin-bottom: 56px; padding-bottom: 24px; border-bottom: 1px solid rgba(250, 242, 238,0.2); }
+  .stores-head .label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  .stores-head h2 { font-family: "Noto Serif TC", serif; font-size: var(--fs-h2); line-height: 1.05; margin: 0; font-weight: 400; }
+  .stores-head .right { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; color: rgba(250, 242, 238,0.6); text-transform: uppercase; align-self: end; white-space: nowrap; }
+
+  .stores-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .store {
+    padding: 0 32px 0 0;
+    border-right: 1px solid rgba(250, 242, 238,0.15);
+  }
+  .store:not(:first-child) { padding-left: 32px; }
+  .store:last-child { border-right: 0; padding-right: 0; }
+
+  .store .img-wrap { aspect-ratio: 4/3; background: rgba(255,255,255,0.05); overflow: hidden; margin-bottom: 28px; }
+  .store .img-wrap img { width: 100%; height: 100%; object-fit: cover; opacity: 0.92; transition: opacity .3s, transform .6s; }
+  .store:hover .img-wrap img { opacity: 1; transform: scale(1.04); }
+
+  .store .num { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); margin-bottom: 14px; }
+  .store h3 { font-family: "Noto Serif TC", serif; font-size: 36px; line-height: 1.05; margin: 0 0 22px; font-weight: 400; }
+  .store h3 .en { display: block; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; color: rgba(250, 242, 238,0.5); text-transform: uppercase; margin-top: 8px; }
+  .store .info { display: grid; gap: 14px; padding-top: 22px; border-top: 1px solid rgba(250, 242, 238,0.15); }
+  .store .info .row { display: grid; grid-template-columns: 70px 1fr; gap: 16px; font-size: 14px; align-items: baseline; }
+  .store .info .row .k { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; color: rgba(250, 242, 238,0.55); text-transform: uppercase; }
+  .store .info .row .v { color: var(--paper); line-height: 1.5; }
+  .store .info .row .v a { color: var(--paper); border-bottom: 1px solid rgba(250, 242, 238,0.4); }
+  .store .info .row .v a:hover { color: var(--accent); border-color: var(--accent); }
+  .store .map-cta {
+    margin-top: 22px;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  }
+
+  /* Team strip */
+  .team {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(56px, 8vw, 100px) var(--gutter);
+  }
+  .team-head { margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--ink); }
+  .team-head .label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  .team-head h2 { font-family: "Noto Serif TC", serif; font-size: var(--fs-h2); line-height: 1.05; margin: 0; font-weight: 400; }
+  .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+  .person .ph { aspect-ratio: 4/5; background: var(--paper-2); overflow: hidden; margin-bottom: 16px; }
+  .person .ph img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(0.15); transition: filter .3s; }
+  .person:hover .ph img { filter: grayscale(0); }
+  .person h4 { font-family: "Noto Serif TC", serif; font-size: 20px; margin: 0; font-weight: 400; }
+  .person .role { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; color: var(--ink-3); text-transform: uppercase; margin-top: 4px; }
+  .person .spec { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+
+  /* Final CTA */
+  .ab-cta {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(56px, 8vw, 96px) var(--gutter);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(40px, 6vw, 96px);
+    align-items: end;
+    border-top: 1px solid var(--rule);
+  }
+  .ab-cta h3 { font-family: "Noto Serif TC", serif; font-size: clamp(32px, 4.5vw, 56px); line-height: 1.05; margin: 0; font-weight: 400; }
+  .ab-cta h3 .em { color: var(--accent); font-style: italic; }
+  .ab-cta .right { display: grid; gap: 16px; }
+  .ab-cta p { color: var(--ink-2); font-size: 16px; line-height: 1.7; margin: 0; }
+  .ab-cta .row { display: flex; gap: 14px; flex-wrap: wrap; }
+
+  @media (max-width: 980px) {
+    .ab-hero { grid-template-columns: 1fr; }
+    .stats-band .inner { grid-template-columns: 1fr 1fr; gap: 32px 24px; }
+    .pillars-grid { grid-template-columns: 1fr; }
+    .pillar { border-left: 0; border-top: 1px solid var(--rule); padding: 28px 0; }
+    .pillar:first-child { border-top: 0; padding-top: 0; }
+    .pillar:last-child { padding-bottom: 0; }
+    .stores-grid { grid-template-columns: 1fr; }
+    .store { border-right: 0; padding: 0 0 40px; border-bottom: 1px solid rgba(250, 242, 238,0.15); }
+    .store:not(:first-child) { padding-left: 0; padding-top: 40px; }
+    .store:last-child { padding-bottom: 0; border-bottom: 0; }
+    .team-grid { grid-template-columns: 1fr 1fr; }
+    .ab-cta { grid-template-columns: 1fr; }
+    .tl-item { grid-template-columns: 90px 1fr; gap: 24px; }
+    .tl-item .tag-side { display: none; }
+  }
+  @media (max-width: 560px) {
+    .pillars-head, .timeline-head, .stores-head { grid-template-columns: 1fr; }
+    .pillars-head .right, .stores-head .right { display: none; }
+    .team-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html">
+      <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="name">找到了<em>旅遊</em></span>
+      <span class="sub">FOUND HOLIDAY&nbsp;&nbsp;Est.2009</span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="index.html">首頁</a>
+      <a href="tours.html">行程</a>
+      <a href="tour.html">特輯</a>
+      <a href="about.html" class="active">關於</a>
+      <a href="about.html#stores">服務據點</a>
+    </nav>
+    <div class="header-cta">
+      <span class="phone"><span class="ico">●</span>02&nbsp;7729&nbsp;0001</span>
+      <a href="tours.html" class="btn">預約諮詢 <span class="arr">→</span></a>
+      <button class="btn ghost menu-toggle" id="menuToggle" aria-label="menu">≡</button>
+    </div>
+  </div>
+</header>
+
+<!-- About hero -->
+<section class="ab-hero">
+  <div>
+    <div class="label">ABOUT — VOL. 028 ・ MARCH 2026</div>
+    <h1>不是賣行程，<br>是替您<span class="em">寫</span>一段<br>值得收藏的旅程。</h1>
+    <p class="lede">找到了旅遊 FOUND HOLIDAY 創立於 2009 年，由一群熱愛旅行的編輯與導遊組成。十七年來，我們造訪 62 個國家、撰寫超過 3,400 條路線，把每一趟旅行當成一本可以收進書櫃的雜誌。</p>
+  </div>
+  <div class="visual">
+    <img src="https://images.unsplash.com/photo-1503220317375-aaad61436b1b?w=900&q=80" alt="找到了旅遊">
+    <div class="stamp">
+      <div><span class="big">17</span>YEARS<br>SINCE 2009</div>
+    </div>
+  </div>
+</section>
+
+<!-- Manifesto -->
+<section class="manifesto">
+  <div class="mono" style="color: var(--accent); margin-bottom: 28px;">— OUR PHILOSOPHY ・ 我們相信 —</div>
+  <p class="quote">「一段好旅程，<br>不在於去過<span class="em">多少地方</span>，<br>而在於能<span class="em">說出多少故事</span>。」</p>
+  <div class="by">— 阿杰 ・ 主編 ・ FOUND HOLIDAY ・ TAIPEI</div>
+</section>
+
+<!-- Stats -->
+<section class="stats-band">
+  <div class="inner">
+    <div class="col">
+      <div class="n">2009<sup>EST.</sup></div>
+      <div class="lbl">創立於 ・ FOUNDED IN TAIPEI</div>
+    </div>
+    <div class="col">
+      <div class="n">62<sup>國</sup></div>
+      <div class="lbl">DESTINATIONS COVERED</div>
+    </div>
+    <div class="col">
+      <div class="n">3,400<sup>+</sup></div>
+      <div class="lbl">ITINERARIES PUBLISHED</div>
+    </div>
+    <div class="col">
+      <div class="n">28,500<sup>位</sup></div>
+      <div class="lbl">TRAVELLERS SERVED</div>
+    </div>
+  </div>
+</section>
+
+<!-- Three pillars -->
+<section class="pillars">
+  <div class="pillars-head">
+    <div>
+      <div class="label">OUR PRINCIPLES — 我們的三項堅持</div>
+      <h2>不只是行程，是一本旅誌。</h2>
+    </div>
+    <div class="right">PRINCIPLE 01 — 03</div>
+  </div>
+
+  <div class="pillars-grid">
+    <div class="pillar">
+      <div class="num">PRINCIPLE / 01</div>
+      <h3>編輯部親自走過</h3>
+      <p>每一條路線、每一間旅館、每一頓餐食，都由編輯部親自走過、住過、吃過再寫進手冊。沒有踩點式的拼湊。我們相信，能推薦的，必須是自己也願意再去一次的。</p>
+    </div>
+    <div class="pillar">
+      <div class="num">PRINCIPLE / 02</div>
+      <h3>小團 ・ 不踩購物站</h3>
+      <p>所有行程都採 8 至 16 人小團制，不安排購物站、不臨時加點。讓您把時間留給真正想停留的地方，把預算花在真正值得的體驗上。</p>
+    </div>
+    <div class="pillar">
+      <div class="num">PRINCIPLE / 03</div>
+      <h3>本地嚮導 ・ 在地深度</h3>
+      <p>除了繁中領隊，我們在每一個主要城市都配置長期合作的在地嚮導。京都的茶人、義大利的酒農、冰島的冰川嚮導 — 他們是我們故事的共同作者。</p>
+    </div>
+  </div>
+</section>
+
+<!-- Timeline -->
+<section class="timeline">
+  <div class="timeline-head">
+    <div>
+      <div class="label">JOURNAL — 編年史</div>
+      <h2>從一份小手冊，走到第二十八期。</h2>
+    </div>
+  </div>
+
+  <div class="timeline-list">
+    <div class="tl-item">
+      <div class="yr">2009<small>VOL. 001</small></div>
+      <div>
+        <h4>創刊號 ・ 京都祇園祭特輯</h4>
+        <p>主編阿杰與三位旅遊作家於台北南京東路成立工作室，發行第一本 32 頁手作旅誌，主題：京都祇園祭。一週賣完三百本。</p>
+      </div>
+      <div class="tag-side">FOUNDING — 創社</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="yr">2013<small>VOL. 005</small></div>
+      <div>
+        <h4>第一間實體門市開幕</h4>
+        <p>台北忠孝旗艦店於東區開設，店內結合書店、選物與旅程諮詢，舉辦第一場「冰島攝影行前說明會」，參與人數突破百位。</p>
+      </div>
+      <div class="tag-side">STORE — 忠孝店</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="yr">2017<small>VOL. 012</small></div>
+      <div>
+        <h4>歐陸路線正式開展</h4>
+        <p>與義大利、法國、冰島三地的在地嚮導長期合作開啟，推出第一條 21 天歐陸深度路線，亦為品牌的轉型起點。</p>
+      </div>
+      <div class="tag-side">EXPANSION — 跨洲</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="yr">2021<small>VOL. 020</small></div>
+      <div>
+        <h4>國旅特輯 ・ 重新發現台灣</h4>
+        <p>疫情期間推出 12 條台灣國旅深度路線，與 30 位在地工作者合作出版《島嶼旅誌》一書，銷售突破萬冊。</p>
+      </div>
+      <div class="tag-side">DOMESTIC — 國旅</div>
+    </div>
+
+    <div class="tl-item">
+      <div class="yr">2026<small>VOL. 028 ・ CURRENT</small></div>
+      <div>
+        <h4>三地門市 ・ 全新刊期</h4>
+        <p>台北、台中、高雄三間實體門市同步運作，季刊形式更新所有行程，並推出「找到了旅遊 ・ 數位版」可在線上閱讀完整版手冊。</p>
+      </div>
+      <div class="tag-side">PRESENT — 當期</div>
+    </div>
+  </div>
+</section>
+
+<!-- Stores -->
+<section class="stores" id="stores">
+  <div class="inner">
+    <div class="stores-head">
+      <div>
+        <div class="label">SERVICE LOCATIONS — 服務據點</div>
+        <h2>歡迎來編輯室，<br>翻一翻、坐一下。</h2>
+      </div>
+      <div class="right">3 STORES ACROSS TAIWAN</div>
+    </div>
+
+    <div class="stores-grid">
+
+      <div class="store">
+        <div class="img-wrap"><img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=900&q=80" alt=""></div>
+        <div class="num">STORE / 01 ・ 旗艦店</div>
+        <h3>台北 ・ 忠孝<span class="en">TAIPEI ・ ZHONGXIAO ・ FLAGSHIP</span></h3>
+        <div class="info">
+          <div class="row"><span class="k">ADDR</span><span class="v">10688 台北市大安區忠孝東路四段 137 號 2 樓</span></div>
+          <div class="row"><span class="k">METRO</span><span class="v">板南線 ・ 忠孝復興站 5 號出口</span></div>
+          <div class="row"><span class="k">TEL</span><span class="v"><a href="tel:0277290001">02&nbsp;7729&nbsp;0001</a></span></div>
+          <div class="row"><span class="k">HOURS</span><span class="v">週一至週六 ・ 11:00 – 21:00</span></div>
+          <div class="row"><span class="k">FEAT</span><span class="v">設有閱讀區、季刊全套陳列、咖啡吧檯</span></div>
+        </div>
+        <a href="#" class="map-cta">在地圖中查看 →</a>
+      </div>
+
+      <div class="store">
+        <div class="img-wrap"><img src="https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=900&q=80" alt=""></div>
+        <div class="num">STORE / 02</div>
+        <h3>台中 ・ 草悟道<span class="en">TAICHUNG ・ CALLIGRAPHY</span></h3>
+        <div class="info">
+          <div class="row"><span class="k">ADDR</span><span class="v">40360 台中市西區公益路 68 巷 12 號</span></div>
+          <div class="row"><span class="k">METRO</span><span class="v">綠線 ・ 文心森林公園站</span></div>
+          <div class="row"><span class="k">TEL</span><span class="v"><a href="tel:0423280002">04&nbsp;2328&nbsp;0002</a></span></div>
+          <div class="row"><span class="k">HOURS</span><span class="v">週二至週日 ・ 12:00 – 20:00</span></div>
+          <div class="row"><span class="k">FEAT</span><span class="v">手工選物、行程攝影展、月度講座</span></div>
+        </div>
+        <a href="#" class="map-cta">在地圖中查看 →</a>
+      </div>
+
+      <div class="store">
+        <div class="img-wrap"><img src="https://images.unsplash.com/photo-1481253127861-534498168948?w=900&q=80" alt=""></div>
+        <div class="num">STORE / 03 ・ 新店</div>
+        <h3>高雄 ・ 鹽埕<span class="en">KAOHSIUNG ・ YANCHENG ・ NEW</span></h3>
+        <div class="info">
+          <div class="row"><span class="k">ADDR</span><span class="v">80345 高雄市鹽埕區大義街 2-1 號</span></div>
+          <div class="row"><span class="k">METRO</span><span class="v">橘線 ・ 鹽埕埔站 1 號出口</span></div>
+          <div class="row"><span class="k">TEL</span><span class="v"><a href="tel:0755100003">07&nbsp;5510&nbsp;0003</a></span></div>
+          <div class="row"><span class="k">HOURS</span><span class="v">週三至週日 ・ 13:00 – 20:00</span></div>
+          <div class="row"><span class="k">FEAT</span><span class="v">老屋改建 ・ 駐店主編每週駐點兩日</span></div>
+        </div>
+        <a href="#" class="map-cta">在地圖中查看 →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Team -->
+<section class="team">
+  <div class="team-head">
+    <div class="label">EDITORIAL TEAM — 編輯部</div>
+    <h2 style="font-family: 'Noto Serif TC', serif; font-size: var(--fs-h2); line-height: 1.05; margin: 0; font-weight: 400;">替您寫旅程的，是這群人。</h2>
+  </div>
+  <div class="team-grid">
+    <div class="person">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80" alt=""></div>
+      <h4>阿杰 ・ Jay Lin</h4>
+      <div class="role">EDITOR IN CHIEF ・ 主編</div>
+      <div class="spec">京都 ・ 北海道 ・ 國旅</div>
+    </div>
+    <div class="person">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80" alt=""></div>
+      <h4>雯亭 ・ Wenting</h4>
+      <div class="role">SENIOR EDITOR ・ 資深編輯</div>
+      <div class="spec">義大利 ・ 西班牙 ・ 葡萄牙</div>
+    </div>
+    <div class="person">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80" alt=""></div>
+      <h4>柏宇 ・ Hugo Hsu</h4>
+      <div class="role">EDITOR ・ 編輯</div>
+      <div class="spec">冰島 ・ 瑞士 ・ 北歐</div>
+    </div>
+    <div class="person">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&q=80" alt=""></div>
+      <h4>欣怡 ・ Hsin-Yi</h4>
+      <div class="role">EDITOR ・ 編輯</div>
+      <div class="spec">韓國 ・ 越南 ・ 東南亞</div>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="ab-cta">
+  <div>
+    <h3>聊聊看，<br>下一段旅程<br>該往哪裡<span class="em">寫</span>。</h3>
+  </div>
+  <div class="right">
+    <p>無論是想跟團、半自助，或是全程客製，找到了旅遊的編輯都樂意陪您聊聊。預約一次免費的諮詢，我們會在 24 小時內回覆。</p>
+    <div class="row" style="margin-top: 14px;">
+      <a href="tours.html" class="btn accent">瀏覽所有行程 →</a>
+      <a href="tel:0277290001" class="btn ghost">02 7729 0001</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="inner">
+    <div class="footer-top">
+      <div>
+        <h4>找到了<em style="color:var(--accent); font-style:normal">旅遊</em></h4>
+        <p style="color:rgba(250, 242, 238,0.7); font-size:14px; max-width:320px; margin:0 0 18px;">為您而寫的旅程。<br>Found Holiday · Travel agency since 2009.</p>
+        <div class="mono" style="color:rgba(250, 242, 238,0.5);">交觀甲 9876 ・ 品保中 0123</div>
+      </div>
+      <div>
+        <h6>瀏覽</h6>
+        <ul>
+          <li><a href="tours.html">所有行程</a></li>
+          <li><a href="tours.html">依地區</a></li>
+          <li><a href="tours.html">依出發月份</a></li>
+          <li><a href="#">客製旅程</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>關於</h6>
+        <ul>
+          <li><a href="about.html">關於找到了旅遊</a></li>
+          <li><a href="about.html#stores">服務據點</a></li>
+          <li><a href="#">編輯團隊</a></li>
+          <li><a href="#">旅誌專欄</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>聯絡</h6>
+        <ul>
+          <li>02 &nbsp;7729&nbsp; 0001</li>
+          <li>hello@foundholiday.tw</li>
+          <li>台北 ・ 台中 ・ 高雄</li>
+          <li>Mon–Sat ・ 10:00–20:00</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 FOUND HOLIDAY TRAVEL CO., LTD.</div>
+      <div>PRIVACY ・ TERMS ・ COOKIES</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('nav').classList.toggle('open');
+  });
+</script>
+</body>
+</html>

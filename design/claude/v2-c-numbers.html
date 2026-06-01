@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C · 數字主張 — 找到了旅遊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;500;700&family=Bodoni+Moda:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5EFEA;
+    --ink: #1F1416;
+    --ink-2: #4A3236;
+    --ink-3: #8E7B7E;
+    --rule: #DCC9C2;
+    --accent: #E63E51;
+    --brand-dark: #7C2C39;
+    --brand-pink: #FFC9D1;
+    --sans: "Noto Sans TC", sans-serif;
+    --serif: "Noto Serif TC", serif;
+    --display: "Bodoni Moda", "Noto Serif TC", serif;
+    --mono: "DM Mono", monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.65;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ============================
+     NAV
+     ============================ */
+  .nav {
+    background: var(--brand-dark);
+    color: #fff;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .nav-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 48px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .brand-logo svg { width: 22px; height: 22px; }
+  .brand-name { font-family: var(--serif); font-size: 22px; letter-spacing: 0.1em; font-weight: 400; }
+  .brand-name em { font-style: normal; color: var(--brand-pink); }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+  }
+  .nav-links a:hover { border-color: var(--brand-pink); color: var(--brand-pink); }
+  .nav-tel {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    color: var(--brand-pink);
+  }
+
+  /* ============================
+     HERO — 大照片 + 巨型數字 overlay
+     ============================ */
+  .hero {
+    position: relative;
+    height: clamp(620px, 90vh, 820px);
+    overflow: hidden;
+    background: var(--ink);
+  }
+  .hero-img { position: absolute; inset: 0; }
+  .hero-img img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-img::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(31,20,22,0.45) 0%, rgba(31,20,22,0.2) 30%, rgba(31,20,22,0.55) 100%);
+  }
+
+  .hero-content {
+    position: absolute;
+    inset: 0;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 80px 48px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .hero-top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+  }
+  .hero-stamp {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: var(--brand-pink);
+    text-transform: uppercase;
+  }
+  .hero-stamp .pipe { color: rgba(255,255,255,0.4); margin: 0 12px; }
+  .hero-issue {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.7);
+    text-align: right;
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+
+  /* 數字主視覺 */
+  .hero-nums {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    align-items: end;
+    margin-bottom: -10px;
+  }
+  .hero-nums::before {
+    content: "";
+    position: absolute;
+    left: 48px; right: 48px;
+    bottom: 240px;
+    height: 1px;
+    background: rgba(255,255,255,0.25);
+  }
+  .num {
+    position: relative;
+  }
+  .num .lab {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: var(--brand-pink);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .num .val {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(80px, 13vw, 180px);
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+    color: #fff;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .num .val sup {
+    font-family: var(--serif);
+    font-size: 0.18em;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--brand-pink);
+    align-self: flex-start;
+    margin-top: 0.4em;
+  }
+  .num .ko {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 18px;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.9);
+    margin-top: 10px;
+  }
+
+  .hero-tagline {
+    position: absolute;
+    left: 48px;
+    bottom: 280px;
+    max-width: 520px;
+    color: #fff;
+  }
+  .hero-tagline h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(28px, 3.6vw, 44px);
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+    margin: 0;
+  }
+  .hero-tagline h1 em { font-style: normal; color: var(--brand-pink); }
+
+  /* ============================
+     MANIFESTO STRIP — 滾動橫條
+     ============================ */
+  .marquee {
+    background: var(--ink);
+    color: #fff;
+    overflow: hidden;
+    padding: 18px 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .marquee-track {
+    display: flex;
+    gap: 56px;
+    animation: scroll 40s linear infinite;
+    width: max-content;
+  }
+  .marquee-track span {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.32em;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .marquee-track span b { color: var(--brand-pink); font-weight: 500; }
+  .marquee-track .dot { color: var(--accent); }
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ============================
+     SECTION
+     ============================ */
+  .section {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 96px 48px;
+  }
+  .sec-head {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 32px;
+    align-items: end;
+    margin-bottom: 56px;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 24px;
+  }
+  .sec-head .n {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .sec-head .t {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(26px, 3.2vw, 38px);
+    letter-spacing: 0.14em;
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+  .sec-head .l {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .sec-head .r {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    text-align: right;
+  }
+  .sec-head .r b { color: var(--ink); font-weight: 500; }
+
+  /* DESTINATIONS — numbered list with thumbs */
+  .dest-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 64px;
+  }
+  .dest-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 90px;
+    gap: 20px;
+    align-items: center;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    transition: padding .25s;
+  }
+  .dest-row:hover { padding-left: 16px; }
+  .dest-row:hover .ord { color: var(--accent); }
+  .dest-row .ord {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 36px;
+    color: var(--ink-3);
+    transition: color .25s;
+    line-height: 1;
+  }
+  .dest-row .info {}
+  .dest-row .nm {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 26px;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+  }
+  .dest-row .en {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+  .dest-row .thumb {
+    width: 90px; height: 64px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--rule);
+  }
+  .dest-row .thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* FEATURED — 大數字 + 圖 stack */
+  .featured-section {
+    background: var(--ink);
+    color: #fff;
+    padding: 0;
+  }
+  .featured-section .section { padding-top: 96px; padding-bottom: 96px; }
+  .featured-section .sec-head { border-bottom-color: rgba(255,255,255,0.15); }
+  .featured-section .sec-head .n { color: var(--brand-pink); }
+  .featured-section .sec-head .l { color: var(--brand-pink); }
+  .featured-section .sec-head .r { color: rgba(255,255,255,0.6); }
+  .featured-section .sec-head .r b { color: #fff; }
+  .featured-section .sec-head .t { color: #fff; }
+
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+  .feat {
+    display: block;
+    color: #fff;
+  }
+  .feat .img {
+    aspect-ratio: 4/5;
+    overflow: hidden;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .feat .img img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+  .feat:hover .img img { transform: scale(1.06); }
+  .feat .img .ord {
+    position: absolute;
+    top: 16px; left: 18px;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 52px;
+    color: #fff;
+    line-height: 0.9;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+  .feat .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: var(--brand-pink);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .feat h3 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 20px;
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    margin: 0 0 18px;
+  }
+  .feat .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: rgba(255,255,255,0.65);
+    text-transform: uppercase;
+  }
+  .feat .row .price {
+    font-family: var(--sans);
+    color: var(--brand-pink);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+  }
+
+  /* FOOTER */
+  .footer {
+    background: var(--brand-dark);
+    color: rgba(255,255,255,0.85);
+    padding: 72px 48px 28px;
+  }
+  .footer-inner { max-width: 1280px; margin: 0 auto; }
+  .footer-top {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    margin-bottom: 48px;
+    text-align: center;
+  }
+  .footer-top .stat {
+    padding: 24px 12px;
+  }
+  .footer-top .stat .v {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 56px;
+    line-height: 1;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  .footer-top .stat .v sup {
+    font-family: var(--serif);
+    font-size: 0.28em;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: var(--brand-pink);
+    margin-left: 4px;
+  }
+  .footer-top .stat .l {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+  }
+  .footer-mid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 48px;
+    padding-top: 36px;
+    border-top: 1px solid rgba(255,255,255,0.18);
+  }
+  .footer-mid h5 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    margin: 0 0 16px;
+  }
+  .footer-mid ul { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.9; }
+  .footer-mid ul a:hover { color: var(--brand-pink); }
+  .footer-mid p { margin: 0; font-size: 13px; line-height: 1.85; max-width: 360px; }
+  .footer-bot {
+    padding-top: 28px;
+    margin-top: 36px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  @media (max-width: 980px) {
+    .nav-inner { padding: 0 24px; }
+    .nav-links { display: none; }
+    .hero-content { padding: 48px 24px; }
+    .hero-nums { grid-template-columns: 1fr; gap: 32px; }
+    .hero-nums::before { display: none; }
+    .num .val { font-size: 72px; }
+    .hero-tagline { position: static; padding: 24px 24px 32px; max-width: 100%; bottom: auto; }
+    .section, .footer { padding-left: 24px; padding-right: 24px; }
+    .sec-head { grid-template-columns: 1fr; gap: 12px; }
+    .sec-head .r { text-align: left; }
+    .dest-list { grid-template-columns: 1fr; gap: 0; }
+    .feat-grid { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .footer-mid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#">
+      <span class="brand-logo"><svg viewBox="0 0 24 24"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="brand-name">找到了<em>旅遊</em></span>
+    </a>
+    <div class="nav-links">
+      <a href="#dest">目的地</a>
+      <a href="#feat">精選行程</a>
+      <a href="about.html">關於我們</a>
+    </div>
+    <span class="nav-tel">02 7729 0001</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-img">
+    <img src="https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=1800&q=80" alt="">
+  </div>
+  <div class="hero-content">
+    <div class="hero-top">
+      <div class="hero-stamp">EST. 2009 <span class="pipe">／</span> SPRING 2026 <span class="pipe">／</span> VOL. 028</div>
+      <div class="hero-issue">圖 ／ 北海道 美瑛<br>FIG. 01 ／ FEB. 2026</div>
+    </div>
+
+    <div class="hero-tagline">
+      <h1>把這些<em>數字</em>，<br>變成你心裡的<em>風景</em>。</h1>
+    </div>
+
+    <div class="hero-nums">
+      <div class="num">
+        <span class="lab">YEARS</span>
+        <span class="val">17<sup>年</sup></span>
+        <span class="ko">陪你走過</span>
+      </div>
+      <div class="num">
+        <span class="lab">COUNTRIES</span>
+        <span class="val">62<sup>國</sup></span>
+        <span class="ko">親自踩線</span>
+      </div>
+      <div class="num">
+        <span class="lab">ROUTES</span>
+        <span class="val">3,400<sup>+</sup></span>
+        <span class="ko">私房路線</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee">
+  <div class="marquee-track">
+    <span>不踩點 <span class="dot">／</span> 不購物 <span class="dot">／</span> 慢慢走</span>
+    <span><b>17</b> 年深耕</span>
+    <span><b>62</b> 國足跡</span>
+    <span><b>3,400+</b> 私房路線</span>
+    <span><b>12</b> 人小團制</span>
+    <span>主編親自踩線</span>
+    <span>FOUND HOLIDAY <span class="dot">·</span> EST. 2009</span>
+    <span>不踩點 <span class="dot">／</span> 不購物 <span class="dot">／</span> 慢慢走</span>
+    <span><b>17</b> 年深耕</span>
+    <span><b>62</b> 國足跡</span>
+    <span><b>3,400+</b> 私房路線</span>
+    <span><b>12</b> 人小團制</span>
+    <span>主編親自踩線</span>
+    <span>FOUND HOLIDAY <span class="dot">·</span> EST. 2009</span>
+  </div>
+</div>
+
+<!-- DESTINATIONS -->
+<section class="section" id="dest">
+  <div class="sec-head">
+    <span class="n">01</span>
+    <div>
+      <div class="l">WHERE ／ 目的地</div>
+      <h2 class="t">從這六個國家，<br>挑一段你的下一程。</h2>
+    </div>
+    <div class="r">TOTAL <b>06</b> ／ 全系列 <b>68</b> 條路線</div>
+  </div>
+
+  <div class="dest-list">
+    <a class="dest-row" href="tours.html">
+      <span class="ord">01</span>
+      <div class="info"><div class="nm">日 本</div><div class="en">JAPAN ／ 14 條</div></div>
+      <div class="thumb"><img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&q=80" alt=""></div>
+    </a>
+    <a class="dest-row" href="tours.html">
+      <span class="ord">02</span>
+      <div class="info"><div class="nm">韓 國</div><div class="en">KOREA ／ 8 條</div></div>
+      <div class="thumb"><img src="https://images.unsplash.com/photo-1538485399081-7191377e8241?w=400&q=80" alt=""></div>
+    </a>
+    <a class="dest-row" href="tours.html">
+      <span class="ord">03</span>
+      <div class="info"><div class="nm">歐 洲</div><div class="en">EUROPE ／ 22 條</div></div>
+      <div class="thumb"><img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400&q=80" alt=""></div>
+    </a>
+    <a class="dest-row" href="tours.html">
+      <span class="ord">04</span>
+      <div class="info"><div class="nm">東 南 亞</div><div class="en">S.E.ASIA ／ 11 條</div></div>
+      <div class="thumb"><img src="https://images.unsplash.com/photo-1528127269322-539801943592?w=400&q=80" alt=""></div>
+    </a>
+    <a class="dest-row" href="tours.html">
+      <span class="ord">05</span>
+      <div class="info"><div class="nm">中 國</div><div class="en">CHINA ／ 6 條</div></div>
+      <div class="thumb"><img src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=400&q=80" alt=""></div>
+    </a>
+    <a class="dest-row" href="tours.html">
+      <span class="ord">06</span>
+      <div class="info"><div class="nm">國 旅</div><div class="en">TAIWAN ／ 7 條</div></div>
+      <div class="thumb"><img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=400&q=80" alt=""></div>
+    </a>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section class="featured-section">
+  <div class="section" id="feat">
+    <div class="sec-head">
+      <span class="n">02</span>
+      <div>
+        <div class="l">WHAT ／ 編輯精選</div>
+        <h2 class="t">本季編輯親踩，<br>給你三條值得記得的路。</h2>
+      </div>
+      <div class="r">FEATURED <b>03</b> ／ SPRING 2026</div>
+    </div>
+
+    <div class="feat-grid">
+      <a class="feat" href="tour.html">
+        <div class="img">
+          <span class="ord">01</span>
+          <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=900&q=80" alt="">
+        </div>
+        <div class="tag">JAPAN ・ KYOTO ・ 8D</div>
+        <h3>清晨六點的嵐山，<br>沒有人的竹林。</h3>
+        <div class="row"><span>03 / 18 出發</span><span class="price">NT$ 89,800 起</span></div>
+      </a>
+
+      <a class="feat" href="tour.html">
+        <div class="img">
+          <span class="ord">02</span>
+          <img src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=900&q=80" alt="">
+        </div>
+        <div class="tag">ICELAND ・ 10D ・ 環島</div>
+        <h3>環島十天，<br>追到四場極光。</h3>
+        <div class="row"><span>03 / 05 出發</span><span class="price">NT$ 158,000 起</span></div>
+      </a>
+
+      <a class="feat" href="tour.html">
+        <div class="img">
+          <span class="ord">03</span>
+          <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=900&q=80" alt="">
+        </div>
+        <div class="tag">ITALY ・ 11D ・ 北中</div>
+        <h3>沿著葡萄藤，<br>從北走到中。</h3>
+        <div class="row"><span>04 / 16 出發</span><span class="price">NT$ 146,500 起</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="stat">
+        <div class="v">17<sup>年</sup></div>
+        <div class="l">YEARS ／ 17 年深耕</div>
+      </div>
+      <div class="stat">
+        <div class="v">62<sup>國</sup></div>
+        <div class="l">COUNTRIES ／ 62 國足跡</div>
+      </div>
+      <div class="stat">
+        <div class="v">3,400<sup>+</sup></div>
+        <div class="l">ROUTES ／ 私房路線</div>
+      </div>
+      <div class="stat">
+        <div class="v">12<sup>人</sup></div>
+        <div class="l">SMALL GROUP ／ 12 人小團制</div>
+      </div>
+    </div>
+    <div class="footer-mid">
+      <div>
+        <h5>FOUND HOLIDAY ／ 找到了旅遊</h5>
+        <p>找到了旅遊股份有限公司<br>10688 台北市大安區忠孝東路四段 137 號 2 樓<br>02 7729 0001 ・ 交觀甲 9876 ・ 品保中 0123</p>
+      </div>
+      <div>
+        <h5>瀏覽 ／ INDEX</h5>
+        <ul>
+          <li><a href="#dest">目的地</a></li>
+          <li><a href="#feat">精選行程</a></li>
+          <li><a href="about.html">關於我們</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>聯絡 ／ CONTACT</h5>
+        <ul>
+          <li><a href="tel:0277290001">02 7729 0001</a></li>
+          <li><a href="#">線上諮詢</a></li>
+          <li><a href="#">門市資訊</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bot">© 2026 FOUND HOLIDAY TRAVEL CO., LTD. ／ ALL RIGHTS RESERVED</div>
+  </div>
+</footer>
+
+</body>
+</html>

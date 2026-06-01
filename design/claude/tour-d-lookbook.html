@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>京都の春 ・ D Lookbook — 找到了旅遊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5EFEA;
+    --paper-2: #FFFFFF;
+    --ink: #1F1416;
+    --ink-2: #4A3236;
+    --ink-3: #8E7B7E;
+    --rule: #DCC9C2;
+    --accent: #E63E51;
+    --brand-dark: #7C2C39;
+    --brand-pink: #FFC9D1;
+    --sans: "Noto Sans TC", sans-serif;
+    --serif: "Noto Serif TC", serif;
+    --mono: "DM Mono", monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    line-height: 1.7;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+
+  /* NAV — minimal top bar pager */
+  .nav {
+    background: var(--brand-dark); color: #fff;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  }
+  .nav-inner {
+    padding: 14px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 34px; height: 34px; background: var(--accent); border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .brand-logo svg { width: 18px; height: 18px; }
+  .brand-name { font-family: var(--serif); font-size: 18px; letter-spacing: 0.12em; font-weight: 400; }
+  .brand-name em { font-style: normal; color: var(--brand-pink); }
+
+  .nav-center {
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.22em; color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+  }
+  .nav-center .cur { color: var(--brand-pink); font-weight: 500; }
+
+  .nav-pager { display: flex; align-items: center; gap: 14px; }
+  .nav-pager button {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; width: 32px; height: 32px;
+    border-radius: 50%; cursor: pointer; font-size: 14px;
+    transition: all .2s;
+  }
+  .nav-pager button:hover { background: var(--accent); border-color: var(--accent); }
+  .nav-pager .ix {
+    font-family: var(--mono); font-size: 12px;
+    letter-spacing: 0.22em; color: #fff;
+  }
+  .nav-pager .ix b { color: var(--brand-pink); }
+
+  /* PAGES */
+  .pages { padding-top: 60px; }
+  .page {
+    min-height: calc(100vh - 60px);
+    position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* page stamps */
+  .stamp-tl, .stamp-tr, .stamp-bl, .stamp-br {
+    position: absolute;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.28em; color: var(--ink-3);
+    text-transform: uppercase; z-index: 4;
+  }
+  .stamp-tl { top: 28px; left: 40px; }
+  .stamp-tr { top: 28px; right: 40px; }
+  .stamp-bl { bottom: 28px; left: 40px; }
+  .stamp-br { bottom: 28px; right: 40px; }
+  .stamp-tl b, .stamp-tr b, .stamp-bl b, .stamp-br b {
+    color: var(--accent); font-weight: 500;
+  }
+
+  /* COVER PAGE */
+  .page-cover {
+    background: var(--ink); color: #fff;
+    display: grid; grid-template-columns: 5fr 4fr;
+    align-items: stretch;
+  }
+  .page-cover .img { position: relative; overflow: hidden; }
+  .page-cover .img img { width: 100%; height: 100%; object-fit: cover; }
+  .page-cover .img::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to right, transparent 70%, var(--ink) 100%);
+  }
+  .page-cover .txt {
+    padding: 88px 80px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .page-cover .lbl {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.32em; color: var(--brand-pink);
+    text-transform: uppercase; margin-bottom: 28px;
+    padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.18);
+  }
+  .page-cover h1 {
+    font-family: var(--serif); font-weight: 300;
+    font-size: clamp(40px, 5.4vw, 64px);
+    letter-spacing: 0.08em; line-height: 1.2;
+    margin: 0 0 36px;
+  }
+  .page-cover h1 em { font-style: normal; color: var(--brand-pink); }
+  .page-cover .meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 24px 32px;
+    margin-bottom: 40px;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.18em; color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+  }
+  .page-cover .meta-grid .v {
+    font-family: var(--serif); font-size: 22px;
+    color: #fff; letter-spacing: 0.04em;
+    font-weight: 400; display: block; margin-top: 6px;
+  }
+  .page-cover .meta-grid .v small {
+    font-family: var(--mono); font-size: 11px;
+    color: rgba(255,255,255,0.5); margin-left: 4px; letter-spacing: 0.1em;
+  }
+  .page-cover .meta-grid .v.price { color: var(--brand-pink); }
+  .page-cover .scroll-hint {
+    position: absolute;
+    left: 50%; bottom: 38px;
+    transform: translateX(-50%);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.32em; color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    z-index: 4;
+  }
+  .page-cover .scroll-hint::after {
+    content: ""; width: 1px; height: 28px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+    animation: drop 1.6s ease-in-out infinite;
+  }
+  @keyframes drop {
+    0%, 100% { transform: translateY(-4px); opacity: 0.4; }
+    50% { transform: translateY(4px); opacity: 1; }
+  }
+  .page-cover .stamp-tl, .page-cover .stamp-tr, .page-cover .stamp-bl, .page-cover .stamp-br {
+    color: rgba(255,255,255,0.55);
+  }
+  .page-cover .stamp-tl b, .page-cover .stamp-tr b, .page-cover .stamp-bl b, .page-cover .stamp-br b {
+    color: var(--brand-pink);
+  }
+
+  /* DAY PAGE — full-bleed image + day text overlay */
+  .page-day {
+    background: var(--ink); color: #fff;
+  }
+  .page-day .full {
+    position: relative;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+  }
+  .page-day .full img { width: 100%; height: 100%; object-fit: cover; }
+  .page-day .full::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(115deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.55) 100%);
+  }
+  .page-day .layer {
+    position: absolute; inset: 0;
+    padding: 96px 80px;
+    display: grid; grid-template-rows: 1fr auto;
+  }
+  .page-day .top-lbl {
+    align-self: start;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.32em; color: var(--brand-pink);
+    text-transform: uppercase;
+  }
+  .page-day .top-lbl::before { content: "—— "; color: rgba(255,255,255,0.4); }
+  .page-day .body {
+    align-self: end;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 56px; align-items: end;
+  }
+  .page-day .l .route {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.28em; color: var(--brand-pink);
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .page-day h2 {
+    font-family: var(--serif); font-weight: 300;
+    font-size: clamp(54px, 8vw, 96px);
+    letter-spacing: 0.08em; line-height: 0.95;
+    margin: 0 0 20px;
+  }
+  .page-day h2 em { font-style: normal; color: var(--brand-pink); }
+  .page-day .date {
+    font-family: var(--mono); font-size: 12px;
+    letter-spacing: 0.32em; color: rgba(255,255,255,0.75);
+    text-transform: uppercase;
+  }
+  .page-day .r {
+    text-align: right;
+    color: rgba(255,255,255,0.9);
+    font-size: 15px; line-height: 1.9;
+    letter-spacing: 0.04em;
+  }
+  .page-day .r .lead {
+    font-family: var(--serif); font-weight: 300;
+    font-size: 22px; line-height: 1.7;
+    margin: 0 0 24px; color: #fff;
+    max-width: 420px; margin-left: auto;
+  }
+  .page-day .r .meals {
+    display: flex; gap: 14px; justify-content: flex-end; flex-wrap: wrap;
+    padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.2);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.22em; color: rgba(255,255,255,0.65);
+    text-transform: uppercase;
+  }
+  .page-day .r .meals b { color: var(--brand-pink); font-weight: 500; }
+
+  .page-day .stamp-tl, .page-day .stamp-tr, .page-day .stamp-bl, .page-day .stamp-br {
+    color: rgba(255,255,255,0.6);
+  }
+  .page-day .stamp-tl b, .page-day .stamp-tr b, .page-day .stamp-bl b, .page-day .stamp-br b {
+    color: var(--brand-pink);
+  }
+
+  /* INCLUDES PAGE */
+  .page-incl {
+    padding: 96px 80px;
+    background: var(--paper);
+  }
+  .page-incl .head {
+    display: grid; grid-template-columns: 1fr auto;
+    align-items: end;
+    margin-bottom: 64px;
+    padding-bottom: 24px;
+    border-bottom: 4px double var(--ink);
+  }
+  .page-incl .lbl {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.32em; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .page-incl h2 {
+    font-family: var(--serif); font-weight: 300;
+    font-size: clamp(36px, 4.6vw, 56px);
+    letter-spacing: 0.14em; margin: 0;
+  }
+  .page-incl h2 em { font-style: normal; color: var(--accent); }
+  .page-incl .head .r {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.22em; color: var(--ink-3);
+    text-transform: uppercase; text-align: right;
+  }
+  .incl {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 64px; max-width: 1080px; margin: 0 auto;
+  }
+  .incl h4 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: 22px; margin: 0 0 20px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--ink);
+    letter-spacing: 0.1em;
+  }
+  .incl ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .incl li {
+    font-size: 14.5px; color: var(--ink-2);
+    padding-left: 24px; position: relative; line-height: 1.7;
+  }
+  .incl .in li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 500; }
+  .incl .out li::before { content: "—"; position: absolute; left: 0; color: var(--ink-3); }
+
+  /* BOOKING PAGE — final */
+  .page-book {
+    background: var(--brand-dark); color: #fff;
+    padding: 96px 80px;
+    min-height: calc(100vh - 60px);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .page-book .stamp-tl, .page-book .stamp-tr, .page-book .stamp-bl, .page-book .stamp-br {
+    color: rgba(255,255,255,0.55);
+  }
+  .page-book .stamp-tl b, .page-book .stamp-tr b, .page-book .stamp-bl b, .page-book .stamp-br b {
+    color: var(--brand-pink);
+  }
+  .page-book-inner { max-width: 1080px; margin: 0 auto; width: 100%; }
+  .page-book .lbl {
+    text-align: center;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.32em; color: var(--brand-pink);
+    text-transform: uppercase; margin-bottom: 18px;
+  }
+  .page-book h2 {
+    font-family: var(--serif); font-weight: 300;
+    font-size: clamp(40px, 5vw, 60px);
+    letter-spacing: 0.14em; line-height: 1.25;
+    margin: 0 0 56px; text-align: center;
+  }
+  .page-book h2 em { font-style: normal; color: var(--brand-pink); }
+
+  .price-bar {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 48px; align-items: center;
+    padding: 32px 40px;
+    border: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 48px;
+  }
+  .price-bar .l .l-lbl {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.28em; color: var(--brand-pink);
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .price-bar .l .price {
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .price-bar .l .price .n {
+    font-family: var(--serif); font-weight: 300;
+    font-size: 72px; line-height: 1; color: #fff;
+  }
+  .price-bar .l .price .c {
+    font-family: var(--mono); font-size: 12px;
+    color: rgba(255,255,255,0.55); letter-spacing: 0.1em;
+  }
+  .price-bar .l .per {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.22em; color: rgba(255,255,255,0.55);
+    margin-top: 10px; text-transform: uppercase;
+  }
+  .price-bar .r {
+    border-left: 1px solid rgba(255,255,255,0.18);
+    padding-left: 40px;
+  }
+  .price-bar .r .lbl-r {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.28em; color: var(--brand-pink);
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .price-bar .r .dep {
+    display: flex; justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    font-size: 13.5px;
+  }
+  .price-bar .r .dep:last-child { border-bottom: 0; }
+  .price-bar .r .dep .d {
+    font-family: var(--serif); font-size: 16px;
+    color: #fff; letter-spacing: 0.04em;
+  }
+  .price-bar .r .dep .d small {
+    font-family: var(--mono); font-size: 9px;
+    color: rgba(255,255,255,0.45); margin-left: 6px; letter-spacing: 0.1em;
+  }
+  .price-bar .r .dep .s {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .price-bar .r .dep .s.ok { color: var(--brand-pink); }
+  .price-bar .r .dep .s.warn { color: var(--accent); }
+  .price-bar .r .dep .s.full { color: rgba(255,255,255,0.4); }
+
+  .ctas {
+    display: flex; justify-content: center; gap: 14px;
+    margin-bottom: 56px;
+  }
+  .btn {
+    display: inline-block; padding: 16px 32px;
+    font-family: var(--mono); font-size: 12px;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    border-radius: 999px; transition: all .25s;
+  }
+  .btn-fill { background: var(--accent); color: #fff; }
+  .btn-fill:hover { background: var(--brand-pink); color: var(--brand-dark); }
+  .btn-ghost { border: 1px solid rgba(255,255,255,0.35); color: #fff; }
+  .btn-ghost:hover { background: #fff; color: var(--brand-dark); border-color: #fff; }
+
+  .colophon {
+    border-top: 4px double rgba(255,255,255,0.2);
+    padding-top: 32px;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+    font-size: 13px; line-height: 1.85;
+    color: rgba(255,255,255,0.82);
+  }
+  .colophon h5 {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.32em; color: rgba(255,255,255,0.55);
+    text-transform: uppercase; margin: 0 0 14px; font-weight: 500;
+  }
+  .colophon p, .colophon ul { margin: 0; }
+  .colophon ul { list-style: none; padding: 0; }
+  .colophon a:hover { color: var(--brand-pink); }
+
+  .end-bot {
+    text-align: center; margin-top: 48px;
+    padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.15);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.22em; color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 980px) {
+    .nav-inner { padding: 12px 24px; }
+    .nav-center { display: none; }
+    .page-cover { grid-template-columns: 1fr; }
+    .page-cover .img { aspect-ratio: 16/10; height: auto; }
+    .page-cover .txt { padding: 48px 28px 64px; }
+    .page-cover .meta-grid { grid-template-columns: 1fr 1fr; }
+    .page-cover .scroll-hint { display: none; }
+    .page-day .layer { padding: 56px 28px; }
+    .page-day .body { grid-template-columns: 1fr; gap: 28px; }
+    .page-day .r { text-align: left; }
+    .page-day .r .lead { margin-left: 0; }
+    .page-day .r .meals { justify-content: flex-start; }
+    .page-day h2 { font-size: 52px; }
+    .page-incl, .page-book { padding: 56px 28px; }
+    .page-incl .head { grid-template-columns: 1fr; gap: 12px; }
+    .incl { grid-template-columns: 1fr; gap: 32px; }
+    .price-bar { grid-template-columns: 1fr; gap: 28px; }
+    .price-bar .r { border-left: 0; padding-left: 0; border-top: 1px solid rgba(255,255,255,0.18); padding-top: 24px; }
+    .ctas { flex-direction: column; }
+    .colophon { grid-template-columns: 1fr; gap: 28px; }
+    .stamp-tl, .stamp-tr, .stamp-bl, .stamp-br { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="v2-d-lookbook.html">
+      <span class="brand-logo"><svg viewBox="0 0 24 24"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="brand-name">找到了<em>旅遊</em></span>
+    </a>
+    <div class="nav-center" id="navCenter">
+      <span class="cur" id="pageTitle">P.014 ／ COVER</span>
+      <span>·</span>
+      <span>JP–028 ・ 京都の春</span>
+    </div>
+    <div class="nav-pager">
+      <button onclick="pageNav(-1)" aria-label="prev">←</button>
+      <span class="ix"><b id="pageIx">01</b> / 11</span>
+      <button onclick="pageNav(1)" aria-label="next">→</button>
+    </div>
+  </div>
+</nav>
+
+<main class="pages">
+
+  <!-- COVER -->
+  <section class="page page-cover" data-title="P.014 ／ COVER">
+    <span class="stamp-tl"><b>P.014</b> ／ COVER</span>
+    <span class="stamp-tr">JP–<b>028</b></span>
+    <span class="stamp-bl">SPRING ／ <b>2026</b></span>
+    <span class="stamp-br">© 找到了旅遊</span>
+
+    <div class="img"><img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1800&q=80" alt=""></div>
+    <div class="txt">
+      <div class="lbl">FEATURE 01 ／ 主編親踩</div>
+      <h1>清晨六點的<em>嵐山</em>，<br>沒有人的<em>竹林</em>。</h1>
+      <div class="meta-grid">
+        <div>DURATION<span class="v">8<small>天</small> 7<small>夜</small></span></div>
+        <div>WHERE<span class="v">京都 ・ 大阪</span></div>
+        <div>GROUP<span class="v">12<small>人小團</small></span></div>
+        <div>FROM<span class="v price">NT$ 89,800</span></div>
+      </div>
+    </div>
+    <div class="scroll-hint">向下翻頁</div>
+  </section>
+
+  <!-- DAY 01 -->
+  <section class="page page-day" data-title="P.015 ／ DAY 01">
+    <span class="stamp-tl"><b>P.015</b> ／ DAY 01</span>
+    <span class="stamp-tr">8 DAYS ／ <b>01 / 08</b></span>
+    <span class="stamp-bl">03.18 TUE</span>
+    <span class="stamp-br">JP–028</span>
+    <div class="full"><img src="https://images.unsplash.com/photo-1480796927426-f609979314bd?w=1800&q=80" alt=""></div>
+    <div class="layer">
+      <div class="top-lbl">DAY 01 ／ 第 一 日</div>
+      <div class="body">
+        <div class="l">
+          <div class="route">桃園 → 關西空港 → 京都</div>
+          <h2>抵達古都，<br>安頓於<em>東山</em>。</h2>
+          <div class="date">03 / 18 TUE</div>
+        </div>
+        <div class="r">
+          <p class="lead">下午班機抵達關西空港，專車送至京都東山地區下榻精品町家旅館。傍晚由領隊帶領散步至清水寺周邊，吃一頓由主編親選的湯豆腐晚膳，提早休息。</p>
+          <div class="meals"><span><b>晚</b> 順正本店</span><span><b>宿</b> 月見庵</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 02 -->
+  <section class="page page-day" data-title="P.016 ／ DAY 02">
+    <span class="stamp-tl"><b>P.016</b> ／ DAY 02</span>
+    <span class="stamp-tr">8 DAYS ／ <b>02 / 08</b></span>
+    <span class="stamp-bl">03.19 WED</span>
+    <span class="stamp-br">JP–028</span>
+    <div class="full"><img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=1800&q=80" alt=""></div>
+    <div class="layer">
+      <div class="top-lbl">DAY 02 ／ 第 二 日</div>
+      <div class="body">
+        <div class="l">
+          <div class="route">嵐 山 一 日</div>
+          <h2>清晨<em>竹林</em>，<br>一段不需要拍照的散步。</h2>
+          <div class="date">03 / 19 WED</div>
+        </div>
+        <div class="r">
+          <p class="lead">早上六點半出發，搶在開園前進入嵐山竹林，這是整趟行程中唯一強烈建議您早起的早晨。上午渡月橋、天龍寺；中午在保津川邊用餐，下午走進祇王寺與野宮神社。</p>
+          <div class="meals"><span><b>早</b> 旅館</span><span><b>午</b> 廣川</span><span><b>宿</b> 翠嵐</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 03 -->
+  <section class="page page-day" data-title="P.017 ／ DAY 03">
+    <span class="stamp-tl"><b>P.017</b> ／ DAY 03</span>
+    <span class="stamp-tr">8 DAYS ／ <b>03 / 08</b></span>
+    <span class="stamp-bl">03.20 THU</span>
+    <span class="stamp-br">JP–028</span>
+    <div class="full"><img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=1800&q=80" alt=""></div>
+    <div class="layer">
+      <div class="top-lbl">DAY 03 ／ 第 三 日</div>
+      <div class="body">
+        <div class="l">
+          <div class="route">嵯峨野 → 哲學之道 → 銀閣寺</div>
+          <h2>沿著一條<br>學者每天走的<em>路</em>。</h2>
+          <div class="date">03 / 20 THU</div>
+        </div>
+        <div class="r">
+          <p class="lead">從嵐山搭嵯峨野小火車到龜岡，午後返回市區，步行哲學之道全段。沿途七座小寺、三家咖啡、一座銀閣。今天的節奏由您決定。</p>
+          <div class="meals"><span><b>午</b> 自由</span><span><b>晚</b> 京懷石 菊乃井</span><span><b>宿</b> 月見庵</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 04 -->
+  <section class="page page-day" data-title="P.018 ／ DAY 04">
+    <span class="stamp-tl"><b>P.018</b> ／ DAY 04</span>
+    <span class="stamp-tr">8 DAYS ／ <b>04 / 08</b></span>
+    <span class="stamp-bl">03.21 FRI</span>
+    <span class="stamp-br">JP–028</span>
+    <div class="full"><img src="https://images.unsplash.com/photo-1542931287-023b922fa89b?w=1800&q=80" alt=""></div>
+    <div class="layer">
+      <div class="top-lbl">DAY 04 ／ 第 四 日</div>
+      <div class="body">
+        <div class="l">
+          <div class="route">伏見稻荷 → 宇治</div>
+          <h2>千鳥居外，<br>還有一條<em>山徑</em>。</h2>
+          <div class="date">03 / 21 FRI</div>
+        </div>
+        <div class="r">
+          <p class="lead">清晨六點，與在地嚮導從稻荷大社後山走入較少人煙的步道。中午搭乘 JR 至宇治，午後在平等院、宇治川邊散步，並由茶師帶領體驗一場一小時的抹茶研磨。</p>
+          <div class="meals"><span><b>午</b> 中村藤吉</span><span><b>體驗</b> 抹茶研磨 1hr</span><span><b>宿</b> 月見庵</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 05 -->
+  <section class="page page-day" data-title="P.019 ／ DAY 05">
+    <span class="stamp-tl"><b>P.019</b> ／ DAY 05</span>
+    <span class="stamp-tr">8 DAYS ／ <b>05 / 08</b></span>
+    <span class="stamp-bl">03.22 SAT</span>
+    <span class="stamp-br">JP–028</span>
+    <div class="full"><img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=1800&q=80" alt=""></div>
+    <div class="layer">
+      <div class="top-lbl">DAY 05 ／ 第 五 日</div>
+      <div class="body">
+        <div class="l">
+          <div class="route">大 原 一 日</div>
+          <h2>一座只有<br><em>六戶人家</em>的村。</h2>
+          <div class="date">03 / 22 SAT</div>
+        </div>
+        <div class="r">
+          <p class="lead">搭巴士北上至大原，這是京都市內極少數仍保有「里山」風景的地方。三千院、寂光院，午餐在地民家割烹，午後自由散步。</p>
+          <div class="meals"><span><b>午</b> 大原 里の駅</span><span><b>宿</b> 大原 はなれ庵</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 06 -->
+  <section class="page page-day" data-title="P.020 ／ DAY 06">
+    <span class="stamp-tl"><b>P.020</b> ／ DAY 06</span>
+    <span class="stamp-tr">8 DAYS ／ <b>06 / 08</b></span>
+    <span class="stamp-bl">03.23 SUN</span>
+    <span class="stamp-br">JP–028</span>
+    <div class="full"><img src="https://images.unsplash.com/photo-1528127269322-539801943592?w=1800&q=80" alt=""></div>
+    <div class="layer">
+      <div class="top-lbl">DAY 06 ／ 第 六 日</div>
+      <div class="body">
+        <div class="l">
+          <div class="route">貴船 → 鞍馬</div>
+          <h2>沿著川走，<br>從神社到<em>山寺</em>。</h2>
+          <div class="date">03 / 23 SUN</div>
+        </div>
+        <div class="r">
+          <p class="lead">晨間由大原前往貴船神社，午餐預訂川床料理。下午步行翻越山徑至鞍馬寺，這是京都最後一段未被觀光化的山林路線。</p>
+          <div class="meals"><span><b>午</b> 仲よし 川床</span><span><b>宿</b> 月見庵</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 07 -->
+  <section class="page page-day" data-title="P.021 ／ DAY 07">
+    <span class="stamp-tl"><b>P.021</b> ／ DAY 07</span>
+    <span class="stamp-tr">8 DAYS ／ <b>07 / 08</b></span>
+    <span class="stamp-bl">03.24 MON</span>
+    <span class="stamp-br">JP–028</span>
+    <div class="full"><img src="https://images.unsplash.com/photo-1538485399081-7191377e8241?w=1800&q=80" alt=""></div>
+    <div class="layer">
+      <div class="top-lbl">DAY 07 ／ 第 七 日</div>
+      <div class="body">
+        <div class="l">
+          <div class="route">京 都 自 由 日</div>
+          <h2>整天，<br>請好好地<em>交給自己</em>。</h2>
+          <div class="date">03 / 24 MON</div>
+        </div>
+        <div class="r">
+          <p class="lead">不安排任何行程。領隊將於前一晚發送一份「主編秘藏 24 小時 京都地圖」，包含 18 間咖啡店、7 家獨立書店與 4 條最不擁擠的散步路線。</p>
+          <div class="meals"><span><b>咖啡</b> 18</span><span><b>書店</b> 7</span><span><b>路線</b> 4</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAY 08 -->
+  <section class="page page-day" data-title="P.022 ／ DAY 08">
+    <span class="stamp-tl"><b>P.022</b> ／ DAY 08</span>
+    <span class="stamp-tr">8 DAYS ／ <b>08 / 08</b></span>
+    <span class="stamp-bl">03.25 TUE</span>
+    <span class="stamp-br">JP–028</span>
+    <div class="full"><img src="https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=1800&q=80" alt=""></div>
+    <div class="layer">
+      <div class="top-lbl">DAY 08 ／ 最 末 日</div>
+      <div class="body">
+        <div class="l">
+          <div class="route">京都 → 關西空港 → 桃園</div>
+          <h2>留一點時間，<br>給<em>離開的儀式</em>。</h2>
+          <div class="date">03 / 25 TUE</div>
+        </div>
+        <div class="r">
+          <p class="lead">早晨自由活動，11:00 集合搭乘專車前往關西空港。下午班機返回桃園，結束八日旅程。</p>
+          <div class="meals"><span><b>午</b> 機上輕食</span><span><b>抵達</b> TPE 17:30</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INCLUDES -->
+  <section class="page page-incl" data-title="P.023 ／ INCLUDED">
+    <span class="stamp-tl"><b>P.023</b> ／ INCLUDED</span>
+    <span class="stamp-tr">SECTION ／ <b>09</b></span>
+    <span class="stamp-bl"><b>8</b> + <b>6</b> ITEMS</span>
+    <span class="stamp-br">JP–028</span>
+
+    <div class="head">
+      <div>
+        <div class="lbl">INCLUDED ／ 費 用 含 與 不 含</div>
+        <h2>所有細節，<br><em>一次攤開</em>。</h2>
+      </div>
+      <div class="r">攤開來<br>放在桌上</div>
+    </div>
+
+    <div class="incl">
+      <div class="in">
+        <h4>包 含 項 目</h4>
+        <ul>
+          <li>桃園 ⇄ 關西 直飛經濟艙來回機票（含稅）</li>
+          <li>四星以上精品旅館 7 晚 ／ 兩晚溫泉旅館</li>
+          <li>全程豪華觀光巴士 ／ 部分區間 JR</li>
+          <li>行程內標示餐食共 14 餐</li>
+          <li>繁中專業領隊 ＋ 京都在地嚮導 3 日</li>
+          <li>嵐山竹林清晨導覽（包場一小時）</li>
+          <li>菊乃井 ／ 順正 等指定餐廳預約</li>
+          <li>200 萬旅遊責任險 ＋ 20 萬醫療險</li>
+        </ul>
+      </div>
+      <div class="out">
+        <h4>不 包 含 項 目</h4>
+        <ul>
+          <li>自由日餐食（建議預算 NT$1,500 ／ 餐）</li>
+          <li>個人消費、洗衣、付費 Wi-Fi</li>
+          <li>領隊司機嚮導小費（NT$ 240 ／ 日）</li>
+          <li>單人房差價 NT$ 18,000</li>
+          <li>抹茶體驗升級方案（選配）</li>
+          <li>護照辦理 ／ 簽證費用</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOKING / COLOPHON -->
+  <section class="page page-book" data-title="P.024 ／ BOOKING">
+    <span class="stamp-tl"><b>P.024</b> ／ BOOKING</span>
+    <span class="stamp-tr">END OF <b>JP–028</b></span>
+    <span class="stamp-bl">THANK YOU</span>
+    <span class="stamp-br">© <b>2026</b></span>
+
+    <div class="page-book-inner">
+      <div class="lbl">BOOKING ／ 報 名 ・ 出 發</div>
+      <h2>翻完了。<br><em>接下來，換你出發。</em></h2>
+
+      <div class="price-bar">
+        <div class="l">
+          <div class="l-lbl">FROM ／ 起 價</div>
+          <div class="price"><span class="n">89,800</span><span class="c">NT$</span></div>
+          <div class="per">PER PERSON ・ 雙人房 ／ 早鳥 3 月 1 日前下訂享 NT$ 4,000 折扣</div>
+        </div>
+        <div class="r">
+          <div class="lbl-r">近期可預約梯次</div>
+          <div class="dep"><span class="d">03 ／ 18 <small>TUE ・ 8D</small></span><span class="s ok">尚有 8 席</span></div>
+          <div class="dep"><span class="d">03 ／ 25 <small>TUE ・ 8D</small></span><span class="s warn">僅剩 5 席</span></div>
+          <div class="dep"><span class="d">04 ／ 08 <small>WED ・ 8D</small></span><span class="s full">候 補</span></div>
+          <div class="dep"><span class="d">04 ／ 22 <small>WED ・ 8D</small></span><span class="s ok">尚有 12 席</span></div>
+        </div>
+      </div>
+
+      <div class="ctas">
+        <a href="#" class="btn btn-fill">立即預訂 →</a>
+        <a href="#" class="btn btn-ghost">下載 PDF ↓</a>
+      </div>
+
+      <div class="colophon">
+        <div>
+          <h5>FOUND HOLIDAY</h5>
+          <p>找到了旅遊股份有限公司<br>10688 台北市大安區<br>忠孝東路四段 137 號 2 樓</p>
+        </div>
+        <div>
+          <h5>聯絡 ／ CONTACT</h5>
+          <ul>
+            <li><a href="tel:0277290001">02 7729 0001</a></li>
+            <li><a href="#">線上諮詢</a></li>
+            <li><a href="#">門市資訊</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>本期 ／ COLOPHON</h5>
+          <ul>
+            <li>路線編號 ／ JP–028</li>
+            <li>主編親踩 ／ 林宥彤</li>
+            <li>影像 ／ 找到了攝影團隊</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="end-bot">© 2026 FOUND HOLIDAY TRAVEL CO., LTD. ／ ALL RIGHTS RESERVED</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  (function() {
+    const pages = [...document.querySelectorAll('.page')];
+    const ixEl = document.getElementById('pageIx');
+    const titleEl = document.getElementById('pageTitle');
+
+    function update() {
+      const mid = window.scrollY + window.innerHeight * 0.4;
+      let cur = 0;
+      for (let i = 0; i < pages.length; i++) {
+        if (pages[i].offsetTop <= mid) cur = i;
+      }
+      ixEl.textContent = String(cur + 1).padStart(2, '0');
+      titleEl.textContent = pages[cur].dataset.title || '';
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+
+    window.pageNav = function(dir) {
+      const mid = window.scrollY + window.innerHeight * 0.4;
+      let cur = 0;
+      for (let i = 0; i < pages.length; i++) {
+        if (pages[i].offsetTop <= mid) cur = i;
+      }
+      const target = Math.max(0, Math.min(pages.length - 1, cur + dir));
+      window.scrollTo({ top: pages[target].offsetTop - 60, behavior: 'smooth' });
+    };
+
+    window.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault(); window.pageNav(1);
+      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault(); window.pageNav(-1);
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

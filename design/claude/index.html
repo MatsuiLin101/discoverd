@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>找到了旅遊 FOUND HOLIDAY — 為您而寫的旅程</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ---------- Page-specific: Home ---------- */
+  .home-marquee {
+    border-bottom: 1px solid var(--rule);
+    overflow: hidden;
+    background: var(--accent-soft);
+  }
+  .home-marquee .track {
+    display: flex; gap: 48px;
+    padding: 10px 0;
+    animation: marq 60s linear infinite;
+    white-space: nowrap;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .home-marquee .track span { display: inline-flex; align-items: center; gap: 14px; }
+  .home-marquee .track span::after {
+    content: "✦"; color: var(--accent); margin-left: 36px;
+  }
+  @keyframes marq { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* HERO -------------------------------------------------------- */
+  .hero {
+    padding: clamp(48px, 8vw, 100px) var(--gutter) clamp(56px, 9vw, 120px);
+    max-width: var(--max);
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: clamp(32px, 5vw, 80px);
+    align-items: end;
+  }
+  .hero-eyebrow {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px;
+  }
+  .hero-eyebrow .num { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); }
+  .hero-eyebrow .lbl { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--ink-3); text-transform: uppercase; }
+  .hero-eyebrow .bar { flex: 1; height: 1px; background: var(--rule); }
+
+  .hero-title {
+    font-family: "Noto Serif TC", serif;
+    font-size: var(--fs-h1);
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+    margin: 0;
+    font-weight: 400;
+  }
+  .hero-title .em { color: var(--accent); font-style: italic; font-family: "Noto Serif TC", serif; }
+  .hero-title .stroke {
+    -webkit-text-stroke: 1px var(--ink);
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-lede {
+    max-width: 420px;
+    font-size: var(--fs-lede);
+    color: var(--ink-2);
+    margin: 28px 0 36px;
+    line-height: 1.55;
+  }
+  .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+
+  .hero-side {
+    position: relative;
+    aspect-ratio: 4/5;
+    background: var(--paper-2);
+    overflow: hidden;
+  }
+  .hero-side img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-side .caption {
+    position: absolute; left: 16px; bottom: 16px;
+    color: var(--paper);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    background: rgba(28,26,23,0.65);
+    padding: 8px 12px;
+    backdrop-filter: blur(4px);
+  }
+  .hero-side .caption .lat { display: block; font-size: 9px; opacity: 0.7; margin-top: 4px; letter-spacing: 0.12em; }
+
+  /* Float ticker over hero */
+  .hero-stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--rule);
+    margin-top: clamp(56px, 8vw, 100px);
+    padding: 28px 0;
+  }
+  .hero-stat .num { font-family: "Noto Serif TC", serif; font-size: 40px; line-height: 1; }
+  .hero-stat .num sup { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--accent); margin-left: 4px; vertical-align: top; }
+  .hero-stat .lbl { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-top: 8px; }
+
+  /* SEARCH band ----------------------------------------------- */
+  .search-band {
+    padding: 36px var(--gutter);
+    max-width: var(--max); margin: 0 auto;
+  }
+  .search-form {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1.2fr 1fr auto;
+    align-items: end;
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .search-form .field {
+    padding: 18px 22px;
+    border-right: 1px solid var(--rule);
+    display: grid; gap: 6px;
+  }
+  .search-form .field:last-of-type { border-right: 0; }
+  .search-form label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .search-form input, .search-form select {
+    border: 0; background: transparent; color: var(--ink);
+    font-family: "Noto Sans TC", sans-serif;
+    font-size: 15px; padding: 0; outline: none;
+    width: 100%;
+  }
+  .search-form .submit {
+    background: var(--ink); color: var(--paper);
+    border: 0; padding: 0 28px;
+    align-self: stretch;
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
+    transition: background .2s;
+  }
+  .search-form .submit:hover { background: var(--accent); }
+
+  /* FEATURED EDITORIAL ---------------------------------------- */
+  .editorial {
+    padding: clamp(72px, 10vw, 120px) var(--gutter);
+    max-width: var(--max); margin: 0 auto;
+  }
+  .section-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .section-head .label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
+  .section-head h2 { margin: 12px 0 0; }
+  .section-head .meta-right { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+
+  /* Editorial featured: 1 huge + 2 stacked */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: clamp(24px, 3vw, 40px);
+  }
+  .feat-main {
+    position: relative;
+    aspect-ratio: 4/5;
+    overflow: hidden;
+    background: var(--paper-2);
+  }
+  .feat-main img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
+  .feat-main:hover img { transform: scale(1.04); }
+  .feat-main .overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(28,26,23,0.7) 0%, rgba(28,26,23,0) 50%);
+  }
+  .feat-main .badge {
+    position: absolute; top: 24px; left: 24px;
+    background: var(--accent); color: var(--paper);
+    padding: 8px 14px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  }
+  .feat-main .body {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: clamp(24px, 3vw, 40px);
+    color: var(--paper);
+  }
+  .feat-main .body .meta { color: rgba(250, 242, 238,0.7); font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 12px; }
+  .feat-main .body h3 { font-family: "Noto Serif TC", serif; font-size: clamp(28px, 4vw, 52px); line-height: 1.05; margin: 0 0 14px; max-width: 600px; font-weight: 400; }
+  .feat-main .body .row { display: flex; justify-content: space-between; align-items: end; margin-top: 24px; gap: 16px; }
+  .feat-main .body .price { color: var(--paper); }
+  .feat-main .body .price .num { font-family: "Noto Serif TC", serif; font-size: 32px; }
+  .feat-main .body .price .from { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; opacity: 0.7; text-transform: uppercase; display: block; }
+  .feat-main .body .cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--paper);
+    padding-bottom: 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
+  }
+
+  .feat-side { display: grid; grid-template-rows: 1fr 1fr; gap: clamp(24px, 3vw, 40px); }
+  .feat-card {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+  .feat-card .img-wrap { aspect-ratio: 4/5; overflow: hidden; background: var(--paper-2); }
+  .feat-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+  .feat-card:hover img { transform: scale(1.04); }
+  .feat-card .body { display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0; }
+  .feat-card .meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .feat-card h4 { font-family: "Noto Serif TC", serif; font-size: clamp(20px, 2vw, 26px); line-height: 1.15; margin: 0 0 10px; font-weight: 400; }
+  .feat-card p { font-size: 13.5px; color: var(--ink-2); margin: 0 0 16px; line-height: 1.5; }
+  .feat-card .foot { display: flex; justify-content: space-between; align-items: end; padding-top: 14px; border-top: 1px solid var(--rule); }
+
+  /* REGIONS — asymmetric -------------------------------------- */
+  .regions {
+    padding: clamp(60px, 8vw, 100px) var(--gutter);
+    max-width: var(--max); margin: 0 auto;
+  }
+  .region-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: clamp(20px, 2.5vw, 32px);
+  }
+  .region {
+    position: relative;
+    overflow: hidden;
+    background: var(--paper-2);
+    cursor: pointer;
+  }
+  .region img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+  .region:hover img { transform: scale(1.05); }
+  .region .label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 20px;
+    color: var(--paper);
+    background: linear-gradient(to top, rgba(28,26,23,0.85), transparent);
+    display: flex; justify-content: space-between; align-items: end;
+  }
+  .region .label .name { font-family: "Noto Serif TC", serif; font-size: 26px; line-height: 1; }
+  .region .label .name .en { display: block; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.2em; opacity: 0.7; margin-top: 6px; text-transform: uppercase; }
+  .region .label .count { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.15em; opacity: 0.85; }
+
+  .region.r-japan   { grid-column: span 6; aspect-ratio: 16/11; }
+  .region.r-korea   { grid-column: span 6; aspect-ratio: 16/11; }
+  .region.r-europe  { grid-column: span 5; aspect-ratio: 4/5; }
+  .region.r-sea     { grid-column: span 4; aspect-ratio: 4/5; }
+  .region.r-domestic{ grid-column: span 3; aspect-ratio: 4/5; }
+
+  /* JOURNAL strip --------------------------------------------- */
+  .journal {
+    padding: clamp(60px, 8vw, 100px) var(--gutter);
+    max-width: var(--max); margin: 0 auto;
+  }
+  .journal-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(24px, 3vw, 40px);
+  }
+  .j-card { display: grid; gap: 16px; }
+  .j-card .img-wrap { aspect-ratio: 4/3; overflow: hidden; background: var(--paper-2); }
+  .j-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+  .j-card:hover img { transform: scale(1.04); }
+  .j-card .meta { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); display: flex; gap: 12px; }
+  .j-card .meta .cat { color: var(--accent); }
+  .j-card h4 { font-family: "Noto Serif TC", serif; font-size: 22px; line-height: 1.25; margin: 0; font-weight: 400; }
+  .j-card p { font-size: 14px; color: var(--ink-2); margin: 0; }
+
+  /* CTA block ------------------------------------------------- */
+  .cta-block {
+    margin: 0 var(--gutter);
+    max-width: var(--max);
+    background: var(--ink);
+    color: var(--paper);
+    padding: clamp(56px, 8vw, 100px) clamp(32px, 6vw, 80px);
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  @media (min-width: 1440px) { .cta-block { margin: 0 auto; } }
+  .cta-block h3 { font-family: "Noto Serif TC", serif; font-size: clamp(32px, 4vw, 56px); line-height: 1.05; margin: 0; font-weight: 400; }
+  .cta-block h3 .em { color: var(--accent); font-style: italic; }
+  .cta-block p { color: rgba(250, 242, 238,0.75); font-size: 16px; max-width: 420px; }
+  .cta-block .cta-form { display: grid; gap: 14px; }
+  .cta-block input {
+    background: transparent; border: 0; border-bottom: 1px solid rgba(250, 242, 238,0.3);
+    padding: 14px 0; color: var(--paper); font-family: "Noto Sans TC", sans-serif; font-size: 15px; outline: none;
+  }
+  .cta-block input::placeholder { color: rgba(250, 242, 238,0.5); }
+  .cta-block .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .cta-block .btn { align-self: start; background: var(--paper); color: var(--ink); border-color: var(--paper); margin-top: 8px; }
+  .cta-block .btn:hover { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 980px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero-side { aspect-ratio: 4/3; }
+    .feat-grid { grid-template-columns: 1fr; }
+    .feat-main { aspect-ratio: 4/4; }
+    .region-grid > * { grid-column: span 6 !important; aspect-ratio: 4/3 !important; }
+    .journal-grid { grid-template-columns: 1fr; }
+    .cta-block { grid-template-columns: 1fr; }
+    .search-form { grid-template-columns: 1fr; }
+    .search-form .field { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .search-form .submit { padding: 18px; justify-content: center; }
+    .hero-stat-row { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  }
+  @media (max-width: 560px) {
+    .region-grid > * { grid-column: span 12 !important; }
+    .feat-card { grid-template-columns: 1fr; }
+    .feat-card .img-wrap { aspect-ratio: 4/3; }
+    .section-head { grid-template-columns: 1fr; }
+    .section-head .meta-right { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Marquee -->
+<div class="home-marquee" aria-hidden="true">
+  <div class="track">
+    <span>Est. 二〇〇九</span>
+    <span>春季新行程 上線</span>
+    <span>北海道 賞櫻早鳥</span>
+    <span>沖繩 親子半自助</span>
+    <span>義大利 文化深度</span>
+    <span>冰島 極光獵奇</span>
+    <span>京都 私房路線</span>
+    <span>Est. 二〇〇九</span>
+    <span>春季新行程 上線</span>
+    <span>北海道 賞櫻早鳥</span>
+    <span>沖繩 親子半自助</span>
+    <span>義大利 文化深度</span>
+    <span>冰島 極光獵奇</span>
+    <span>京都 私房路線</span>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html">
+      <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="name">找到了<em>旅遊</em></span>
+      <span class="sub">FOUND HOLIDAY&nbsp;&nbsp;Est.2009</span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="index.html" class="active">首頁</a>
+      <a href="tours.html">行程</a>
+      <a href="tour.html">特輯</a>
+      <a href="about.html">關於</a>
+      <a href="about.html#stores">服務據點</a>
+    </nav>
+    <div class="header-cta">
+      <span class="phone"><span class="ico">●</span>02&nbsp;7729&nbsp;0001</span>
+      <a href="tours.html" class="btn">預約諮詢 <span class="arr">→</span></a>
+      <button class="btn ghost menu-toggle" id="menuToggle" aria-label="menu">≡</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid">
+    <div class="hero-main">
+      <div class="hero-eyebrow">
+        <span class="num">No. 028</span>
+        <span class="lbl">Spring / Summer Issue ・ 2026</span>
+        <span class="bar"></span>
+      </div>
+      <h1 class="hero-title">為您而<span class="em">寫</span>的<br>那一段<span class="stroke">旅程</span>。</h1>
+      <p class="hero-lede">不只是行程，更是一本可以親身翻閱的旅誌。我們深耕亞洲與歐陸十七年，為您整理出值得停留的城市、值得繞路的風景，與值得記住的人。</p>
+      <div class="hero-ctas">
+        <a href="tours.html" class="btn accent">瀏覽全部行程 <span class="arr">→</span></a>
+        <a href="about.html" class="btn ghost">關於找到了旅遊</a>
+      </div>
+    </div>
+    <div class="hero-side">
+      <img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=900&q=80" alt="春日山徑">
+      <div class="caption">No. 028 ・ 京都 ・ 嵐山<span class="lat">35.0094° N ・ 135.6664° E</span></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="hero-stat-row">
+    <div class="hero-stat">
+      <div class="num">17<sup>年</sup></div>
+      <div class="lbl">In&nbsp;Business&nbsp;Since&nbsp;2009</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">62<sup>國</sup></div>
+      <div class="lbl">Destinations&nbsp;Covered</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">3,400<sup>＋</sup></div>
+      <div class="lbl">Itineraries&nbsp;Crafted</div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">98<sup>%</sup></div>
+      <div class="lbl">Returning&nbsp;Travellers</div>
+    </div>
+  </div>
+</section>
+
+<!-- SEARCH -->
+<section class="search-band">
+  <form class="search-form" onsubmit="event.preventDefault(); location.href='tours.html';">
+    <div class="field">
+      <label>目的地</label>
+      <input type="text" placeholder="日本、義大利、冰島⋯" value="">
+    </div>
+    <div class="field">
+      <label>出發月份</label>
+      <select><option>2026 / 03 — 三月</option><option>2026 / 04 — 四月</option><option>2026 / 05 — 五月</option><option>2026 / 06 — 六月</option></select>
+    </div>
+    <div class="field">
+      <label>旅行天數</label>
+      <select><option>5 - 7 天</option><option>8 - 10 天</option><option>11 天以上</option></select>
+    </div>
+    <div class="field">
+      <label>預算 / 人</label>
+      <select><option>NT$ 40,000 以下</option><option>NT$ 40,000 - 80,000</option><option>NT$ 80,000 以上</option></select>
+    </div>
+    <button class="submit" type="submit">搜尋行程 →</button>
+  </form>
+</section>
+
+<!-- EDITORIAL FEATURED -->
+<section class="editorial">
+  <div class="section-head">
+    <div>
+      <div class="label">FEATURED — 編輯精選</div>
+      <h2 class="h2">本月主編精選</h2>
+    </div>
+    <div class="meta-right">No. 028 / Mar 2026</div>
+  </div>
+
+  <div class="feat-grid">
+    <!-- Main -->
+    <a class="feat-main" href="tour.html">
+      <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1400&q=80" alt="京都">
+      <div class="overlay"></div>
+      <div class="badge">封面行程</div>
+      <div class="body">
+        <div class="meta">Itinerary No. JP-028 ・ 8 天 7 夜</div>
+        <h3>京都的春，從一條私房小路開始。</h3>
+        <div class="row">
+          <div class="price">
+            <span class="from">From</span>
+            <span class="num">NT$ 89,800</span>
+          </div>
+          <span class="cta">查看行程 →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Side stack -->
+    <div class="feat-side">
+      <a class="feat-card" href="tour.html">
+        <div class="img-wrap"><img src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=800&q=80" alt="冰島"></div>
+        <div class="body">
+          <div>
+            <div class="meta-row">
+              <span class="tag accent">極光季</span>
+              <span class="tag">10 天</span>
+            </div>
+            <h4>冰島：在黑夜與極光之間</h4>
+            <p>九座冰川、四場日落、與一場可遇不可求的綠色舞蹈。</p>
+          </div>
+          <div class="foot">
+            <div class="price-block">
+              <span class="price-from">From</span>
+              <span class="price-num">NT$ 158,000</span>
+            </div>
+            <span class="arrow-link">查看 →</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="feat-card" href="tour.html">
+        <div class="img-wrap"><img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&q=80" alt="義大利"></div>
+        <div class="body">
+          <div>
+            <div class="meta-row">
+              <span class="tag">11 天</span>
+              <span class="tag">深度文化</span>
+            </div>
+            <h4>義大利北中部：藝術與葡萄園</h4>
+            <p>從威尼斯到托斯卡尼，沿途九座小鎮、三座美術館，與一杯午後的奇揚替。</p>
+          </div>
+          <div class="foot">
+            <div class="price-block">
+              <span class="price-from">From</span>
+              <span class="price-num">NT$ 146,500</span>
+            </div>
+            <span class="arrow-link">查看 →</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- REGIONS asymmetric -->
+<section class="regions">
+  <div class="section-head">
+    <div>
+      <div class="label">DESTINATIONS — 依地區瀏覽</div>
+      <h2 class="h2">您想往哪裡走？</h2>
+    </div>
+    <div class="meta-right">5 / 14 個地區</div>
+  </div>
+
+  <div class="region-grid">
+    <a class="region r-japan" href="tours.html">
+      <img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=1100&q=80" alt="日本">
+      <div class="label">
+        <div class="name">日本<span class="en">JAPAN ・ 14 行程</span></div>
+        <div class="count">→</div>
+      </div>
+    </a>
+    <a class="region r-korea" href="tours.html">
+      <img src="https://images.unsplash.com/photo-1538485399081-7191377e8241?w=1100&q=80" alt="韓國">
+      <div class="label">
+        <div class="name">韓國<span class="en">KOREA ・ 8 行程</span></div>
+        <div class="count">→</div>
+      </div>
+    </a>
+    <a class="region r-europe" href="tours.html">
+      <img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=900&q=80" alt="歐洲">
+      <div class="label">
+        <div class="name">歐洲<span class="en">EUROPE ・ 22 行程</span></div>
+        <div class="count">→</div>
+      </div>
+    </a>
+    <a class="region r-sea" href="tours.html">
+      <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&q=80" alt="東南亞">
+      <div class="label">
+        <div class="name">東南亞<span class="en">S.E. ASIA ・ 11 行程</span></div>
+        <div class="count">→</div>
+      </div>
+    </a>
+    <a class="region r-domestic" href="tours.html">
+      <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=900&q=80" alt="國旅">
+      <div class="label">
+        <div class="name">國旅<span class="en">TAIWAN ・ 7 行程</span></div>
+        <div class="count">→</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- JOURNAL -->
+<section class="journal">
+  <div class="section-head">
+    <div>
+      <div class="label">JOURNAL — 編輯筆記</div>
+      <h2 class="h2">旅誌專欄</h2>
+    </div>
+    <a href="#" class="arrow-link">瀏覽全部專欄</a>
+  </div>
+
+  <div class="journal-grid">
+    <a class="j-card" href="#">
+      <div class="img-wrap"><img src="https://images.unsplash.com/photo-1480796927426-f609979314bd?w=900&q=80" alt=""></div>
+      <div class="meta"><span class="cat">FIELD NOTE</span><span>04.21.2026</span></div>
+      <h4>京都不只賞櫻：在嵐山住一晚的理由</h4>
+      <p>避開白天的人潮，看一場只屬於住客的夜竹林。</p>
+    </a>
+    <a class="j-card" href="#">
+      <div class="img-wrap"><img src="https://images.unsplash.com/photo-1531168556467-80aace0d0144?w=900&q=80" alt=""></div>
+      <div class="meta"><span class="cat">GUIDE</span><span>04.14.2026</span></div>
+      <h4>義大利北部選酒指南：一張在地人的午餐清單</h4>
+      <p>奇揚替不只一種，從產區到杯型，給你最簡的入門地圖。</p>
+    </a>
+    <a class="j-card" href="#">
+      <div class="img-wrap"><img src="https://images.unsplash.com/photo-1504309092620-4d0ec726efa4?w=900&q=80" alt=""></div>
+      <div class="meta"><span class="cat">INTERVIEW</span><span>04.02.2026</span></div>
+      <h4>專訪：北海道牧場第三代主理人</h4>
+      <p>他用十二年，把一塊乳酪做成可以說故事的東西。</p>
+    </a>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-block">
+  <div>
+    <h3>讓我們，<br>為您寫一段<span class="em">專屬</span>的旅程。</h3>
+    <p style="margin-top: 20px;">找到了旅遊提供 1 對 1 旅程客製。留下您的聯絡方式，主編將在 24 小時內與您聯繫。</p>
+  </div>
+  <form class="cta-form" onsubmit="event.preventDefault(); alert('已收到，謝謝！');">
+    <div class="row2">
+      <input type="text" placeholder="姓名" required>
+      <input type="tel" placeholder="電話" required>
+    </div>
+    <input type="email" placeholder="電子信箱">
+    <input type="text" placeholder="想去的地方 / 出發月份">
+    <button class="btn" type="submit">送出諮詢 →</button>
+  </form>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="inner">
+    <div class="footer-top">
+      <div>
+        <h4>找到了<em style="color:var(--accent); font-style:normal">旅遊</em></h4>
+        <p style="color:rgba(250, 242, 238,0.7); font-size:14px; max-width:320px; margin:0 0 18px;">為您而寫的旅程。<br>Found Holiday · Travel agency since 2009.</p>
+        <div class="mono" style="color:rgba(250, 242, 238,0.5);">交觀甲 9876 ・ 品保中 0123</div>
+      </div>
+      <div>
+        <h6>瀏覽</h6>
+        <ul>
+          <li><a href="tours.html">所有行程</a></li>
+          <li><a href="tours.html">依地區</a></li>
+          <li><a href="tours.html">依出發月份</a></li>
+          <li><a href="#">客製旅程</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>關於</h6>
+        <ul>
+          <li><a href="about.html">關於找到了旅遊</a></li>
+          <li><a href="about.html#stores">服務據點</a></li>
+          <li><a href="#">編輯團隊</a></li>
+          <li><a href="#">旅誌專欄</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>聯絡</h6>
+        <ul>
+          <li>02 &nbsp;7729&nbsp; 0001</li>
+          <li>hello@foundholiday.tw</li>
+          <li>台北 ・ 台中 ・ 高雄</li>
+          <li>Mon–Sat ・ 10:00–20:00</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 FOUND HOLIDAY TRAVEL CO., LTD.</div>
+      <div>PRIVACY ・ TERMS ・ COOKIES</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('nav').classList.toggle('open');
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1056 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>北海道 ／ 日本 — 找到了旅遊 FOUND HOLIDAY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="search-suggest.css">
+<style>
+  :root {
+    --g-top: #FFECEF;
+    --g-bot: #E0E0FF;
+    --ink: #2A2233;
+    --ink-2: #5A4F66;
+    --ink-3: #8B8197;
+    --line: rgba(42, 34, 51, 0.12);
+    --line-2: rgba(42, 34, 51, 0.18);
+    --accent: #E0506B;
+    --accent-2: #7166D6;
+    --panel: rgba(255, 255, 255, 0.58);
+    --panel-solid: rgba(255, 255, 255, 0.78);
+    --sans: "Noto Sans", "Noto Sans TC", sans-serif;
+    --serif: "Noto Sans", "Noto Sans TC", sans-serif;
+    --display: "Noto Sans", "Noto Sans TC", sans-serif;
+    --mono: "Noto Sans", "Noto Sans TC", sans-serif;
+    --max: 1320px;
+    --gutter: 48px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(180deg, var(--g-top) 0%, #F2E8F4 46%, var(--g-bot) 100%);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.65;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--accent); color: #fff; }
+
+  /* =========================================================
+     HEADER
+     ========================================================= */
+  .site-header {
+    position: sticky; top: 0; z-index: 60;
+    background: rgba(255, 236, 239, 0.55);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    border-bottom: 1px solid var(--line);
+  }
+  .header-inner {
+    max-width: var(--max); margin: 0 auto;
+    padding: 0 var(--gutter); height: 84px;
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center; gap: 32px;
+  }
+  .brand { display: flex; align-items: center; gap: 13px; }
+  .brand-logo {
+    width: 44px; height: 44px; background: var(--accent); border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0;
+  }
+  .brand-logo svg { width: 23px; height: 23px; }
+  .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+  .brand-name { font-family: var(--serif); font-size: 22px; letter-spacing: 0.12em; font-weight: 500; }
+  .brand-name em { font-style: normal; color: var(--accent); }
+  .brand-sub { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.28em; color: var(--ink-3); text-transform: uppercase; margin-top: 3px; }
+  .search { justify-self: center; width: 100%; max-width: 520px; }
+  .search-form {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--panel-solid); border: 1px solid var(--line-2);
+    border-radius: 999px; padding: 5px 5px 5px 8px;
+    box-shadow: 0 6px 22px -14px rgba(42, 34, 51, 0.4);
+  }
+  .search-form input {
+    flex: 1; min-width: 0; border: 0; background: transparent;
+    font-family: var(--sans); font-size: 14px; color: var(--ink); padding: 8px 12px; outline: none;
+  }
+  .search-form input::placeholder { color: var(--ink-3); }
+  .search-btn {
+    flex-shrink: 0; width: 40px; height: 40px; border: 0; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background .2s, transform .2s;
+  }
+  .search-btn:hover { background: var(--accent-2); transform: scale(1.05); }
+  .search-btn svg { width: 17px; height: 17px; }
+  .social { display: flex; align-items: center; gap: 10px; }
+  .social a {
+    width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--accent);
+    background: var(--panel); display: inline-flex; align-items: center; justify-content: center;
+    color: var(--accent); transition: background .2s, color .2s, border-color .2s, transform .2s;
+  }
+  .social a:hover { background: var(--accent); border-color: var(--accent); color: #fff; transform: translateY(-2px); }
+  .social a svg { width: 18px; height: 18px; }
+  .social .label { display: none; }
+
+  /* =========================================================
+     PAGE BAR — breadcrumb
+     ========================================================= */
+  .page-bar { }
+  .page-bar-inner {
+    max-width: var(--max); margin: 0 auto; padding: 44px var(--gutter) 6px;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .page-bar .crumb { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .page-bar .crumb a { color: var(--ink-2); }
+  .page-bar .crumb a:hover { color: var(--accent); }
+  .page-bar .crumb .sep { color: var(--ink-3); }
+  .page-bar .crumb .cur { color: var(--accent-2); }
+
+  /* =========================================================
+     SECTION HEAD
+     ========================================================= */
+  .listing {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(4px, 1vw, 10px) var(--gutter) clamp(56px, 8vw, 96px);
+  }
+  .sec-head {
+    display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: end;
+    padding-bottom: 22px; border-bottom: 1px solid var(--line-2);
+  }
+  .sec-head .mid .l {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.26em;
+    color: var(--accent-2); text-transform: uppercase; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sec-head .mid .l .en { color: var(--ink-3); }
+  .sec-head .mid .t {
+    font-family: var(--serif); font-weight: 300; font-size: clamp(24px, 3vw, 36px);
+    letter-spacing: 0.1em; line-height: 1.32; margin: 0;
+  }
+  .sec-head .mid .t em { font-style: normal; color: var(--accent); display: inline-block; white-space: nowrap; }
+  .sec-head .r {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--ink-3);
+    text-transform: uppercase; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  }
+  .sec-head .r span { white-space: nowrap; }
+  .sec-head .r b { color: var(--ink); font-weight: 500; }
+
+  /* =========================================================
+     SUB-CATEGORY TABS
+     ========================================================= */
+  .subtabs {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 28px; margin-bottom: 4px;
+  }
+  .subtabs a {
+    font-family: var(--sans); font-size: 14px; letter-spacing: 0.06em;
+    padding: 9px 18px; border-radius: 999px;
+    border: 1px solid var(--line-2); background: var(--panel);
+    color: var(--ink-2); transition: all .22s; white-space: nowrap;
+    display: inline-flex; align-items: baseline; gap: 9px;
+  }
+  .subtabs a .en { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+  .subtabs a:hover { border-color: var(--accent); color: var(--ink); }
+  .subtabs a.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .subtabs a.active .en { color: rgba(255,255,255,0.6); }
+
+  /* =========================================================
+     TOUR LIST
+     ========================================================= */
+  .tour-list { margin-top: 36px; display: grid; gap: 20px; }
+  .trow {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 0;
+    background: var(--panel-solid);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+    transition: box-shadow .35s ease, transform .35s ease, border-color .35s ease;
+  }
+  .trow:hover {
+    box-shadow: 0 24px 50px -28px rgba(42, 34, 51, 0.42);
+    transform: translateY(-3px);
+    border-color: var(--line-2);
+  }
+  /* image */
+  .trow .t-img { position: relative; overflow: hidden; background: #d8cfe0; min-height: 232px; }
+  .trow .t-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
+  .trow:hover .t-img img { transform: scale(1.07); }
+  /* body */
+  .trow .t-body { padding: 28px 30px; display: flex; flex-direction: column; min-width: 0; }
+  .trow .t-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .trow .t-tags span {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+  }
+  .trow .t-tags span.hot { color: var(--accent); border-color: var(--accent); }
+  .trow .t-name {
+    font-family: var(--serif); font-weight: 500; font-size: clamp(22px, 2vw, 28px);
+    letter-spacing: 0.04em; line-height: 1.32; margin: 0 0 6px;
+  }
+  .trow .t-en { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 14px; }
+  .trow .t-lede { font-size: 13.5px; line-height: 1.8; color: var(--ink-2); margin: 0 0 22px; max-width: 460px; text-wrap: pretty; }
+  /* price footer — merged into body */
+  .trow .t-foot {
+    margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  }
+  .trow .t-foot .amt { display: flex; align-items: flex-end; gap: 4px; font-family: var(--display); font-weight: 500; color: var(--accent); line-height: 1; }
+  .trow .t-foot .amt .cur { font-size: 13px; color: var(--accent); }
+  .trow .t-foot .amt .num { font-size: 28px; letter-spacing: 0.01em; }
+  .trow .t-foot .amt .unit { font-size: 16px; color: var(--accent); }
+  .trow .t-foot .cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    background: transparent; color: var(--accent); border: 1px solid var(--accent);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 12px 22px; border-radius: 999px;
+    transition: background .2s, color .2s, border-color .2s, gap .2s;
+  }
+  .trow:hover .t-foot .cta { background: var(--accent); border-color: var(--accent); color: #fff; gap: 15px; }
+
+  .empty {
+    margin-top: 48px; padding: 56px; text-align: center;
+    border: 1px dashed var(--line-2); border-radius: 18px;
+    font-family: var(--serif); font-size: 20px; color: var(--ink-3); font-weight: 300;
+  }
+
+  /* =========================================================
+     MODAL — 行程詳情
+     ========================================================= */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    display: none; align-items: center; justify-content: center;
+    padding: clamp(16px, 4vw, 48px);
+    background: rgba(42, 34, 51, 0.46);
+    backdrop-filter: blur(10px) saturate(1.1);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  }
+  .modal-overlay.open { display: flex; animation: fadein .25s ease; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    position: relative;
+    width: min(1180px, 100%); height: min(860px, 92vh);
+    display: grid; grid-template-columns: 1fr 392px; grid-template-rows: minmax(0, 1fr);
+    background: linear-gradient(180deg, #ffffff 0%, #FBF2F5 100%);
+    border: 1px solid var(--line-2); border-radius: 22px; overflow: hidden;
+    box-shadow: 0 50px 120px -40px rgba(42, 34, 51, 0.6);
+    animation: pop .3s cubic-bezier(.2, .8, .25, 1);
+  }
+  @keyframes pop { from { transform: translateY(16px) scale(.985); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-x {
+    position: absolute; top: 16px; right: 16px; z-index: 5;
+    width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line-2);
+    background: rgba(255, 255, 255, 0.86); color: var(--ink); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .2s, color .2s, transform .2s;
+  }
+  .modal-x:hover { background: var(--ink); color: #fff; transform: rotate(90deg); }
+  .modal-x svg { width: 18px; height: 18px; }
+  /* gallery (left) */
+  .modal-gallery { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: #ECE6EE; }
+  .modal-gallery-head {
+    flex-shrink: 0; padding: 18px 26px; border-bottom: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.6);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2);
+  }
+  .modal-gallery-head b { color: var(--accent); font-weight: 500; }
+  .modal-gallery-scroll {
+    flex: 1; min-height: 0; overflow-y: auto; padding: 24px;
+    display: flex; flex-direction: column; gap: 16px;
+    scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+  }
+  .modal-gallery-scroll::-webkit-scrollbar { width: 8px; }
+  .modal-gallery-scroll::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 999px; }
+  .modal-gallery-scroll img {
+    width: 100%; display: block; border-radius: 12px;
+    box-shadow: 0 12px 30px -18px rgba(42, 34, 51, 0.5);
+  }
+  /* side (right) */
+  .modal-side {
+    display: flex; flex-direction: column; justify-content: space-between; gap: 28px;
+    padding: 52px 40px 36px; border-left: 1px solid var(--line); overflow-y: auto;
+  }
+  .modal-side .m-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 16px; }
+  .modal-side .m-name { font-family: var(--serif); font-weight: 500; font-size: 30px; line-height: 1.32; letter-spacing: 0.03em; margin: 0 0 8px; }
+  .modal-side .m-en { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 22px; }
+  .modal-side .m-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .modal-side .m-tags span {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
+    padding: 6px 13px; border-radius: 999px; background: transparent; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap;
+  }
+  .modal-side .m-bottom { display: flex; flex-direction: column; gap: 24px; }
+  .modal-side .m-price-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-3); }
+  .modal-side .m-price { display: flex; align-items: flex-end; gap: 5px; font-family: var(--display); font-weight: 500; color: var(--accent); line-height: 1; margin-top: 10px; }
+  .modal-side .m-price .cur { font-size: 16px; }
+  .modal-side .m-price .num { font-size: 40px; letter-spacing: 0.01em; }
+  .modal-side .m-price .unit { font-size: 20px; }
+  .modal-side .m-note { font-size: 12px; line-height: 1.7; color: var(--ink-3); margin: 14px 0 0; }
+  .modal-side .m-actions { display: flex; flex-direction: column; gap: 12px; }
+  .modal-side .m-actions a {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 15px 20px; border-radius: 999px;
+    font-family: var(--sans); font-size: 15px; font-weight: 500; letter-spacing: 0.04em;
+    transition: transform .2s, filter .2s, background .2s, color .2s;
+  }
+  .modal-side .m-actions a:hover { transform: translateY(-2px); }
+  .modal-side .m-line { background: #06C755; color: #fff; }
+  .modal-side .m-line:hover { filter: brightness(1.06); }
+  .modal-side .m-line svg { width: 22px; height: 22px; }
+  .modal-side .m-form { background: var(--ink); color: #fff; }
+  .modal-side .m-form:hover { background: var(--accent-2); }
+  .modal-side .m-form svg { width: 18px; height: 18px; }
+
+  /* toggle (mobile only) — 右上角箭頭，展開 / 收合 */
+  .m-toggle { display: none; }
+
+  @media (max-width: 860px) {
+    .modal { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: 92vh; }
+    .modal-gallery { min-height: 0; }
+    .modal-side {
+      position: relative;
+      border-left: 0; border-top: 1px solid var(--line);
+      overflow: hidden; max-height: none; padding: 16px 20px;
+      justify-content: flex-start; gap: 10px;
+    }
+    /* 右上角箭頭切換鈕 */
+    .m-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      position: absolute; top: 12px; right: 16px; z-index: 3;
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 1px solid var(--line-2); background: rgba(255,255,255,0.7);
+      color: var(--ink-2); cursor: pointer; padding: 0;
+    }
+    .m-toggle svg { width: 16px; height: 16px; transition: transform .25s; }
+    .modal-side.collapsed .m-toggle svg { transform: rotate(180deg); }
+    /* 手機版：說明區文字縮小、不出現捲軸，右側留出箭頭空間 */
+    .modal-side .m-eyebrow { font-size: 10px; letter-spacing: 0.18em; margin-bottom: 7px; padding-right: 36px; }
+    .modal-side .m-name { font-size: 19px; line-height: 1.3; margin-bottom: 4px; }
+    .modal-side .m-en { font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 9px; }
+    .modal-side .m-tags { gap: 6px; }
+    .modal-side .m-tags span { font-size: 9.5px; padding: 4px 10px; }
+    .modal-side .m-bottom { gap: 12px; }
+    .modal-side .m-price { margin-top: 6px; }
+    .modal-side .m-price .cur { font-size: 13px; }
+    .modal-side .m-price .num { font-size: 27px; }
+    .modal-side .m-price .unit { font-size: 15px; }
+    .modal-side .m-note { font-size: 11px; line-height: 1.55; margin-top: 8px; }
+    /* 精簡按鈕：並排一列 */
+    .modal-side .m-actions { flex-direction: row; gap: 8px; }
+    .modal-side .m-actions a { flex: 1; padding: 11px 10px; font-size: 13px; gap: 7px; }
+    .modal-side .m-line svg { width: 18px; height: 18px; }
+    .modal-side .m-form svg { width: 15px; height: 15px; }
+    /* 精簡：只顯示行程名稱 + 價格（字體縮小） */
+    .modal-side.collapsed { max-height: none; gap: 10px; padding-bottom: 16px; }
+    .modal-side.collapsed .m-eyebrow,
+    .modal-side.collapsed .m-en,
+    .modal-side.collapsed .m-tags,
+    .modal-side.collapsed .m-note,
+    .modal-side.collapsed .m-actions { display: none; }
+    .modal-side.collapsed .m-name { margin-bottom: 0; font-size: 17px; line-height: 1.3; padding-right: 36px; }
+    .modal-side.collapsed .m-price { margin-top: 5px; }
+    .modal-side.collapsed .m-price .cur { font-size: 12px; }
+    .modal-side.collapsed .m-price .num { font-size: 23px; }
+    .modal-side.collapsed .m-price .unit { font-size: 14px; }
+    .modal-side.collapsed .m-bottom { gap: 0; }
+  }
+
+  /* =========================================================
+     FORM MODAL — 諮詢單（疊在行程 modal 之上）
+     ========================================================= */
+  .form-overlay {
+    position: fixed; inset: 0; z-index: 320;
+    display: none; align-items: center; justify-content: center;
+    padding: clamp(16px, 4vw, 48px);
+    background: rgba(42, 34, 51, 0.42);
+    backdrop-filter: blur(8px) saturate(1.1);
+    -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  }
+  .form-overlay.open { display: flex; animation: fadein .22s ease; }
+  .form-modal {
+    position: relative;
+    width: min(560px, 100%); max-height: 92vh; overflow-y: auto;
+    background: linear-gradient(180deg, #ffffff 0%, #FBF2F5 100%);
+    border: 1px solid var(--line-2); border-radius: 22px;
+    box-shadow: 0 60px 130px -42px rgba(42, 34, 51, 0.66);
+    animation: pop .28s cubic-bezier(.2, .8, .25, 1);
+    scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+  }
+  .form-modal::-webkit-scrollbar { width: 8px; }
+  .form-modal::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 999px; }
+  .form-x {
+    position: absolute; top: 18px; right: 18px; z-index: 5;
+    width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-2);
+    background: rgba(255, 255, 255, 0.86); color: var(--ink); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .2s, color .2s, transform .2s;
+  }
+  .form-x:hover { background: var(--ink); color: #fff; transform: rotate(90deg); }
+  .form-x svg { width: 18px; height: 18px; }
+  .form-head { padding: 44px 44px 22px; border-bottom: 1px solid var(--line); }
+  .form-eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--accent-2); margin-bottom: 13px;
+  }
+  .form-title { font-family: var(--serif); font-weight: 500; font-size: 27px; letter-spacing: 0.03em; margin: 0; }
+  .form-trip { font-size: 13.5px; color: var(--ink-2); margin: 9px 0 0; }
+  .form-trip b { color: var(--accent); font-weight: 500; }
+  .form-body { padding: 28px 44px 36px; display: flex; flex-direction: column; gap: 19px; }
+  .f-field { display: flex; flex-direction: column; gap: 8px; }
+  .f-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-2); display: flex; align-items: center; gap: 7px;
+  }
+  .f-label em { font-style: normal; color: var(--accent); font-size: 14px; line-height: 1; }
+  .f-label .opt { font-family: var(--sans); letter-spacing: 0.04em; text-transform: none; color: var(--ink-3); font-size: 11px; }
+  .f-field input,
+  .f-field textarea {
+    width: 100%; border: 1px solid var(--line-2); border-radius: 12px;
+    background: rgba(255, 255, 255, 0.7); color: var(--ink);
+    font-family: var(--sans); font-size: 15px; line-height: 1.6;
+    padding: 13px 15px; outline: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .f-field textarea { resize: vertical; min-height: 92px; }
+  .f-field input::placeholder,
+  .f-field textarea::placeholder { color: var(--ink-3); }
+  .f-field input:focus,
+  .f-field textarea:focus {
+    border-color: var(--accent-2); background: #fff;
+    box-shadow: 0 0 0 3px rgba(113, 102, 214, 0.14);
+  }
+  .f-field.invalid input,
+  .f-field.invalid textarea {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(224, 80, 107, 0.14);
+  }
+  .f-error {
+    font-size: 11.5px; color: var(--accent); letter-spacing: 0.02em;
+    height: 0; overflow: hidden; opacity: 0; transition: opacity .2s;
+  }
+  .f-field.invalid .f-error { height: auto; opacity: 1; }
+  .form-foot { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+  .form-submit {
+    flex: 1; border: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--ink); color: #fff; border-radius: 999px;
+    font-family: var(--sans); font-size: 15px; font-weight: 500; letter-spacing: 0.04em;
+    padding: 15px 24px; transition: background .2s, transform .2s;
+  }
+  .form-submit:hover { background: var(--accent-2); transform: translateY(-2px); }
+  .form-submit svg { width: 17px; height: 17px; }
+  .form-cancel {
+    border: 1px solid var(--line-2); background: var(--panel); cursor: pointer;
+    color: var(--ink-2); border-radius: 999px;
+    font-family: var(--sans); font-size: 14px; padding: 15px 22px;
+    transition: border-color .2s, color .2s;
+  }
+  .form-cancel:hover { border-color: var(--ink); color: var(--ink); }
+  /* success state */
+  .form-success { display: none; padding: 56px 44px 52px; text-align: center; }
+  .form-success.show { display: block; animation: fadein .3s ease; }
+  .form-success .tick {
+    width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 26px;
+    background: #06C755; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 18px 40px -18px rgba(6, 199, 85, 0.7);
+    animation: pop .4s cubic-bezier(.2, .8, .25, 1);
+  }
+  .form-success .tick svg { width: 38px; height: 38px; }
+  .form-success h3 { font-family: var(--serif); font-weight: 500; font-size: 25px; letter-spacing: 0.03em; margin: 0 0 12px; }
+  .form-success p { font-size: 14px; line-height: 1.85; color: var(--ink-2); margin: 0 auto; max-width: 360px; text-wrap: pretty; }
+  .form-success p b { color: var(--ink); font-weight: 500; }
+  .form-success .done-btn {
+    margin-top: 30px; border: 0; cursor: pointer;
+    background: var(--ink); color: #fff; border-radius: 999px;
+    font-family: var(--sans); font-size: 15px; font-weight: 500; letter-spacing: 0.04em;
+    padding: 14px 38px; transition: background .2s, transform .2s;
+  }
+  .form-success .done-btn:hover { background: var(--accent-2); transform: translateY(-2px); }
+
+  @media (max-width: 560px) {
+    .form-head { padding: 36px 26px 20px; }
+    .form-body { padding: 24px 26px 30px; }
+    .form-success { padding: 46px 26px 42px; }
+    .form-foot { flex-direction: column-reverse; }
+    .form-cancel, .form-submit { width: 100%; }
+  }
+
+  /* =========================================================
+     FOOTER
+     ========================================================= */
+  .site-footer { border-top: 1px solid var(--line-2); margin-top: clamp(40px, 6vw, 80px); }
+  .footer-inner { max-width: var(--max); margin: 0 auto; padding: 64px var(--gutter) 40px; }
+  .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; }
+  .footer-brand .brand { margin-bottom: 20px; }
+  .footer-brand p { margin: 0; font-size: 13.5px; line-height: 1.95; color: var(--ink-2); max-width: 340px; }
+  .footer-brand .lic { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--ink-3); margin-top: 16px; text-transform: uppercase; }
+  .footer-col h5 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.26em; color: var(--ink-3); text-transform: uppercase; margin: 0 0 18px; }
+  .footer-col ul { list-style: none; padding: 0; margin: 0; }
+  .footer-col li { font-size: 13.5px; line-height: 2.15; color: var(--ink-2); }
+  .footer-col a:hover { color: var(--accent); }
+  .footer-social { display: flex; gap: 10px; margin-top: 4px; }
+  .footer-social a {
+    width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--accent);
+    display: inline-flex; align-items: center; justify-content: center; color: var(--accent);
+    transition: background .2s, color .2s, border-color .2s;
+  }
+  .footer-social a:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .footer-social a svg { width: 17px; height: 17px; }
+  .footer-bottom {
+    max-width: var(--max); margin: 0 auto; padding: 22px var(--gutter); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; color: var(--ink-3); text-transform: uppercase;
+  }
+
+  /* =========================================================
+     RESPONSIVE
+     ========================================================= */
+  @media (max-width: 1080px) {
+    :root { --gutter: 28px; }
+    .header-inner { grid-template-columns: auto 1fr; grid-template-rows: auto auto; height: auto; padding-top: 16px; padding-bottom: 16px; gap: 16px 24px; }
+    .brand { grid-column: 1; grid-row: 1; }
+    .social { grid-column: 2; grid-row: 1; justify-self: end; }
+    .search { grid-column: 1 / -1; grid-row: 2; max-width: 100%; }
+    .trow { grid-template-columns: 240px 1fr; }
+  }
+  @media (max-width: 860px) {
+    .sec-head { grid-template-columns: 1fr; gap: 14px; }
+    .sec-head .r { flex-direction: row; justify-content: space-between; align-items: baseline; width: 100%; gap: 16px; }
+  }
+  @media (max-width: 640px) {
+    :root { --gutter: 18px; }
+    .brand-sub { display: none; }
+    .brand-name { font-size: 19px; }
+    .social a { width: 36px; height: 36px; }
+    .trow { grid-template-columns: 1fr; }
+    .trow .t-img { min-height: 200px; aspect-ratio: 16/10; }
+    .trow .t-body { padding: 22px 22px; }
+    .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+    .footer-bottom { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =====================  HEADER  ===================== -->
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index-c-fullbleed.html">
+      <span class="brand-logo"><svg viewBox="0 0 24 24"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="brand-text">
+        <span class="brand-name">找到了<em>旅遊</em></span>
+      </span>
+    </a>
+    <div class="search">
+      <form class="search-form" id="searchForm" autocomplete="off" onsubmit="event.preventDefault(); location.href='category.html';">
+        <input type="text" id="searchInput" placeholder="搜尋目的地、行程關鍵字⋯">
+        <button class="search-btn" type="submit" aria-label="搜尋">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        </button>
+      </form>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <div class="social">
+      <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.4h2.5l.37-2.88H13.5V8.88c0-.83.23-1.4 1.43-1.4h1.53V4.9a20.5 20.5 0 0 0-2.23-.11c-2.2 0-3.71 1.34-3.71 3.81v2.12H8v2.88h2.52V21z"/></svg></a>
+      <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg></a>
+      <a href="#" aria-label="LINE"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5c-5 0-9 3.2-9 7.2 0 3.6 3.2 6.6 7.5 7.16.29.06.69.19.79.44.09.22.06.57.03.8l-.13.77c-.04.22-.18.9.79.49 1-.41 5.36-3.16 7.31-5.41 1.34-1.48 1.71-2.99 1.71-4.25 0-4-4-7.2-9-7.2z"/></svg></a>
+    </div>
+  </div>
+</header>
+
+<!-- =====================  PAGE BAR — breadcrumb  ===================== -->
+<nav class="page-bar">
+  <div class="page-bar-inner">
+    <span class="crumb">
+      <a href="index-c-fullbleed.html">首頁</a> <span class="sep">／</span>
+      <a href="category.html" id="crumb-parent">日本</a> <span class="sep">／</span>
+      <span class="cur" id="crumb-sub">北海道</span>
+    </span>
+  </div>
+</nav>
+
+<!-- =====================  LISTING  ===================== -->
+<section class="listing">
+  <div class="sec-head">
+    <div class="mid">
+      <h2 class="t" id="head-title">遇見<em>旅程</em>的每一種可能</h2>
+    </div>
+    <div class="r"><span id="head-combo">日本 ・ 北海道</span><span><b id="head-count">3</b> 條路線</span></div>
+  </div>
+
+  <!-- sub-category tabs -->
+  <nav class="subtabs" id="subtabs"></nav>
+
+  <!-- tour list -->
+  <div class="tour-list" id="tour-list"></div>
+</section>
+
+<!-- =====================  MODAL — 行程詳情  ===================== -->
+<div class="modal-overlay" id="modal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-name">
+    <button class="modal-x" id="modal-close" aria-label="關閉">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <!-- left: long scrollable images / pdf pages -->
+    <div class="modal-gallery">
+      <div class="modal-gallery-scroll" id="m-gallery"></div>
+    </div>
+    <!-- right: info + actions -->
+    <aside class="modal-side">
+      <button class="m-toggle" id="m-toggle" aria-expanded="true" aria-label="展開或收合說明">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="m-top">
+        <div class="m-eyebrow" id="m-eyebrow">日本 ・ 北海道</div>
+        <h3 class="m-name" id="m-name">行程名稱</h3>
+        <div class="m-tags" id="m-tags"></div>
+      </div>
+      <div class="m-bottom">
+        <div class="m-price-wrap">
+          <div class="m-price" id="m-price"></div>
+          <p class="m-note">※ 優惠方案及出發日期請洽服務專員</p>
+        </div>
+        <div class="m-actions">
+          <a class="m-line" href="#" onclick="event.preventDefault();">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5c-5 0-9 3.2-9 7.2 0 3.6 3.2 6.6 7.5 7.16.29.06.69.19.79.44.09.22.06.57.03.8l-.13.77c-.04.22-.18.9.79.49 1-.41 5.36-3.16 7.31-5.41 1.34-1.48 1.71-2.99 1.71-4.25 0-4-4-7.2-9-7.2z"/></svg>
+            加 LINE 諮詢
+          </a>
+          <a class="m-form" href="#" id="m-open-form" onclick="event.preventDefault();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a2 2 0 0 1 2 2v0M9 4a2 2 0 0 0-2 2v0M9 4V3m6 1V3M5 8h14v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2zM9 13h6M9 17h4"/></svg>
+            填寫諮詢單
+          </a>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- =====================  FORM MODAL — 諮詢單  ===================== -->
+<div class="form-overlay" id="formModal" aria-hidden="true">
+  <div class="form-modal" role="dialog" aria-modal="true" aria-labelledby="form-title">
+    <button class="form-x" id="form-close" aria-label="關閉">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+
+    <div class="form-head">
+      <div class="form-eyebrow">線上諮詢</div>
+      <h3 class="form-title" id="form-title">填寫諮詢單</h3>
+      <p class="form-trip" id="form-trip">關於 <b>—</b></p>
+    </div>
+
+    <form class="form-body" id="inquiryForm" novalidate>
+      <div class="f-field" data-field>
+        <span class="f-label">聯絡人 <em>*</em></span>
+        <input type="text" name="name" placeholder="您的姓名" autocomplete="name">
+        <span class="f-error">請填寫聯絡人姓名</span>
+      </div>
+      <div class="f-field" data-field>
+        <span class="f-label">行動電話 <em>*</em></span>
+        <input type="tel" name="phone" placeholder="09xx-xxx-xxx" autocomplete="tel">
+        <span class="f-error">請填寫正確的行動電話號碼</span>
+      </div>
+      <div class="f-field" data-field>
+        <span class="f-label">電子郵件 <span class="opt">（選填）</span></span>
+        <input type="email" name="email" placeholder="you@example.com" autocomplete="email">
+        <span class="f-error">電子郵件格式有誤</span>
+      </div>
+      <div class="f-field" data-field>
+        <span class="f-label">LINE ID <span class="opt">（選填）</span></span>
+        <input type="text" name="line" placeholder="您的 LINE ID">
+        <span class="f-error"></span>
+      </div>
+      <div class="f-field" data-field>
+        <span class="f-label">諮詢內容 <em>*</em></span>
+        <textarea name="message" placeholder="想詢問的出發日期、人數、預算或其他需求⋯"></textarea>
+        <span class="f-error">請填寫諮詢內容</span>
+      </div>
+      <div class="form-foot">
+        <button type="button" class="form-cancel" id="form-cancel">取消</button>
+        <button type="submit" class="form-submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          送出諮詢
+        </button>
+      </div>
+    </form>
+
+    <div class="form-success" id="form-success">
+      <span class="tick">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </span>
+      <h3>已收到您的諮詢單</h3>
+      <p>謝謝您的填寫！我們的旅遊專員將於 <b>一個工作天內</b> 透過電話或 LINE 與您聯繫，為您安排專屬行程。</p>
+      <button type="button" class="done-btn" id="form-done">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================  FOOTER  ===================== -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="index-c-fullbleed.html">
+          <span class="brand-logo"><svg viewBox="0 0 24 24"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+          <span class="brand-text">
+            <span class="brand-name">找到了<em>旅遊</em></span>
+          </span>
+        </a>
+        <p>找到了旅遊股份有限公司<br>10688 台北市大安區忠孝東路四段 137 號 2 樓<br>營業時間 ／ 週一至週六 10:00–20:00</p>
+        <div class="lic">交觀甲 9876 ・ 品保中 0123</div>
+      </div>
+      <div class="footer-col">
+        <h5>瀏覽</h5>
+        <ul>
+          <li><a href="category.html">所有行程</a></li>
+          <li><a href="category.html">依地區瀏覽</a></li>
+          <li><a href="category.html">編輯精選</a></li>
+          <li><a href="index-c-fullbleed.html">關於我們</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>聯絡</h5>
+        <ul>
+          <li><a href="tel:0277290001">02 7729 0001</a></li>
+          <li><a href="mailto:hello@foundholiday.tw">hello@foundholiday.tw</a></li>
+          <li>線上諮詢</li>
+          <li>門市資訊</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>追蹤我們</h5>
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-7.4h2.5l.37-2.88H13.5V8.88c0-.83.23-1.4 1.43-1.4h1.53V4.9a20.5 20.5 0 0 0-2.23-.11c-2.2 0-3.71 1.34-3.71 3.81v2.12H8v2.88h2.52V21z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="#" aria-label="LINE"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5c-5 0-9 3.2-9 7.2 0 3.6 3.2 6.6 7.5 7.16.29.06.69.19.79.44.09.22.06.57.03.8l-.13.77c-.04.22-.18.9.79.49 1-.41 5.36-3.16 7.31-5.41 1.34-1.48 1.71-2.99 1.71-4.25 0-4-4-7.2-9-7.2z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 找到了旅遊股份有限公司 ／ 版權所有</span>
+    <span>隱私權 ・ 服務條款 ・ 使用須知</span>
+  </div>
+</footer>
+
+<script>
+  /* =========================================================
+     資料：主分類（PARENT）之下的多個次分類（SUBS），各自的旅遊行程
+     主分類不一定是國家、次分類不一定是地區，所以用中性的「次分類」用詞
+     ========================================================= */
+  const PARENT = { zh: "日本", en: "Japan", unit: "次分類" }; // unit ：次分類的量詞，例如「地區」「主題」「類型」
+
+  // 【通用標語版】所有次分類共用一句標語（覆寫各區的 region.title）
+  const GENERIC_TITLE = '遇見<em>旅程</em>的每一種可能';
+
+  const REGIONS = [
+    { slug: "hokkaido", zh: "北海道", en: "Hokkaido",
+      title: '遇見<em>北海道</em>的<br>每一種季節。',
+      tours: [
+        { img: "https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=700&q=80", code: "JP-HKD-05",
+          name: "北海道五日之旅", en: "Hokkaido in 5 Days",
+          tags: ["5 天 4 夜", "經典首選"],
+          lede: "札幌、小樽運河與函館百萬夜景一次收齊，主編精選三間在地食堂與一場大通公園的清晨。",
+          dep: "03.18 / 04.08 / 05.06", size: "12 人小團", price: "42,800", next: "3 / 18" },
+        { img: "https://images.unsplash.com/photo-1551524559-8af4e6624178?w=700&q=80", code: "JP-HKD-07",
+          name: "北海道七日親子滑雪", en: "Niseko Family Ski",
+          tags: ["7 天 6 夜", "親子滑雪", "hot"],
+          lede: "二世谷粉雪與富良野雪原，含兒童滑雪課程、雪上香蕉船與兩晚溫泉度假村。",
+          dep: "01.22 / 02.05 / 02.19", size: "自由出發", price: "68,500", next: "1 / 22" },
+        { img: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=700&q=80", code: "JP-HKD-04",
+          name: "道東祕境四日", en: "Eastern Hokkaido",
+          tags: ["4 天 3 夜", "深度自然"],
+          lede: "知床半島、釧路濕原與摩周湖,跟著在地嚮導走進丹頂鶴與流冰的世界。",
+          dep: "02.12 / 03.05 / 03.26", size: "10 人小團", price: "54,200", next: "2 / 12" },
+      ] },
+    { slug: "tokyo", zh: "東京", en: "Tokyo",
+      title: '在<em>東京</em>,<br>慢慢地不趕路。',
+      tours: [
+        { img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=700&q=80", code: "JP-TYO-05",
+          name: "東京五日自由行", en: "Tokyo Free & Easy",
+          tags: ["5 天 4 夜", "半自助", "hot"],
+          lede: "澀谷、淺草與台場任你安排,含三晚新宿精品酒店與一張主編三十間咖啡清單。",
+          dep: "天天出發", size: "自由出發", price: "32,800", next: "隨時" },
+        { img: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=700&q=80", code: "JP-TYO-03",
+          name: "箱根河口湖溫泉三日", en: "Hakone & Fuji Onsen",
+          tags: ["3 天 2 夜", "溫泉慢旅"],
+          lede: "近郊溫泉雙城,一晚富士山景溫泉旅館、一段箱根登山纜車與蘆之湖的午後。",
+          dep: "03.14 / 04.11 / 05.09", size: "16 人", price: "28,500", next: "3 / 14" },
+        { img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=700&q=80", code: "JP-TYO-04",
+          name: "東京迪士尼親子四日", en: "Tokyo Disney Family",
+          tags: ["4 天 3 夜", "親子旅遊"],
+          lede: "兩日樂園暢遊、園區飯店一晚、加上一場台場的海濱煙火與樂高樂園。",
+          dep: "週四 ・ 週六出發", size: "自由出發", price: "39,800", next: "3 / 13" },
+      ] },
+    { slug: "kansai", zh: "關西", en: "Kansai",
+      title: '走進<em>關西</em>,<br>千年古都的四季。',
+      tours: [
+        { img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=700&q=80", code: "JP-KIX-05",
+          name: "京都奈良五日", en: "Kyoto & Nara",
+          tags: ["5 天 4 夜", "深度文化", "hot"],
+          lede: "嵐山竹林、哲學之道與奈良小鹿,避開人潮的清晨參拜與兩間百年茶屋。",
+          dep: "03.20 / 04.03 / 04.17", size: "12 人小團", price: "46,800", next: "3 / 20" },
+        { img: "https://images.unsplash.com/photo-1590559899731-a382839e5549?w=700&q=80", code: "JP-KIX-04",
+          name: "大阪環球影城四日", en: "Osaka USJ",
+          tags: ["4 天 3 夜", "親子樂園"],
+          lede: "兩日環球影城快速通關、心齋橋逛街與道頓堀美食巡禮,一晚海遊館旁飯店。",
+          dep: "天天出發", size: "自由出發", price: "35,500", next: "隨時" },
+        { img: "https://images.unsplash.com/photo-1624253321171-1be53e12f5f4?w=700&q=80", code: "JP-KIX-07",
+          name: "關西深度七日", en: "Grand Kansai",
+          tags: ["7 天 6 夜", "深度文化"],
+          lede: "京都、大阪、神戶與姬路城,六座 UNESCO 古蹟、一段保津川泛舟與和牛饗宴。",
+          dep: "04.10 / 05.08 / 06.05", size: "14 人", price: "62,800", next: "4 / 10" },
+      ] },
+    { slug: "kyushu", zh: "九州", en: "Kyushu",
+      title: '泡進<em>九州</em>,<br>溫泉鄉的煙與霧。',
+      tours: [
+        { img: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=700&q=80", code: "JP-FUK-06",
+          name: "九州溫泉六日", en: "Kyushu Onsen",
+          tags: ["6 天 5 夜", "溫泉慢旅", "hot"],
+          lede: "別府地獄、由布院與黑川溫泉,三晚不同泉質的溫泉旅館與一場阿蘇火山的草原。",
+          dep: "03.16 / 04.13 / 05.11", size: "12 人小團", price: "52,800", next: "3 / 16" },
+        { img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?w=700&q=80", code: "JP-FUK-05",
+          name: "福岡熊本五日", en: "Fukuoka & Kumamoto",
+          tags: ["5 天 4 夜", "城市美食"],
+          lede: "博多屋台、太宰府天滿宮與熊本城,一段九州新幹線與一晚柳川水鄉。",
+          dep: "03.22 / 04.19 / 05.17", size: "16 人", price: "41,500", next: "3 / 22" },
+      ] },
+    { slug: "shikoku", zh: "四國", en: "Shikoku",
+      title: '深入<em>四國</em>,<br>祕境與古湯之間。',
+      tours: [
+        { img: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=700&q=80", code: "JP-SHK-06",
+          name: "四國祕境六日", en: "Hidden Shikoku",
+          tags: ["6 天 5 夜", "深度自然"],
+          lede: "道後溫泉、大步危峽谷與祖谷藤蔓橋,跟著在地嚮導走進最少人造訪的山中祕境。",
+          dep: "04.08 / 05.13 / 06.10", size: "10 人小團", price: "58,200", next: "4 / 8" },
+      ] },
+    { slug: "okinawa", zh: "沖繩", en: "Okinawa",
+      title: '在<em>沖繩</em>,<br>把腳步放進海裡。',
+      tours: [
+        { img: "https://images.unsplash.com/photo-1528127269322-539801943592?w=700&q=80", code: "JP-OKA-05",
+          name: "沖繩親子五日", en: "Okinawa Family",
+          tags: ["5 天 4 夜", "親子半自助", "hot"],
+          lede: "美麗海水族館、海中道路與古宇利島,三晚海景度假村、兩日專車包車的鬆散節奏。",
+          dep: "天天出發", size: "自由出發", price: "38,500", next: "隨時" },
+      ] },
+  ];
+
+  const $ = (s) => document.querySelector(s);
+  const params = new URLSearchParams(location.search);
+  let active = params.get("sub") || "hokkaido";
+  if (!REGIONS.some(r => r.slug === active)) active = "hokkaido";
+
+  function render() {
+    const region = REGIONS.find(r => r.slug === active);
+
+    // breadcrumb + head
+    $("#crumb-parent").textContent = PARENT.zh;
+    $("#crumb-sub").textContent = region.zh;
+    $("#head-title").innerHTML = GENERIC_TITLE;
+    $("#head-count").textContent = region.tours.length;
+    $("#head-combo").textContent = `${PARENT.zh} ・ ${region.zh}`;
+    document.title = region.zh + " ／ " + PARENT.zh + " — 找到了旅遊 FOUND HOLIDAY";
+
+    // tabs
+    $("#subtabs").innerHTML = REGIONS.map(r =>
+      `<a href="?sub=${r.slug}" class="${r.slug === active ? "active" : ""}" data-slug="${r.slug}">
+        ${r.zh}
+      </a>`).join("");
+
+    // list
+    const list = $("#tour-list");
+    if (!region.tours.length) {
+      list.innerHTML = `<div class="empty">這個分類的行程正在籌備中,敬請期待。</div>`;
+      return;
+    }
+    list.innerHTML = region.tours.map((t, i) => {
+      const isHot = t.tags.includes("hot");
+      const tags = t.tags.map(tag =>
+        tag === "hot"
+          ? `<span class="hot">熱門</span>`
+          : `<span>${tag}</span>`).join("");
+      return `
+      <article class="trow">
+        <a class="t-img" href="category.html" data-open="${i}">
+          <img src="${t.img}" alt="${t.name}">
+        </a>
+        <div class="t-body">
+          <div class="t-tags">${tags}</div>
+          <h3 class="t-name"><a href="category.html" data-open="${i}">${t.name}</a></h3>
+          <p class="t-lede">${t.lede}</p>
+          <div class="t-foot">
+            <span class="amt"><span class="cur">$</span><span class="num">${t.price}</span><span class="unit">起</span></span>
+            <a href="category.html" class="cta" data-open="${i}">查看行程 →</a>
+          </div>
+        </div>
+      </article>`;
+    }).join("");
+
+    // open detail modal
+    list.querySelectorAll("[data-open]").forEach(el => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        openModal(active, +el.dataset.open);
+      });
+    });
+
+    // smooth switch via tabs (update URL without full reload)
+    $("#subtabs").querySelectorAll("a").forEach(a => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        active = a.dataset.slug;
+        history.replaceState(null, "", "?sub=" + active);
+        render();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    });
+  }
+
+  /* =========================================================
+     MODAL — 行程詳情
+     ========================================================= */
+  const overlay = $("#modal");
+  const modalSide = document.querySelector(".modal-side");
+  const mToggle = $("#m-toggle");
+  let currentTrip = null;
+
+  function openModal(slug, i) {
+    const region = REGIONS.find(r => r.slug === slug);
+    const t = region.tours[i];
+    if (!t) return;
+    currentTrip = t;
+
+    // 左側：連續 N 張圖片（以點選行程為首，接著同區其他行程的主圖）
+    let imgs = [...new Set([t.img, ...region.tours.map(x => x.img)])];
+    $("#m-gallery").innerHTML = imgs.map(src => `<img src="${src}" alt="${t.name}">`).join("");
+    $("#m-gallery").scrollTop = 0;
+
+    // 右側：名稱 / 標籤 / 價格
+    $("#m-eyebrow").textContent = `${PARENT.zh} ・ ${region.zh}`;
+    $("#m-name").textContent = t.name;
+    $("#m-tags").innerHTML = t.tags.map(tag =>
+      `<span>${tag === "hot" ? "熱門" : tag}</span>`).join("");
+    $("#m-price").innerHTML =
+      `<span class="cur">NT$</span><span class="num">${t.price}</span><span class="unit">起</span>`;
+
+    // 預設：完整顯示（手機版才有精簡切換）
+    modalSide.classList.remove("collapsed");
+    mToggle.setAttribute("aria-expanded", "true");
+
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal() {
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  $("#modal-close").addEventListener("click", closeModal);
+  mToggle.addEventListener("click", () => {
+    const collapsed = modalSide.classList.toggle("collapsed");
+    mToggle.setAttribute("aria-expanded", String(!collapsed));
+  });
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && overlay.classList.contains("open") && !formOverlay.classList.contains("open")) closeModal(); });
+
+  /* =========================================================
+     FORM MODAL — 諮詢單（疊在行程 modal 之上，行程 modal 不關閉）
+     ========================================================= */
+  const formOverlay = $("#formModal");
+  const inquiryForm = $("#inquiryForm");
+  const formSuccess = $("#form-success");
+
+  function openForm() {
+    // 帶入目前行程名稱
+    $("#form-trip").innerHTML = currentTrip
+      ? `關於 <b>${currentTrip.name}</b>`
+      : "線上行程諮詢";
+    // 重置表單狀態
+    inquiryForm.reset();
+    inquiryForm.style.display = "";
+    formSuccess.classList.remove("show");
+    inquiryForm.querySelectorAll(".f-field").forEach(f => f.classList.remove("invalid"));
+
+    formOverlay.classList.add("open");
+    formOverlay.setAttribute("aria-hidden", "false");
+    // body overflow 已由行程 modal 設為 hidden，維持即可
+    setTimeout(() => inquiryForm.querySelector('input[name="name"]').focus(), 60);
+  }
+
+  function closeForm() {
+    formOverlay.classList.remove("open");
+    formOverlay.setAttribute("aria-hidden", "true");
+  }
+
+  $("#m-open-form").addEventListener("click", (e) => { e.preventDefault(); openForm(); });
+  $("#form-close").addEventListener("click", closeForm);
+  $("#form-cancel").addEventListener("click", closeForm);
+  $("#form-done").addEventListener("click", closeForm);
+  formOverlay.addEventListener("click", (e) => { if (e.target === formOverlay) closeForm(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && formOverlay.classList.contains("open")) { e.stopPropagation(); closeForm(); }
+  });
+
+  // 即時：使用者開始輸入時移除錯誤狀態
+  inquiryForm.querySelectorAll("input, textarea").forEach(el => {
+    el.addEventListener("input", () => el.closest(".f-field").classList.remove("invalid"));
+  });
+
+  inquiryForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const fields = inquiryForm.querySelectorAll(".f-field");
+    fields.forEach(f => f.classList.remove("invalid"));
+
+    const name = inquiryForm.elements["name"];
+    const phone = inquiryForm.elements["phone"];
+    const email = inquiryForm.elements["email"];
+    const message = inquiryForm.elements["message"];
+    let firstInvalid = null;
+
+    // 聯絡人必填
+    if (!name.value.trim()) {
+      name.closest(".f-field").classList.add("invalid");
+      firstInvalid = firstInvalid || name;
+    }
+    // 行動電話必填 + 基本格式（至少 8 碼數字）
+    const phoneDigits = phone.value.replace(/[^0-9]/g, "");
+    if (!phone.value.trim() || phoneDigits.length < 8) {
+      phone.closest(".f-field").classList.add("invalid");
+      firstInvalid = firstInvalid || phone;
+    }
+    // 諮詢內容必填
+    if (!message.value.trim()) {
+      message.closest(".f-field").classList.add("invalid");
+      firstInvalid = firstInvalid || message;
+    }
+    // 電子郵件：選填，但填了就驗格式
+    if (email.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
+      email.closest(".f-field").classList.add("invalid");
+      firstInvalid = firstInvalid || email;
+    }
+
+    if (firstInvalid) { firstInvalid.focus(); return; }
+
+    // 通過驗證 → 顯示已收到提示
+    inquiryForm.style.display = "none";
+    formSuccess.classList.add("show");
+    formOverlay.querySelector(".form-modal").scrollTop = 0;
+  });
+
+  render();
+</script>
+<script src="search-suggest.js"></script>
+</body>
+</html>

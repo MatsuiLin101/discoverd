@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>京都の春 — 找到了旅遊 FOUND HOLIDAY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ============== Detail page ============== */
+  .detail-head {
+    padding: clamp(40px, 5vw, 72px) var(--gutter) clamp(32px, 4vw, 56px);
+    max-width: var(--max); margin: 0 auto;
+  }
+  .detail-head .crumbs {
+    font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 36px;
+  }
+  .detail-head .crumbs a:hover { color: var(--accent); }
+  .detail-head .crumbs .sep { margin: 0 12px; color: var(--rule-2); }
+  .detail-head .top-row {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 24px; align-items: end;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .detail-head .top-row .label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
+  .detail-head h1 {
+    font-family: "Noto Serif TC", serif;
+    font-size: clamp(40px, 6.5vw, 88px); line-height: 0.98;
+    margin: 0; font-weight: 400; letter-spacing: -0.01em;
+  }
+  .detail-head h1 .em { color: var(--accent); font-style: italic; }
+  .detail-head .id-stamp {
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    letter-spacing: 0.2em; color: var(--ink-3); white-space: nowrap;
+    text-align: right;
+  }
+  .detail-head .id-stamp .big { font-family: "Noto Serif TC", serif; font-size: 32px; color: var(--ink); display: block; letter-spacing: 0; margin-top: 4px; }
+
+  .detail-meta-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .detail-meta-strip .cell {
+    padding: 24px 28px;
+    border-right: 1px solid var(--rule);
+  }
+  .detail-meta-strip .cell:last-child { border-right: 0; }
+  .detail-meta-strip .k { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); display: block; margin-bottom: 8px; }
+  .detail-meta-strip .v { font-family: "Noto Serif TC", serif; font-size: 22px; color: var(--ink); line-height: 1.2; }
+  .detail-meta-strip .v small { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-3); margin-left: 4px; letter-spacing: 0.1em; }
+
+  /* ===== Hero image collage ===== */
+  .gallery {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(28px, 4vw, 48px) var(--gutter);
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: clamp(16px, 2vw, 24px);
+    aspect-ratio: 16/9;
+    max-height: 720px;
+  }
+  .gallery .g1 { grid-row: 1 / span 2; background: var(--paper-2); overflow: hidden; position: relative; }
+  .gallery .g2, .gallery .g3 { background: var(--paper-2); overflow: hidden; position: relative; }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; }
+  .gallery .g1 .cap {
+    position: absolute; left: 20px; bottom: 20px;
+    background: rgba(28,26,23,0.75); color: var(--paper);
+    padding: 8px 12px;
+    font-family: "JetBrains Mono", monospace; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    backdrop-filter: blur(6px);
+  }
+
+  /* ===== Body: two columns ===== */
+  .body-grid {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(40px, 5vw, 72px) var(--gutter);
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: clamp(40px, 5vw, 80px);
+    align-items: start;
+  }
+
+  .article .dropcap p:first-of-type::first-letter {
+    font-family: "Noto Serif TC", serif;
+    font-size: 88px; line-height: 0.85;
+    float: left; padding: 6px 14px 0 0;
+    color: var(--accent);
+  }
+  .article p { font-size: 16.5px; line-height: 1.7; color: var(--ink-2); margin: 0 0 18px; max-width: 640px; }
+  .article p strong { color: var(--ink); font-weight: 500; }
+
+  .article h2 {
+    font-family: "Noto Serif TC", serif;
+    font-size: clamp(28px, 3vw, 40px);
+    line-height: 1.1;
+    margin: 56px 0 24px;
+    padding-top: 28px;
+    border-top: 1px solid var(--ink);
+    font-weight: 400;
+  }
+  .article .section-label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; }
+
+  /* Day-by-day */
+  .itinerary { display: grid; gap: 0; margin-top: 16px; }
+  .day {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 32px;
+    padding: 28px 0;
+    border-top: 1px solid var(--rule);
+    position: relative;
+  }
+  .day:last-child { border-bottom: 1px solid var(--rule); }
+  .day .ord {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: 0.18em; color: var(--ink-3); text-transform: uppercase;
+  }
+  .day .ord .n {
+    font-family: "Noto Serif TC", serif;
+    font-size: 56px; line-height: 1; color: var(--ink);
+    display: block; margin-top: 6px; letter-spacing: 0;
+  }
+  .day .ord .date { display: block; margin-top: 8px; font-size: 10px; }
+  .day h3 { font-family: "Noto Serif TC", serif; font-size: 24px; line-height: 1.25; margin: 0 0 8px; font-weight: 400; }
+  .day .route { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .day p { font-size: 15px; color: var(--ink-2); margin: 0 0 14px; line-height: 1.6; }
+  .day .meals {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;
+    padding-top: 14px; border-top: 1px dashed var(--rule);
+  }
+  .day .meals .m {
+    font-family: "JetBrains Mono", monospace; font-size: 10px;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .day .meals .m b { color: var(--ink); font-weight: 500; }
+
+  /* Includes / excludes */
+  .incl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 32px 0; }
+  .incl-grid .col h4 { font-family: "Noto Serif TC", serif; font-size: 22px; margin: 0 0 18px; font-weight: 400; }
+  .incl-grid .col ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .incl-grid .col li {
+    font-size: 14.5px;
+    color: var(--ink-2);
+    padding-left: 22px;
+    position: relative;
+    line-height: 1.55;
+  }
+  .incl-grid .col.in li::before {
+    content: "✓"; position: absolute; left: 0; top: 0;
+    color: var(--accent); font-weight: 700;
+  }
+  .incl-grid .col.out li::before {
+    content: "—"; position: absolute; left: 0; top: 0;
+    color: var(--ink-3);
+  }
+
+  /* Sidebar (sticky booking card) */
+  .booking {
+    position: sticky; top: 96px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .booking .head {
+    padding: 22px 24px 20px;
+    border-bottom: 1px solid var(--ink);
+    background: var(--deep); color: var(--paper);
+  }
+  .booking .head .lbl { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.22em; opacity: 0.7; text-transform: uppercase; margin-bottom: 8px; }
+  .booking .head .pricing { display: flex; align-items: baseline; gap: 8px; }
+  .booking .head .num { font-family: "Noto Serif TC", serif; font-size: 44px; line-height: 1; }
+  .booking .head .cur { font-family: "JetBrains Mono", monospace; font-size: 11px; opacity: 0.7; }
+  .booking .head .per { font-family: "JetBrains Mono", monospace; font-size: 10px; opacity: 0.6; letter-spacing: 0.18em; margin-top: 10px; text-transform: uppercase; }
+
+  .booking .body { padding: 22px 24px; display: grid; gap: 16px; }
+  .booking .field { display: grid; gap: 6px; }
+  .booking .field label { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+  .booking .field select, .booking .field input {
+    border: 0; border-bottom: 1px solid var(--rule-2); background: transparent;
+    padding: 8px 0; font-family: "Noto Sans TC", sans-serif; font-size: 14px; outline: none; color: var(--ink);
+  }
+  .booking .field select:focus, .booking .field input:focus { border-color: var(--ink); }
+
+  .booking .dep-list { display: grid; gap: 8px; }
+  .booking .dep-list .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--rule);
+    font-size: 13.5px;
+  }
+  .booking .dep-list .row:last-child { border-bottom: 0; }
+  .booking .dep-list .date { display: flex; align-items: baseline; gap: 6px; }
+  .booking .dep-list .date b { font-family: "Noto Serif TC", serif; font-size: 18px; color: var(--ink); font-weight: 400; }
+  .booking .dep-list .date span { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .booking .dep-list .status { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .booking .dep-list .status.ok { color: var(--deep); }
+  .booking .dep-list .status.warn { color: var(--accent); }
+  .booking .dep-list .status.full { color: var(--ink-3); }
+
+  .booking .ctas { display: grid; gap: 10px; padding: 0 24px 24px; }
+  .booking .ctas .btn { width: 100%; justify-content: center; padding: 14px 18px; }
+  .booking .note {
+    padding: 16px 24px; border-top: 1px solid var(--rule);
+    font-size: 12px; color: var(--ink-3); line-height: 1.6;
+    background: var(--paper-2);
+  }
+
+  /* Related */
+  .related {
+    padding: clamp(40px, 6vw, 80px) var(--gutter);
+    max-width: var(--max); margin: 0 auto;
+  }
+  .related .section-head { margin-bottom: 36px; padding-bottom: 18px; }
+  .rel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .rel-card { display: grid; gap: 14px; }
+  .rel-card .img-wrap { aspect-ratio: 4/3; overflow: hidden; background: var(--paper-2); }
+  .rel-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+  .rel-card:hover img { transform: scale(1.04); }
+  .rel-card h4 { font-family: "Noto Serif TC", serif; font-size: 20px; line-height: 1.3; margin: 0; font-weight: 400; }
+  .rel-card .row { display: flex; justify-content: space-between; align-items: end; padding-top: 12px; border-top: 1px solid var(--rule); }
+
+  @media (max-width: 980px) {
+    .body-grid { grid-template-columns: 1fr; }
+    .booking { position: static; }
+    .gallery { grid-template-columns: 1fr; grid-template-rows: 1.4fr 1fr 1fr; aspect-ratio: auto; max-height: none; }
+    .gallery .g1 { grid-row: auto; aspect-ratio: 16/10; }
+    .gallery .g2, .gallery .g3 { aspect-ratio: 16/9; }
+    .detail-meta-strip { grid-template-columns: 1fr 1fr; }
+    .detail-meta-strip .cell { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .detail-meta-strip .cell:nth-child(odd) { border-right: 1px solid var(--rule); }
+    .rel-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .detail-head .top-row { grid-template-columns: 1fr; }
+    .detail-head .id-stamp { text-align: left; }
+    .day { grid-template-columns: 80px 1fr; gap: 18px; }
+    .day .ord .n { font-size: 40px; }
+    .incl-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html">
+      <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="name">找到了<em>旅遊</em></span>
+      <span class="sub">FOUND HOLIDAY&nbsp;&nbsp;Est.2009</span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="index.html">首頁</a>
+      <a href="tours.html" class="active">行程</a>
+      <a href="tour.html">特輯</a>
+      <a href="about.html">關於</a>
+      <a href="about.html#stores">服務據點</a>
+    </nav>
+    <div class="header-cta">
+      <span class="phone"><span class="ico">●</span>02&nbsp;7729&nbsp;0001</span>
+      <a href="#book" class="btn">立即預約 <span class="arr">→</span></a>
+      <button class="btn ghost menu-toggle" id="menuToggle" aria-label="menu">≡</button>
+    </div>
+  </div>
+</header>
+
+<!-- Detail head -->
+<section class="detail-head">
+  <div class="crumbs">
+    <a href="index.html">首頁</a><span class="sep">/</span><a href="tours.html">所有行程</a><span class="sep">/</span><span>京都の春</span>
+  </div>
+  <div class="top-row">
+    <div>
+      <div class="label">★ 主編推薦 ・ FEATURED ITINERARY</div>
+      <h1>京都の春<br>嵐山 ・ 哲學之道 ・ <span class="em">大原</span></h1>
+    </div>
+    <div class="id-stamp">
+      ITINERARY ID
+      <span class="big">JP-028</span>
+      ISSUED 03 / 2026
+    </div>
+  </div>
+</section>
+
+<!-- Meta strip -->
+<div class="detail-meta-strip">
+  <div class="cell">
+    <span class="k">DURATION</span>
+    <span class="v">8 <small>天</small> 7 <small>夜</small></span>
+  </div>
+  <div class="cell">
+    <span class="k">DESTINATIONS</span>
+    <span class="v">京都 ・ 大阪</span>
+  </div>
+  <div class="cell">
+    <span class="k">DEPARTURE</span>
+    <span class="v">2026 <small>春季</small></span>
+  </div>
+  <div class="cell">
+    <span class="k">GROUP SIZE</span>
+    <span class="v">12 <small>人小團</small></span>
+  </div>
+  <div class="cell">
+    <span class="k">FROM</span>
+    <span class="v" style="color: var(--accent);">NT$ 89,800</span>
+  </div>
+</div>
+
+<!-- Gallery -->
+<section class="gallery">
+  <div class="g1">
+    <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1600&q=80" alt="京都">
+    <div class="cap">PLATE 01 / 嵐山竹林</div>
+  </div>
+  <div class="g2"><img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=900&q=80" alt="哲學之道"></div>
+  <div class="g3"><img src="https://images.unsplash.com/photo-1480796927426-f609979314bd?w=900&q=80" alt="春櫻"></div>
+</section>
+
+<!-- Body grid -->
+<section class="body-grid">
+
+  <!-- Article -->
+  <article class="article">
+
+    <div class="section-label">Editor's Note ・ 主編的話</div>
+    <div class="dropcap" style="margin-top: 14px;">
+      <p>京都的春，不在最熱鬧的時候才美。我們把這趟八日行程，從清晨的嵐山起步，走過哲學之道、繞進大原與貴船，最後落在一條巷弄深處的茶屋。<strong>八天，剛好夠讓你慢下來。</strong></p>
+      <p>這條路線從 2018 年起年年微調，每一個落腳點都是編輯部親自走過、住過、吃過再寫下來的。住宿選用兩間在地溫泉旅館與兩晚町家民宿，全程不踩觀光商店街、不安排購物站、不趕集合時間。</p>
+      <p>本團 12 人小團、繁中領隊全程隨行，附京都在地嚮導 3 日。適合第二次以上造訪京都的旅人。</p>
+    </div>
+
+    <!-- Itinerary -->
+    <h2>逐日行程</h2>
+    <div class="section-label" style="margin-top: -16px;">DAY BY DAY ・ 8 DAYS</div>
+
+    <div class="itinerary">
+
+      <div class="day">
+        <div class="ord">DAY<span class="n">01</span><span class="date">03.18 TUE</span></div>
+        <div>
+          <div class="route">桃園 → 關西空港 → 京都</div>
+          <h3>抵達古都，安頓於東山。</h3>
+          <p>下午班機抵達關西空港，專車送至京都東山地區下榻精品町家旅館。傍晚由領隊帶領散步至清水寺周邊，吃一頓由主編親選的湯豆腐晚膳，提早休息。</p>
+          <div class="meals"><span class="m"><b>晚</b> 順正本店 湯豆腐</span><span class="m"><b>宿</b> 京の宿 月見庵</span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="ord">DAY<span class="n">02</span><span class="date">03.19 WED</span></div>
+        <div>
+          <div class="route">嵐山一日</div>
+          <h3>清晨竹林，與一段不需要拍照的散步。</h3>
+          <p>早上六點半出發，搶在開園前進入嵐山竹林，這是整趟行程中唯一強烈建議您早起的早晨。上午渡月橋、天龍寺；中午在保津川邊用餐，下午走進祇王寺與野宮神社。</p>
+          <div class="meals"><span class="m"><b>早</b> 旅館</span><span class="m"><b>午</b> 廣川 鰻魚飯</span><span class="m"><b>宿</b> 嵐山 翠嵐溫泉旅館</span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="ord">DAY<span class="n">03</span><span class="date">03.20 THU</span></div>
+        <div>
+          <div class="route">嵯峨野 → 哲學之道 → 銀閣寺</div>
+          <h3>沿著一條學者每天走的路。</h3>
+          <p>從嵐山搭嵯峨野小火車到龜岡，午後返回市區，步行哲學之道全段。沿途七座小寺、三家咖啡、一座銀閣。今天的節奏由您決定。</p>
+          <div class="meals"><span class="m"><b>早</b> 旅館</span><span class="m"><b>午</b> 自由用餐</span><span class="m"><b>晚</b> 京懷石 菊乃井</span><span class="m"><b>宿</b> 京の宿 月見庵</span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="ord">DAY<span class="n">04</span><span class="date">03.21 FRI</span></div>
+        <div>
+          <div class="route">伏見稻荷 → 宇治</div>
+          <h3>千鳥居外，還有一條山徑。</h3>
+          <p>清晨六點，與在地嚮導從稻荷大社後山走入較少人煙的步道。中午搭乘 JR 至宇治，午後在平等院、宇治川邊散步，並由茶師帶領體驗一場一小時的抹茶研磨。</p>
+          <div class="meals"><span class="m"><b>早</b> 旅館</span><span class="m"><b>午</b> 中村藤吉 本店</span><span class="m"><b>宿</b> 京の宿 月見庵</span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="ord">DAY<span class="n">05</span><span class="date">03.22 SAT</span></div>
+        <div>
+          <div class="route">大原 一日</div>
+          <h3>離開市區，去看一座只有六戶人家的村。</h3>
+          <p>搭巴士北上至大原，這是京都市內極少數仍保有「里山」風景的地方。三千院、寂光院，午餐在地民家割烹，午後自由散步。</p>
+          <div class="meals"><span class="m"><b>早</b> 旅館</span><span class="m"><b>午</b> 大原 里の駅</span><span class="m"><b>宿</b> 大原 里の宿 はなれ庵</span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="ord">DAY<span class="n">06</span><span class="date">03.23 SUN</span></div>
+        <div>
+          <div class="route">貴船 → 鞍馬</div>
+          <h3>沿著川走，從一座神社到另一座山寺。</h3>
+          <p>晨間由大原前往貴船神社，午餐預訂川床料理（4 月起為冷膳形式）。下午步行翻越山徑至鞍馬寺，這是京都最後一段未被觀光化的山林路線。</p>
+          <div class="meals"><span class="m"><b>早</b> 旅館</span><span class="m"><b>午</b> 貴船 仲よし 川床</span><span class="m"><b>宿</b> 京の宿 月見庵</span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="ord">DAY<span class="n">07</span><span class="date">03.24 MON</span></div>
+        <div>
+          <div class="route">京都自由日</div>
+          <h3>整天，請好好地交給自己。</h3>
+          <p>不安排任何行程。領隊將於前一晚發送一份「主編秘藏 24 小時 京都地圖」，包含 18 間咖啡店、7 家獨立書店與 4 條最不擁擠的散步路線。</p>
+          <div class="meals"><span class="m"><b>早</b> 旅館</span><span class="m"><b>午晚</b> 自由用餐（建議列表附上）</span><span class="m"><b>宿</b> 京の宿 月見庵</span></div>
+        </div>
+      </div>
+
+      <div class="day">
+        <div class="ord">DAY<span class="n">08</span><span class="date">03.25 TUE</span></div>
+        <div>
+          <div class="route">京都 → 關西空港 → 桃園</div>
+          <h3>把一點時間留給離開的儀式。</h3>
+          <p>早晨自由活動，11:00 集合搭乘專車前往關西空港。下午班機返回桃園，結束八日旅程。</p>
+          <div class="meals"><span class="m"><b>早</b> 旅館</span><span class="m"><b>午</b> 機上輕食</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Includes -->
+    <h2>費用包含 / 不包含</h2>
+    <div class="incl-grid">
+      <div class="col in">
+        <h4>包含項目</h4>
+        <ul>
+          <li>桃園 ⇄ 關西 直飛經濟艙來回機票（含稅）</li>
+          <li>四星以上精品旅館 7 晚 / 兩晚溫泉旅館</li>
+          <li>全程豪華觀光巴士 / 部分區間 JR 鐵路</li>
+          <li>行程內標示餐食共 14 餐</li>
+          <li>繁中專業領隊 + 京都在地嚮導 3 日</li>
+          <li>嵐山竹林清晨導覽（包場前一小時）</li>
+          <li>菊乃井 / 順正 等指定餐廳預約</li>
+          <li>200 萬旅遊責任險 + 20 萬醫療險</li>
+        </ul>
+      </div>
+      <div class="col out">
+        <h4>不包含項目</h4>
+        <ul>
+          <li>自由日餐食（建議預算 NT$1,500 / 餐）</li>
+          <li>個人消費、洗衣、付費 Wi-Fi</li>
+          <li>領隊司機嚮導小費（NT$ 240 / 日 / 人）</li>
+          <li>單人房差價 NT$ 18,000</li>
+          <li>抹茶體驗升級方案（選配）</li>
+          <li>護照辦理 / 簽證費用</li>
+        </ul>
+      </div>
+    </div>
+
+  </article>
+
+  <!-- Booking sidebar -->
+  <aside id="book">
+    <div class="booking">
+      <div class="head">
+        <div class="lbl">FROM / 起價</div>
+        <div class="pricing">
+          <span class="num">89,800</span>
+          <span class="cur">NT$</span>
+        </div>
+        <div class="per">PER PERSON ・ 雙人房報價</div>
+      </div>
+
+      <div class="body">
+        <div class="field">
+          <label>選擇出發梯次</label>
+          <select>
+            <option>2026 / 03 / 18（二）— 8 席</option>
+            <option>2026 / 03 / 25（二）— 5 席</option>
+            <option>2026 / 04 / 08（三）— 候補</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>成人 / 兒童</label>
+          <input type="text" value="2 人 ・ 0 兒童">
+        </div>
+
+        <div style="border-top: 1px solid var(--rule); padding-top: 18px; margin-top: 4px;">
+          <div class="mono" style="color: var(--ink-3); font-size: 11px; margin-bottom: 12px;">近期可預約梯次</div>
+          <div class="dep-list">
+            <div class="row">
+              <div class="date"><b>03 / 18</b><span>TUE ・ 8 天</span></div>
+              <div class="status ok">尚有 8 席</div>
+            </div>
+            <div class="row">
+              <div class="date"><b>03 / 25</b><span>TUE ・ 8 天</span></div>
+              <div class="status warn">僅剩 5 席</div>
+            </div>
+            <div class="row">
+              <div class="date"><b>04 / 08</b><span>WED ・ 8 天</span></div>
+              <div class="status full">候補登記</div>
+            </div>
+            <div class="row">
+              <div class="date"><b>04 / 22</b><span>WED ・ 8 天</span></div>
+              <div class="status ok">尚有 12 席</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ctas">
+        <a href="#" class="btn accent">立即預訂 →</a>
+        <a href="#" class="btn ghost">下載行程 PDF</a>
+      </div>
+
+      <div class="note">
+        ⓘ 早鳥優惠：3 月 1 日前下訂享 NT$ 4,000 折扣。<br>
+        團體 4 人以上請洽客服取得專屬報價。
+      </div>
+    </div>
+  </aside>
+
+</section>
+
+<!-- Related -->
+<section class="related">
+  <div class="section-head">
+    <div>
+      <div class="label" style="font-family:JetBrains Mono,monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase;">YOU MIGHT ALSO LIKE</div>
+      <h2 class="h3" style="margin: 10px 0 0;">相近行程</h2>
+    </div>
+    <a href="tours.html" class="arrow-link">瀏覽所有行程</a>
+  </div>
+
+  <div class="rel-grid">
+    <a class="rel-card" href="tour.html">
+      <div class="img-wrap"><img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=900&q=80" alt=""></div>
+      <div class="meta-row" style="display:flex; gap:6px;"><span class="tag">7 天</span><span class="tag">親子</span></div>
+      <h4>東京 ・ 富士山 ・ 箱根</h4>
+      <div class="row">
+        <div class="price-block"><span class="price-from">From</span><span class="price-num">NT$ 68,800</span></div>
+        <span class="arrow-link">查看 →</span>
+      </div>
+    </a>
+    <a class="rel-card" href="tour.html">
+      <div class="img-wrap"><img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=900&q=80" alt=""></div>
+      <div class="meta-row" style="display:flex; gap:6px;"><span class="tag">10 天</span><span class="tag">深度</span></div>
+      <h4>北海道四季：富良野與函館</h4>
+      <div class="row">
+        <div class="price-block"><span class="price-from">From</span><span class="price-num">NT$ 94,500</span></div>
+        <span class="arrow-link">查看 →</span>
+      </div>
+    </a>
+    <a class="rel-card" href="tour.html">
+      <div class="img-wrap"><img src="https://images.unsplash.com/photo-1480796927426-f609979314bd?w=900&q=80" alt=""></div>
+      <div class="meta-row" style="display:flex; gap:6px;"><span class="tag">6 天</span><span class="tag">半自助</span></div>
+      <h4>大阪 ・ 神戶 ・ 奈良慢遊</h4>
+      <div class="row">
+        <div class="price-block"><span class="price-from">From</span><span class="price-num">NT$ 52,800</span></div>
+        <span class="arrow-link">查看 →</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="inner">
+    <div class="footer-top">
+      <div>
+        <h4>找到了<em style="color:var(--accent); font-style:normal">旅遊</em></h4>
+        <p style="color:rgba(250, 242, 238,0.7); font-size:14px; max-width:320px; margin:0 0 18px;">為您而寫的旅程。<br>Found Holiday · Travel agency since 2009.</p>
+        <div class="mono" style="color:rgba(250, 242, 238,0.5);">交觀甲 9876 ・ 品保中 0123</div>
+      </div>
+      <div>
+        <h6>瀏覽</h6>
+        <ul>
+          <li><a href="tours.html">所有行程</a></li>
+          <li><a href="tours.html">依地區</a></li>
+          <li><a href="tours.html">依出發月份</a></li>
+          <li><a href="#">客製旅程</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>關於</h6>
+        <ul>
+          <li><a href="about.html">關於找到了旅遊</a></li>
+          <li><a href="about.html#stores">服務據點</a></li>
+          <li><a href="#">編輯團隊</a></li>
+          <li><a href="#">旅誌專欄</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>聯絡</h6>
+        <ul>
+          <li>02 &nbsp;7729&nbsp; 0001</li>
+          <li>hello@foundholiday.tw</li>
+          <li>台北 ・ 台中 ・ 高雄</li>
+          <li>Mon–Sat ・ 10:00–20:00</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 FOUND HOLIDAY TRAVEL CO., LTD.</div>
+      <div>PRIVACY ・ TERMS ・ COOKIES</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('nav').classList.toggle('open');
+  });
+</script>
+</body>
+</html>

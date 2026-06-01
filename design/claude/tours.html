@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>所有行程 — 找到了旅遊 FOUND HOLIDAY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Page header */
+  .ph {
+    padding: clamp(48px, 7vw, 100px) var(--gutter) clamp(32px, 5vw, 60px);
+    max-width: var(--max); margin: 0 auto;
+    border-bottom: 1px solid var(--ink);
+  }
+  .ph .crumbs { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 28px; }
+  .ph .crumbs a { color: var(--ink-3); }
+  .ph .crumbs a:hover { color: var(--accent); }
+  .ph .crumbs .sep { margin: 0 12px; color: var(--rule-2); }
+  .ph .title-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 24px;
+    align-items: end;
+  }
+  .ph .label { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.22em; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  .ph h1 { font-family: "Noto Serif TC", serif; font-size: clamp(48px, 7vw, 96px); line-height: 0.95; margin: 0; letter-spacing: -0.01em; font-weight: 400; }
+  .ph h1 .em { color: var(--accent); font-style: italic; }
+  .ph .stats { display: flex; gap: 40px; }
+  .ph .stat .n { font-family: "Noto Serif TC", serif; font-size: 36px; line-height: 1; }
+  .ph .stat .l { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--ink-3); text-transform: uppercase; margin-top: 6px; }
+
+  /* Toolbar */
+  .toolbar {
+    max-width: var(--max); margin: 0 auto;
+    padding: 22px var(--gutter);
+    border-bottom: 1px solid var(--rule);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 24px; flex-wrap: wrap;
+    background: var(--paper);
+    position: sticky; top: 73px; z-index: 30;
+  }
+  .pills { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pill {
+    padding: 8px 14px;
+    border: 1px solid var(--rule-2);
+    border-radius: 999px;
+    font-size: 13px;
+    background: transparent;
+    color: var(--ink-2);
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .pill:hover { border-color: var(--ink); color: var(--ink); }
+  .pill.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .pill .cnt { font-family: "JetBrains Mono", monospace; font-size: 10px; margin-left: 6px; opacity: 0.55; letter-spacing: 0.1em; }
+  .pill.active .cnt { opacity: 0.7; }
+
+  .sort {
+    display: flex; align-items: center; gap: 12px;
+    font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .sort select {
+    background: transparent; border: 0; border-bottom: 1px solid var(--ink);
+    font-family: "Noto Sans TC", sans-serif; font-size: 14px; color: var(--ink); padding: 4px 0;
+    text-transform: none; letter-spacing: normal;
+  }
+
+  /* Layout: sidebar filter + magazine list */
+  .results {
+    max-width: var(--max); margin: 0 auto;
+    padding: clamp(40px, 5vw, 56px) var(--gutter) clamp(40px, 5vw, 80px);
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: clamp(32px, 4vw, 64px);
+  }
+  /* Sidebar */
+  .filters .group { padding: 0 0 28px; border-bottom: 1px solid var(--rule); margin-bottom: 28px; }
+  .filters .group:last-child { border-bottom: 0; }
+  .filters h6 {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-3);
+    margin: 0 0 16px;
+  }
+  .filters .opt { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; cursor: pointer; color: var(--ink-2); }
+  .filters .opt:hover { color: var(--ink); }
+  .filters .opt input { accent-color: var(--accent); margin-right: 10px; }
+  .filters .opt .n { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-3); }
+  .filters .range-row { display: flex; gap: 10px; }
+  .filters .range-row input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--rule-2); background: var(--paper);
+    font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--ink);
+  }
+
+  /* Tour list — alternating rows (not cards) */
+  .tour-list { display: grid; gap: 0; }
+  .tour-row {
+    display: grid;
+    grid-template-columns: 110px 1.4fr 1fr 0.7fr;
+    align-items: stretch;
+    gap: 32px;
+    padding: 28px 0;
+    border-top: 1px solid var(--rule);
+    transition: background .2s;
+    position: relative;
+  }
+  .tour-row:last-child { border-bottom: 1px solid var(--rule); }
+  .tour-row:hover { background: rgba(28,26,23,0.02); }
+  .tour-row:hover .tour-img img { transform: scale(1.04); }
+  .tour-row .id {
+    font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.15em;
+    color: var(--ink-3); padding-top: 4px;
+  }
+  .tour-row .id .num { display: block; font-family: "Noto Serif TC", serif; font-size: 28px; color: var(--ink); margin-top: 4px; letter-spacing: 0; }
+  .tour-row .main { display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: center; }
+  .tour-row .tour-img {
+    width: 200px; aspect-ratio: 4/3; overflow: hidden; background: var(--paper-2);
+  }
+  .tour-row .tour-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s; }
+  .tour-row h3 { font-family: "Noto Serif TC", serif; font-size: clamp(22px, 2vw, 28px); line-height: 1.2; margin: 0 0 10px; font-weight: 400; }
+  .tour-row h3 a { color: var(--ink); }
+  .tour-row h3 a:hover { color: var(--accent); }
+  .tour-row .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tour-row .lede { font-size: 14px; color: var(--ink-2); margin: 0; max-width: 480px; }
+  .tour-row .meta-col {
+    display: grid; gap: 12px; align-content: center;
+    border-left: 1px solid var(--rule); padding-left: 24px;
+  }
+  .tour-row .meta-col .pair { display: grid; gap: 4px; }
+  .tour-row .meta-col .k { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); }
+  .tour-row .meta-col .v { font-size: 14px; color: var(--ink); }
+  .tour-row .price-col {
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 12px;
+    border-left: 1px solid var(--rule); padding-left: 24px;
+  }
+  .tour-row .price-col .from { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--ink-3); text-transform: uppercase; }
+  .tour-row .price-col .num { font-family: "Noto Serif TC", serif; font-size: 30px; line-height: 1; }
+  .tour-row .price-col .cur { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .tour-row .price-col .next { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.1em; }
+  .tour-row .price-col .btn { padding: 9px 14px; font-size: 13px; }
+
+  .tour-row.featured::before {
+    content: "✦ 主編推薦";
+    position: absolute; top: -10px; left: 110px;
+    background: var(--accent); color: var(--paper);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 4px 10px;
+  }
+
+  /* Pagination */
+  .pager {
+    max-width: var(--max); margin: 0 auto;
+    padding: 24px var(--gutter) 80px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--rule);
+  }
+  .pager .pages { display: flex; gap: 6px; }
+  .pager .pages a {
+    width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid transparent; font-family: "JetBrains Mono", monospace; font-size: 13px;
+    color: var(--ink-2);
+  }
+  .pager .pages a.curr { border-color: var(--ink); color: var(--ink); }
+  .pager .pages a:hover { color: var(--accent); }
+  .pager .arrow { font-family: "JetBrains Mono", monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; }
+
+  /* Responsive */
+  @media (max-width: 1040px) {
+    .results { grid-template-columns: 1fr; }
+    .filters { display: none; }
+    .tour-row { grid-template-columns: 80px 1fr 1fr; }
+    .tour-row .price-col { grid-column: 2 / span 2; flex-direction: row; justify-content: space-between; border-left: 0; border-top: 1px solid var(--rule); padding: 16px 0 0; align-items: center; }
+  }
+  @media (max-width: 720px) {
+    .ph .title-row { grid-template-columns: 1fr; }
+    .ph .stats { gap: 24px; }
+    .toolbar { position: static; }
+    .tour-row { grid-template-columns: 1fr; gap: 16px; }
+    .tour-row .id { display: flex; gap: 12px; align-items: baseline; }
+    .tour-row .id .num { margin-top: 0; }
+    .tour-row .main { grid-template-columns: 1fr; }
+    .tour-row .tour-img { width: 100%; aspect-ratio: 16/10; }
+    .tour-row .meta-col { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 16px; grid-template-columns: 1fr 1fr; display: grid; }
+    .tour-row .price-col { grid-column: auto; padding-top: 16px; }
+    .tour-row.featured::before { left: 0; top: -8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="index.html">
+      <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="name">找到了<em>旅遊</em></span>
+      <span class="sub">FOUND HOLIDAY&nbsp;&nbsp;Est.2009</span>
+    </a>
+    <nav class="nav" id="nav">
+      <a href="index.html">首頁</a>
+      <a href="tours.html" class="active">行程</a>
+      <a href="tour.html">特輯</a>
+      <a href="about.html">關於</a>
+      <a href="about.html#stores">服務據點</a>
+    </nav>
+    <div class="header-cta">
+      <span class="phone"><span class="ico">●</span>02&nbsp;7729&nbsp;0001</span>
+      <a href="#" class="btn">預約諮詢 <span class="arr">→</span></a>
+      <button class="btn ghost menu-toggle" id="menuToggle" aria-label="menu">≡</button>
+    </div>
+  </div>
+</header>
+
+<!-- Page Header -->
+<section class="ph">
+  <div class="crumbs">
+    <a href="index.html">首頁</a><span class="sep">/</span><span>所有行程</span>
+  </div>
+  <div class="title-row">
+    <div>
+      <div class="label">ALL ITINERARIES — VOL. 028</div>
+      <h1>所有<span class="em">行程</span><br>共 62 條路線</h1>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n">14</div><div class="l">DESTINATIONS</div></div>
+      <div class="stat"><div class="n">62</div><div class="l">ITINERARIES</div></div>
+      <div class="stat"><div class="n">2026</div><div class="l">SPRING / SUMMER</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Filter pills + sort -->
+<div class="toolbar">
+  <div class="pills">
+    <button class="pill active">全部 <span class="cnt">62</span></button>
+    <button class="pill">日本 <span class="cnt">14</span></button>
+    <button class="pill">韓國 <span class="cnt">8</span></button>
+    <button class="pill">歐洲 <span class="cnt">22</span></button>
+    <button class="pill">東南亞 <span class="cnt">11</span></button>
+    <button class="pill">國旅 <span class="cnt">7</span></button>
+  </div>
+  <div class="sort">
+    排序 / SORT BY
+    <select>
+      <option>主編推薦</option>
+      <option>價格 ↑</option>
+      <option>價格 ↓</option>
+      <option>出發日期</option>
+    </select>
+  </div>
+</div>
+
+<!-- Results: sidebar + list -->
+<section class="results">
+  <!-- Sidebar -->
+  <aside class="filters">
+    <div class="group">
+      <h6>出發月份</h6>
+      <label class="opt"><span><input type="checkbox" checked>2026 / 03 月</span><span class="n">12</span></label>
+      <label class="opt"><span><input type="checkbox">2026 / 04 月</span><span class="n">18</span></label>
+      <label class="opt"><span><input type="checkbox">2026 / 05 月</span><span class="n">15</span></label>
+      <label class="opt"><span><input type="checkbox">2026 / 06 月</span><span class="n">9</span></label>
+      <label class="opt"><span><input type="checkbox">2026 / 07 月</span><span class="n">8</span></label>
+    </div>
+    <div class="group">
+      <h6>旅行天數</h6>
+      <label class="opt"><span><input type="checkbox">3 - 5 天</span><span class="n">14</span></label>
+      <label class="opt"><span><input type="checkbox" checked>6 - 8 天</span><span class="n">24</span></label>
+      <label class="opt"><span><input type="checkbox" checked>9 - 11 天</span><span class="n">18</span></label>
+      <label class="opt"><span><input type="checkbox">12 天以上</span><span class="n">6</span></label>
+    </div>
+    <div class="group">
+      <h6>預算範圍 / 每人</h6>
+      <div class="range-row">
+        <input type="text" placeholder="MIN" value="40,000">
+        <input type="text" placeholder="MAX" value="180,000">
+      </div>
+    </div>
+    <div class="group">
+      <h6>旅程性質</h6>
+      <label class="opt"><span><input type="checkbox">深度文化</span><span class="n">22</span></label>
+      <label class="opt"><span><input type="checkbox">半自助</span><span class="n">18</span></label>
+      <label class="opt"><span><input type="checkbox">親子旅遊</span><span class="n">11</span></label>
+      <label class="opt"><span><input type="checkbox">蜜月慶生</span><span class="n">9</span></label>
+      <label class="opt"><span><input type="checkbox">主編帶團</span><span class="n">5</span></label>
+    </div>
+    <div class="group">
+      <button class="btn ghost" style="width:100%;">套用篩選 →</button>
+    </div>
+  </aside>
+
+  <!-- List -->
+  <div class="tour-list">
+
+    <article class="tour-row featured">
+      <div class="id">No.<span class="num">01</span>JP-028</div>
+      <div class="main">
+        <a class="tour-img" href="tour.html"><img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&q=80" alt=""></a>
+        <div class="info">
+          <div class="tags"><span class="tag accent">封面行程</span><span class="tag">深度文化</span><span class="tag">8 天 7 夜</span></div>
+          <h3><a href="tour.html">京都の春：嵐山 ・ 哲學之道 ・ 大原</a></h3>
+          <p class="lede">避開人潮、住進嵐山溫泉旅館，主編親選六間在地茶屋與三條私房散步路線。</p>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="pair"><span class="k">DURATION</span><span class="v">8 天 7 夜</span></div>
+        <div class="pair"><span class="k">DEPARTURE</span><span class="v">03.18 / 03.25 / 04.08</span></div>
+        <div class="pair"><span class="k">GROUP SIZE</span><span class="v">12 人小團</span></div>
+      </div>
+      <div class="price-col">
+        <span class="from">From / per person</span>
+        <div><span class="num">NT$ 89,800</span></div>
+        <span class="next">下次出發 ・ 3 月 18 日</span>
+        <a href="tour.html" class="btn accent">查看行程 →</a>
+      </div>
+    </article>
+
+    <article class="tour-row">
+      <div class="id">No.<span class="num">02</span>IS-014</div>
+      <div class="main">
+        <a class="tour-img" href="tour.html"><img src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=600&q=80" alt=""></a>
+        <div class="info">
+          <div class="tags"><span class="tag">極光季</span><span class="tag">10 天 8 夜</span></div>
+          <h3><a href="tour.html">冰島：黑沙、冰川與北極光</a></h3>
+          <p class="lede">環島十天，四場攝影級日落、兩晚追光營地、與一場冰川健行。</p>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="pair"><span class="k">DURATION</span><span class="v">10 天 8 夜</span></div>
+        <div class="pair"><span class="k">DEPARTURE</span><span class="v">03.05 / 03.19 / 04.02</span></div>
+        <div class="pair"><span class="k">GROUP SIZE</span><span class="v">8 人精緻團</span></div>
+      </div>
+      <div class="price-col">
+        <span class="from">From / per person</span>
+        <div><span class="num">NT$ 158,000</span></div>
+        <span class="next">下次出發 ・ 3 月 5 日</span>
+        <a href="tour.html" class="btn">查看行程 →</a>
+      </div>
+    </article>
+
+    <article class="tour-row">
+      <div class="id">No.<span class="num">03</span>IT-021</div>
+      <div class="main">
+        <a class="tour-img" href="tour.html"><img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=600&q=80" alt=""></a>
+        <div class="info">
+          <div class="tags"><span class="tag">深度文化</span><span class="tag">11 天 9 夜</span></div>
+          <h3><a href="tour.html">義大利北中部：威尼斯 ・ 翡冷翠 ・ 托斯卡尼</a></h3>
+          <p class="lede">沿亞德里亞海北上轉入葡萄產區，三座 UNESCO 老城、九個小鎮、午後品酒。</p>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="pair"><span class="k">DURATION</span><span class="v">11 天 9 夜</span></div>
+        <div class="pair"><span class="k">DEPARTURE</span><span class="v">04.16 / 05.07 / 05.28</span></div>
+        <div class="pair"><span class="k">GROUP SIZE</span><span class="v">14 人</span></div>
+      </div>
+      <div class="price-col">
+        <span class="from">From / per person</span>
+        <div><span class="num">NT$ 146,500</span></div>
+        <span class="next">下次出發 ・ 4 月 16 日</span>
+        <a href="tour.html" class="btn">查看行程 →</a>
+      </div>
+    </article>
+
+    <article class="tour-row">
+      <div class="id">No.<span class="num">04</span>KR-009</div>
+      <div class="main">
+        <a class="tour-img" href="tour.html"><img src="https://images.unsplash.com/photo-1538485399081-7191377e8241?w=600&q=80" alt=""></a>
+        <div class="info">
+          <div class="tags"><span class="tag">半自助</span><span class="tag">6 天 5 夜</span></div>
+          <h3><a href="tour.html">韓國首爾 ・ 釜山雙城慢遊</a></h3>
+          <p class="lede">高鐵串連首都與港都，三晚精品酒店、兩日自由活動，與一張二十間咖啡清單。</p>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="pair"><span class="k">DURATION</span><span class="v">6 天 5 夜</span></div>
+        <div class="pair"><span class="k">DEPARTURE</span><span class="v">每週四 ・ 每週日</span></div>
+        <div class="pair"><span class="k">GROUP SIZE</span><span class="v">16 人</span></div>
+      </div>
+      <div class="price-col">
+        <span class="from">From / per person</span>
+        <div><span class="num">NT$ 42,800</span></div>
+        <span class="next">下次出發 ・ 3 月 7 日</span>
+        <a href="tour.html" class="btn">查看行程 →</a>
+      </div>
+    </article>
+
+    <article class="tour-row">
+      <div class="id">No.<span class="num">05</span>JP-031</div>
+      <div class="main">
+        <a class="tour-img" href="tour.html"><img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&q=80" alt=""></a>
+        <div class="info">
+          <div class="tags"><span class="tag">親子旅遊</span><span class="tag">5 天 4 夜</span></div>
+          <h3><a href="tour.html">沖繩親子半自助：海中道路與美麗海</a></h3>
+          <p class="lede">三晚海景度假村、兩日專車包車、與全程不踩點的鬆散節奏。</p>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="pair"><span class="k">DURATION</span><span class="v">5 天 4 夜</span></div>
+        <div class="pair"><span class="k">DEPARTURE</span><span class="v">天天出發</span></div>
+        <div class="pair"><span class="k">GROUP SIZE</span><span class="v">自由出發</span></div>
+      </div>
+      <div class="price-col">
+        <span class="from">From / per person</span>
+        <div><span class="num">NT$ 38,500</span></div>
+        <span class="next">下次出發 ・ 隨時</span>
+        <a href="tour.html" class="btn">查看行程 →</a>
+      </div>
+    </article>
+
+    <article class="tour-row">
+      <div class="id">No.<span class="num">06</span>TW-003</div>
+      <div class="main">
+        <a class="tour-img" href="tour.html"><img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=900&q=80" alt=""></a>
+        <div class="info">
+          <div class="tags"><span class="tag">國旅</span><span class="tag">3 天 2 夜</span><span class="tag">主編帶團</span></div>
+          <h3><a href="tour.html">花蓮慢旅：縱谷、原民村與一場海邊星空</a></h3>
+          <p class="lede">主編阿杰親帶，兩日在地嚮導、一晚部落民宿、一場無人海岸的清晨。</p>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="pair"><span class="k">DURATION</span><span class="v">3 天 2 夜</span></div>
+        <div class="pair"><span class="k">DEPARTURE</span><span class="v">03.21 / 04.18 / 05.16</span></div>
+        <div class="pair"><span class="k">GROUP SIZE</span><span class="v">10 人小團</span></div>
+      </div>
+      <div class="price-col">
+        <span class="from">From / per person</span>
+        <div><span class="num">NT$ 18,800</span></div>
+        <span class="next">下次出發 ・ 3 月 21 日</span>
+        <a href="tour.html" class="btn">查看行程 →</a>
+      </div>
+    </article>
+
+    <article class="tour-row">
+      <div class="id">No.<span class="num">07</span>VN-007</div>
+      <div class="main">
+        <a class="tour-img" href="tour.html"><img src="https://images.unsplash.com/photo-1528127269322-539801943592?w=600&q=80" alt=""></a>
+        <div class="info">
+          <div class="tags"><span class="tag">深度文化</span><span class="tag">7 天 6 夜</span></div>
+          <h3><a href="tour.html">越南中部：會安 ・ 順化 ・ 峴港</a></h3>
+          <p class="lede">三座古都串連，一晚會安燈節、兩場法式殖民風老屋早餐、與山茶半島的私房沙灘。</p>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="pair"><span class="k">DURATION</span><span class="v">7 天 6 夜</span></div>
+        <div class="pair"><span class="k">DEPARTURE</span><span class="v">03.11 / 04.08 / 05.13</span></div>
+        <div class="pair"><span class="k">GROUP SIZE</span><span class="v">12 人</span></div>
+      </div>
+      <div class="price-col">
+        <span class="from">From / per person</span>
+        <div><span class="num">NT$ 36,800</span></div>
+        <span class="next">下次出發 ・ 3 月 11 日</span>
+        <a href="tour.html" class="btn">查看行程 →</a>
+      </div>
+    </article>
+
+    <article class="tour-row">
+      <div class="id">No.<span class="num">08</span>CH-005</div>
+      <div class="main">
+        <a class="tour-img" href="tour.html"><img src="https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?w=600&q=80" alt=""></a>
+        <div class="info">
+          <div class="tags"><span class="tag">深度文化</span><span class="tag">9 天 7 夜</span></div>
+          <h3><a href="tour.html">瑞士黃金景觀列車：少女峰 ・ 馬特洪</a></h3>
+          <p class="lede">四段景觀火車、兩座 4000+ 雪峰、與一晚的策馬特木屋。</p>
+        </div>
+      </div>
+      <div class="meta-col">
+        <div class="pair"><span class="k">DURATION</span><span class="v">9 天 7 夜</span></div>
+        <div class="pair"><span class="k">DEPARTURE</span><span class="v">04.23 / 05.21 / 06.18</span></div>
+        <div class="pair"><span class="k">GROUP SIZE</span><span class="v">14 人</span></div>
+      </div>
+      <div class="price-col">
+        <span class="from">From / per person</span>
+        <div><span class="num">NT$ 168,000</span></div>
+        <span class="next">下次出發 ・ 4 月 23 日</span>
+        <a href="tour.html" class="btn">查看行程 →</a>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- Pager -->
+<div class="pager">
+  <div class="shell-meta mono" style="color: var(--ink-3); font-size: 11px;">顯示 1 – 8 ・ 共 62 條行程</div>
+  <div class="pages">
+    <a href="#" class="arrow">← PREV</a>
+    <a href="#" class="curr">1</a>
+    <a href="#">2</a>
+    <a href="#">3</a>
+    <a href="#">…</a>
+    <a href="#">8</a>
+    <a href="#" class="arrow">NEXT →</a>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="inner">
+    <div class="footer-top">
+      <div>
+        <h4>找到了<em style="color:var(--accent); font-style:normal">旅遊</em></h4>
+        <p style="color:rgba(250, 242, 238,0.7); font-size:14px; max-width:320px; margin:0 0 18px;">為您而寫的旅程。<br>Found Holiday · Travel agency since 2009.</p>
+        <div class="mono" style="color:rgba(250, 242, 238,0.5);">交觀甲 9876 ・ 品保中 0123</div>
+      </div>
+      <div>
+        <h6>瀏覽</h6>
+        <ul>
+          <li><a href="tours.html">所有行程</a></li>
+          <li><a href="tours.html">依地區</a></li>
+          <li><a href="tours.html">依出發月份</a></li>
+          <li><a href="#">客製旅程</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>關於</h6>
+        <ul>
+          <li><a href="about.html">關於找到了旅遊</a></li>
+          <li><a href="about.html#stores">服務據點</a></li>
+          <li><a href="#">編輯團隊</a></li>
+          <li><a href="#">旅誌專欄</a></li>
+        </ul>
+      </div>
+      <div>
+        <h6>聯絡</h6>
+        <ul>
+          <li>02 &nbsp;7729&nbsp; 0001</li>
+          <li>hello@foundholiday.tw</li>
+          <li>台北 ・ 台中 ・ 高雄</li>
+          <li>Mon–Sat ・ 10:00–20:00</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 FOUND HOLIDAY TRAVEL CO., LTD.</div>
+      <div>PRIVACY ・ TERMS ・ COOKIES</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('nav').classList.toggle('open');
+  });
+  document.querySelectorAll('.pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>

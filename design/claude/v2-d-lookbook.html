@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D · Lookbook — 找到了旅遊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5EFEA;
+    --paper-2: #FFFFFF;
+    --ink: #1F1416;
+    --ink-2: #4A3236;
+    --ink-3: #8E7B7E;
+    --rule: #DCC9C2;
+    --accent: #E63E51;
+    --brand-dark: #7C2C39;
+    --brand-pink: #FFC9D1;
+    --sans: "Noto Sans TC", sans-serif;
+    --serif: "Noto Serif TC", serif;
+    --mono: "DM Mono", monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.65;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ============================
+     NAV — minimal top bar
+     ============================ */
+  .nav {
+    background: var(--brand-dark);
+    color: #fff;
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 50;
+  }
+  .nav-inner {
+    padding: 14px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .brand-logo svg { width: 18px; height: 18px; }
+  .brand-name { font-family: var(--serif); font-size: 18px; letter-spacing: 0.12em; font-weight: 400; }
+  .brand-name em { font-style: normal; color: var(--brand-pink); }
+
+  .nav-center {
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+  }
+  .nav-center .cur { color: var(--brand-pink); font-weight: 500; }
+
+  .nav-pager {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .nav-pager button {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all .2s;
+  }
+  .nav-pager button:hover { background: var(--accent); border-color: var(--accent); }
+  .nav-pager .ix {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    color: #fff;
+  }
+  .nav-pager .ix b { color: var(--brand-pink); }
+
+  /* ============================
+     PAGES — each page = 1 viewport
+     ============================ */
+  .pages { padding-top: 60px; }
+  .page {
+    min-height: calc(100vh - 60px);
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* PAGE CORNERS — page number stamps */
+  .page-stamp-tl, .page-stamp-tr, .page-stamp-bl, .page-stamp-br {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    z-index: 4;
+  }
+  .page-stamp-tl { top: 28px; left: 40px; }
+  .page-stamp-tr { top: 28px; right: 40px; }
+  .page-stamp-bl { bottom: 28px; left: 40px; }
+  .page-stamp-br { bottom: 28px; right: 40px; }
+  .page-stamp-tl b, .page-stamp-tr b, .page-stamp-bl b, .page-stamp-br b {
+    color: var(--accent); font-weight: 500;
+  }
+
+  /* ----- PAGE 01 ─ COVER ----- */
+  .page-cover {
+    background: var(--ink);
+    color: #fff;
+    display: grid;
+    grid-template-columns: 5fr 4fr;
+    align-items: stretch;
+  }
+  .page-cover .img {
+    position: relative;
+    overflow: hidden;
+  }
+  .page-cover .img img { width: 100%; height: 100%; object-fit: cover; }
+  .page-cover .img::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(to right, transparent 70%, var(--ink) 100%);
+  }
+  .page-cover .txt {
+    padding: 88px 80px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .page-cover .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: var(--brand-pink);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.18);
+  }
+  .page-cover h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(40px, 5.4vw, 80px);
+    letter-spacing: 0.1em;
+    line-height: 1.15;
+    margin: 0 0 36px;
+  }
+  .page-cover h1 em { font-style: normal; color: var(--brand-pink); }
+  .page-cover .sub {
+    font-size: 14.5px;
+    color: rgba(255,255,255,0.82);
+    line-height: 1.95;
+    letter-spacing: 0.06em;
+    max-width: 380px;
+    margin: 0 0 40px;
+  }
+  .page-cover .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    line-height: 2;
+  }
+  .page-cover .meta b { color: #fff; font-weight: 500; }
+  .page-cover .scroll-hint {
+    position: absolute;
+    left: 50%; bottom: 38px;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px;
+    z-index: 4;
+  }
+  .page-cover .scroll-hint::after {
+    content: "";
+    width: 1px; height: 28px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+    animation: drop 1.6s ease-in-out infinite;
+  }
+  @keyframes drop {
+    0%, 100% { transform: translateY(-4px); opacity: 0.4; }
+    50% { transform: translateY(4px); opacity: 1; }
+  }
+  .page-cover .page-stamp-tl, .page-cover .page-stamp-tr,
+  .page-cover .page-stamp-bl, .page-cover .page-stamp-br { color: rgba(255,255,255,0.55); }
+  .page-cover .page-stamp-tl b, .page-cover .page-stamp-tr b,
+  .page-cover .page-stamp-bl b, .page-cover .page-stamp-br b { color: var(--brand-pink); }
+
+  /* ----- PAGE 02 ─ DESTINATION (full-bleed image) ----- */
+  .page-dest {
+    background: var(--ink);
+    color: #fff;
+  }
+  .page-dest .full {
+    position: relative;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+  }
+  .page-dest .full img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .page-dest .full::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.5) 100%);
+  }
+  .page-dest .layer {
+    position: absolute;
+    inset: 0;
+    padding: 96px 80px;
+    display: grid;
+    grid-template-rows: 1fr auto;
+  }
+  .page-dest .lbl {
+    align-self: start;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: var(--brand-pink);
+    text-transform: uppercase;
+  }
+  .page-dest .lbl::before {
+    content: "—— ";
+    color: rgba(255,255,255,0.4);
+  }
+  .page-dest .info {
+    align-self: end;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: end;
+    color: #fff;
+  }
+  .page-dest h2 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(60px, 12vw, 180px);
+    letter-spacing: 0.16em;
+    line-height: 0.95;
+    margin: 0 0 12px;
+  }
+  .page-dest .en {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.36em;
+    color: rgba(255,255,255,0.75);
+    text-transform: uppercase;
+  }
+  .page-dest .copy {
+    max-width: 340px;
+    text-align: right;
+    color: rgba(255,255,255,0.88);
+    line-height: 1.9;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+  }
+  .page-dest .copy .cta {
+    display: inline-block;
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--brand-pink);
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--brand-pink);
+  }
+  .page-dest .copy .cta:hover { color: #fff; border-color: #fff; }
+  .page-dest .page-stamp-tl, .page-dest .page-stamp-tr,
+  .page-dest .page-stamp-bl, .page-dest .page-stamp-br { color: rgba(255,255,255,0.6); }
+  .page-dest .page-stamp-tl b, .page-dest .page-stamp-tr b,
+  .page-dest .page-stamp-bl b, .page-dest .page-stamp-br b { color: var(--brand-pink); }
+
+  /* ----- PAGE 06 ─ INDEX (目錄) ----- */
+  .page-index {
+    padding: 96px 80px;
+    background: var(--paper);
+  }
+  .page-index .head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    margin-bottom: 64px;
+    padding-bottom: 24px;
+    border-bottom: 4px double var(--ink);
+  }
+  .page-index .head .lbl {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .page-index .head h2 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(36px, 4.6vw, 56px);
+    letter-spacing: 0.16em;
+    margin: 0;
+  }
+  .page-index .head h2 em { font-style: normal; color: var(--accent); }
+  .page-index .head .r {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    text-align: right;
+  }
+
+  .feat-list {
+    display: grid;
+    gap: 0;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .feat {
+    display: grid;
+    grid-template-columns: 80px 1fr 220px 160px 30px;
+    gap: 28px;
+    align-items: center;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    transition: padding .25s;
+  }
+  .feat:hover { padding-left: 16px; }
+  .feat:hover .ord { color: var(--accent); }
+  .feat .ord {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 44px;
+    line-height: 1;
+    color: var(--ink-3);
+    transition: color .25s;
+  }
+  .feat .info .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .feat .info h3 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(22px, 2.6vw, 28px);
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    margin: 0;
+  }
+  .feat .thumb {
+    aspect-ratio: 5/3;
+    overflow: hidden;
+  }
+  .feat .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .feat .price {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .feat .price small {
+    display: block;
+    font-family: var(--sans);
+    font-size: 10px;
+    color: var(--ink-3);
+    margin-top: 6px;
+    letter-spacing: 0.18em;
+  }
+  .feat .ar {
+    text-align: right;
+    color: var(--ink-3);
+    font-size: 18px;
+  }
+
+  /* ----- PAGE 09 ─ COLOPHON / FOOTER ----- */
+  .page-end {
+    background: var(--brand-dark);
+    color: #fff;
+    padding: 96px 80px;
+    min-height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .page-end-inner { max-width: 980px; margin: 0 auto; width: 100%; }
+  .page-end h2 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(40px, 5.4vw, 72px);
+    letter-spacing: 0.14em;
+    line-height: 1.25;
+    margin: 0 0 36px;
+    text-align: center;
+  }
+  .page-end h2 em { font-style: normal; color: var(--brand-pink); }
+  .page-end .lede {
+    text-align: center;
+    max-width: 620px;
+    margin: 0 auto 56px;
+    font-size: 15px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.95;
+    letter-spacing: 0.06em;
+  }
+  .page-end .cta-row {
+    display: flex; justify-content: center; gap: 14px;
+    margin-bottom: 72px;
+  }
+  .page-end .btn {
+    padding: 16px 32px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    transition: all .25s;
+  }
+  .btn-fill { background: var(--accent); color: #fff; }
+  .btn-fill:hover { background: var(--brand-pink); color: var(--brand-dark); }
+  .btn-ghost { border: 1px solid rgba(255,255,255,0.35); color: #fff; }
+  .btn-ghost:hover { background: #fff; color: var(--brand-dark); border-color: #fff; }
+
+  .colophon {
+    border-top: 4px double rgba(255,255,255,0.2);
+    padding-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+    font-size: 13px;
+    line-height: 1.85;
+    color: rgba(255,255,255,0.82);
+  }
+  .colophon h5 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    margin: 0 0 14px;
+    font-weight: 500;
+  }
+  .colophon ul { list-style: none; padding: 0; margin: 0; }
+  .colophon a:hover { color: var(--brand-pink); }
+  .colophon .lic {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.5);
+    margin-top: 12px;
+    text-transform: uppercase;
+  }
+  .page-end .bot {
+    text-align: center;
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 980px) {
+    .nav-inner { padding: 12px 24px; }
+    .nav-center { display: none; }
+    .page-cover { grid-template-columns: 1fr; }
+    .page-cover .img { aspect-ratio: 16/10; height: auto; }
+    .page-cover .txt { padding: 48px 28px 64px; }
+    .page-cover .scroll-hint { display: none; }
+    .page-dest .layer { padding: 60px 28px; }
+    .page-dest .info { grid-template-columns: 1fr; gap: 16px; }
+    .page-dest .copy { text-align: left; max-width: 100%; }
+    .page-dest h2 { font-size: 64px; }
+    .page-index, .page-end { padding-left: 28px; padding-right: 28px; }
+    .page-index .head { grid-template-columns: 1fr; gap: 12px; }
+    .feat { grid-template-columns: 50px 1fr 80px; gap: 16px; }
+    .feat .thumb, .feat .ar { display: none; }
+    .feat .ord { font-size: 28px; }
+    .colophon { grid-template-columns: 1fr; gap: 28px; }
+    .page-stamp-tl, .page-stamp-tr, .page-stamp-bl, .page-stamp-br { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV — minimal pager -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#p01">
+      <span class="brand-logo"><svg viewBox="0 0 24 24"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="brand-name">找到了<em>旅遊</em></span>
+    </a>
+    <div class="nav-center" id="navCenter">
+      <span class="cur" id="pageTitle">P.001 ／ COVER</span>
+      <span>·</span>
+      <span>VOL. 028 ・ 2026 SPRING</span>
+    </div>
+    <div class="nav-pager">
+      <button onclick="pageNav(-1)" aria-label="prev">←</button>
+      <span class="ix"><b id="pageIx">01</b> / 09</span>
+      <button onclick="pageNav(1)" aria-label="next">→</button>
+    </div>
+  </div>
+</nav>
+
+<main class="pages">
+
+  <!-- ===== P.001 ・ COVER ===== -->
+  <section class="page page-cover" id="p01" data-title="P.001 ／ COVER">
+    <span class="page-stamp-tl"><b>P.001</b> ／ COVER</span>
+    <span class="page-stamp-tr">FOUND HOLIDAY ／ <b>VOL.028</b></span>
+    <span class="page-stamp-bl">2026 ／ <b>SPRING</b></span>
+    <span class="page-stamp-br">© 找到了旅遊</span>
+
+    <div class="img">
+      <img src="https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=1800&q=80" alt="">
+    </div>
+    <div class="txt">
+      <div class="label">SPRING LOOKBOOK ／ 春 之 卷</div>
+      <h1>翻 開 春 天，<br>找 一 條<em>沒 走 過</em><br>的 路。</h1>
+      <p class="sub">這不是一本旅遊型錄。我們把十七年的踩線心得，整理成一本可以翻的書。每頁一個地方，每個地方都是我們真心想推薦的。</p>
+      <div class="meta">
+        VOL. <b>028</b> ／ 2026 SPRING<br>
+        ISSUED BY <b>FOUND HOLIDAY</b><br>
+        TAIPEI ・ EST. 2009
+      </div>
+    </div>
+    <div class="scroll-hint">向下翻頁</div>
+  </section>
+
+  <!-- ===== P.012 ・ JAPAN ===== -->
+  <section class="page page-dest" id="p02" data-title="P.012 ／ JAPAN" style="background:#3a1f1a;">
+    <span class="page-stamp-tl"><b>P.012</b> ／ JAPAN</span>
+    <span class="page-stamp-tr">FEATURE ／ <b>01 / 06</b></span>
+    <span class="page-stamp-bl"><b>14</b> ROUTES</span>
+    <span class="page-stamp-br">SPRING ／ <b>2026</b></span>
+
+    <div class="full">
+      <img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=1800&q=80" alt="">
+    </div>
+    <div class="layer">
+      <div class="lbl">FEATURE 01 ／ 日 本 編</div>
+      <div class="info">
+        <div>
+          <h2>日 本</h2>
+          <div class="en">JAPAN ／ 四 季 皆 美</div>
+        </div>
+        <div class="copy">
+          從北海道的雪到沖繩的海，四季皆有不同的看法。本季春櫻、雪見溫泉、嵐山清晨包場 —— 14 條主編親踩的路線等你翻閱。
+          <br><a class="cta" href="tours.html">翻到日本 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== P.038 ・ KOREA ===== -->
+  <section class="page page-dest" id="p03" data-title="P.038 ／ KOREA">
+    <span class="page-stamp-tl"><b>P.038</b> ／ KOREA</span>
+    <span class="page-stamp-tr">FEATURE ／ <b>02 / 06</b></span>
+    <span class="page-stamp-bl"><b>8</b> ROUTES</span>
+    <span class="page-stamp-br">SPRING ／ <b>2026</b></span>
+
+    <div class="full">
+      <img src="https://images.unsplash.com/photo-1538485399081-7191377e8241?w=1800&q=80" alt="">
+    </div>
+    <div class="layer">
+      <div class="lbl">FEATURE 02 ／ 韓 國 編</div>
+      <div class="info">
+        <div>
+          <h2>韓 國</h2>
+          <div class="en">KOREA ／ 雙 城 雙 味</div>
+        </div>
+        <div class="copy">
+          首爾與釜山雙城、濟州島環島自駕、江原道滑雪季。從美食、追星到秘境，8 條私房路線。
+          <br><a class="cta" href="tours.html">翻到韓國 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== P.054 ・ EUROPE ===== -->
+  <section class="page page-dest" id="p04" data-title="P.054 ／ EUROPE">
+    <span class="page-stamp-tl"><b>P.054</b> ／ EUROPE</span>
+    <span class="page-stamp-tr">FEATURE ／ <b>03 / 06</b></span>
+    <span class="page-stamp-bl"><b>22</b> ROUTES</span>
+    <span class="page-stamp-br">SPRING ／ <b>2026</b></span>
+
+    <div class="full">
+      <img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=1800&q=80" alt="">
+    </div>
+    <div class="layer">
+      <div class="lbl">FEATURE 03 ／ 歐 洲 編</div>
+      <div class="info">
+        <div>
+          <h2>歐 洲</h2>
+          <div class="en">EUROPE ／ 老 城 與 葡 萄 藤</div>
+        </div>
+        <div class="copy">
+          義大利、瑞士、冰島、葡萄牙 —— 22 條深度歐陸路線。UNESCO 老城、酒農與牧場、3-4 星精品旅館。
+          <br><a class="cta" href="tours.html">翻到歐洲 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== P.092 ・ S.E.ASIA ===== -->
+  <section class="page page-dest" id="p05" data-title="P.092 ／ SOUTHEAST ASIA">
+    <span class="page-stamp-tl"><b>P.092</b> ／ S.E.ASIA</span>
+    <span class="page-stamp-tr">FEATURE ／ <b>04 / 06</b></span>
+    <span class="page-stamp-bl"><b>11</b> ROUTES</span>
+    <span class="page-stamp-br">SPRING ／ <b>2026</b></span>
+
+    <div class="full">
+      <img src="https://images.unsplash.com/photo-1528127269322-539801943592?w=1800&q=80" alt="">
+    </div>
+    <div class="layer">
+      <div class="lbl">FEATURE 04 ／ 東 南 亞 編</div>
+      <div class="info">
+        <div>
+          <h2>東 南 亞</h2>
+          <div class="en">S.E.ASIA ／ 陽 光 與 美 食</div>
+        </div>
+        <div class="copy">
+          會安燈節、清邁雙城、峇里島親子度假村。11 條陽光與美食路線。
+          <br><a class="cta" href="tours.html">翻到東南亞 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== P.118 ・ CHINA ===== -->
+  <section class="page page-dest" id="p06" data-title="P.118 ／ CHINA">
+    <span class="page-stamp-tl"><b>P.118</b> ／ CHINA</span>
+    <span class="page-stamp-tr">FEATURE ／ <b>05 / 06</b></span>
+    <span class="page-stamp-bl"><b>6</b> ROUTES</span>
+    <span class="page-stamp-br">SPRING ／ <b>2026</b></span>
+
+    <div class="full">
+      <img src="https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=1800&q=80" alt="">
+    </div>
+    <div class="layer">
+      <div class="lbl">FEATURE 05 ／ 中 國 編</div>
+      <div class="info">
+        <div>
+          <h2>中 國</h2>
+          <div class="en">CHINA ／ 深 度 文 化</div>
+        </div>
+        <div class="copy">
+          張家界、九寨溝、絲路敦煌與江南六大水鄉。六條主編親踩的深度路線。
+          <br><a class="cta" href="tours.html">翻到中國 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== P.140 ・ TAIWAN ===== -->
+  <section class="page page-dest" id="p07" data-title="P.140 ／ TAIWAN">
+    <span class="page-stamp-tl"><b>P.140</b> ／ TAIWAN</span>
+    <span class="page-stamp-tr">FEATURE ／ <b>06 / 06</b></span>
+    <span class="page-stamp-bl"><b>7</b> ROUTES</span>
+    <span class="page-stamp-br">SPRING ／ <b>2026</b></span>
+
+    <div class="full">
+      <img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=1800&q=80" alt="">
+    </div>
+    <div class="layer">
+      <div class="lbl">FEATURE 06 ／ 國 旅 編</div>
+      <div class="info">
+        <div>
+          <h2>國 旅</h2>
+          <div class="en">TAIWAN ／ 慢 遊 自 己 的 島</div>
+        </div>
+        <div class="copy">
+          花蓮部落民宿、澎湖跳島、馬祖藍眼淚季、屏東山海雙拼。七條主編親自走過的台灣慢遊路線。
+          <br><a class="cta" href="tours.html">翻到國旅 →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== P.160 ・ INDEX / 編輯精選 ===== -->
+  <section class="page page-index" id="p08" data-title="P.160 ／ EDITOR'S PICK">
+    <span class="page-stamp-tl"><b>P.160</b> ／ EDITOR'S PICK</span>
+    <span class="page-stamp-tr">SECTION ／ <b>07</b></span>
+    <span class="page-stamp-bl"><b>03</b> FEATURED</span>
+    <span class="page-stamp-br">SPRING ／ <b>2026</b></span>
+
+    <div class="head">
+      <div>
+        <div class="lbl">EDITOR'S PICK ／ 編 輯 精 選</div>
+        <h2>本期，三條<em>值得</em><br>留在心裡的路。</h2>
+      </div>
+      <div class="r">本期主編<br>林宥彤 ／ 親 選</div>
+    </div>
+
+    <div class="feat-list">
+      <a class="feat" href="tour.html">
+        <span class="ord">01</span>
+        <div class="info">
+          <div class="tag">JAPAN ・ KYOTO ・ 8 DAYS</div>
+          <h3>清晨六點的嵐山，沒有人的竹林</h3>
+        </div>
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&q=80" alt=""></div>
+        <div class="price">NT$ 89,800<small>起 ／ 人</small></div>
+        <span class="ar">→</span>
+      </a>
+      <a class="feat" href="tour.html">
+        <span class="ord">02</span>
+        <div class="info">
+          <div class="tag">ICELAND ・ 10 DAYS</div>
+          <h3>環島十天，追到四場極光</h3>
+        </div>
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=600&q=80" alt=""></div>
+        <div class="price">NT$ 158,000<small>起 ／ 人</small></div>
+        <span class="ar">→</span>
+      </a>
+      <a class="feat" href="tour.html">
+        <span class="ord">03</span>
+        <div class="info">
+          <div class="tag">ITALY ・ 11 DAYS</div>
+          <h3>沿著葡萄藤，從北走到中</h3>
+        </div>
+        <div class="thumb"><img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=600&q=80" alt=""></div>
+        <div class="price">NT$ 146,500<small>起 ／ 人</small></div>
+        <span class="ar">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ===== P.192 ・ COLOPHON / 結尾 ===== -->
+  <section class="page page-end" id="p09" data-title="P.192 ／ COLOPHON">
+    <span class="page-stamp-tl" style="color:rgba(255,255,255,0.55);"><b style="color:var(--brand-pink);">P.192</b> ／ COLOPHON</span>
+    <span class="page-stamp-tr" style="color:rgba(255,255,255,0.55);">END OF <b style="color:var(--brand-pink);">VOL.028</b></span>
+    <span class="page-stamp-bl" style="color:rgba(255,255,255,0.55);">THANK YOU</span>
+    <span class="page-stamp-br" style="color:rgba(255,255,255,0.55);">© <b style="color:var(--brand-pink);">2026</b></span>
+
+    <div class="page-end-inner">
+      <h2>翻完了。<br><em>接下來，換你出發。</em></h2>
+      <p class="lede">這本春之卷在這裡告一段落。但只要你還想走，我們就繼續為你找路。歡迎來門市坐一坐、講講你想去哪裡，剩下的，交給我們。</p>
+
+      <div class="cta-row">
+        <a class="btn btn-fill" href="tours.html">瀏覽全部路線 →</a>
+        <a class="btn btn-ghost" href="tel:0277290001">02 7729 0001</a>
+      </div>
+
+      <div class="colophon">
+        <div>
+          <h5>FOUND HOLIDAY</h5>
+          <p style="margin:0;">找到了旅遊股份有限公司<br>10688 台北市大安區<br>忠孝東路四段 137 號 2 樓</p>
+          <p class="lic">交觀甲 9876 ・ 品保中 0123 ・ 統編 24681357</p>
+        </div>
+        <div>
+          <h5>聯絡 ／ CONTACT</h5>
+          <ul>
+            <li><a href="tel:0277290001">02 7729 0001</a></li>
+            <li><a href="#">線上諮詢</a></li>
+            <li><a href="#">門市資訊</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>本期 ／ COLOPHON</h5>
+          <ul>
+            <li>主編 ／ 林宥彤</li>
+            <li>編輯 ／ 黃韻安 ・ 周敏</li>
+            <li>影像 ／ 找到了攝影團隊</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bot">© 2026 FOUND HOLIDAY TRAVEL CO., LTD. ／ ALL RIGHTS RESERVED</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  /* Pager — track current page in viewport, show in nav */
+  (function() {
+    const pages = [...document.querySelectorAll('.page')];
+    const ixEl = document.getElementById('pageIx');
+    const titleEl = document.getElementById('pageTitle');
+
+    function update() {
+      const mid = window.scrollY + window.innerHeight * 0.4;
+      let cur = 0;
+      for (let i = 0; i < pages.length; i++) {
+        if (pages[i].offsetTop <= mid) cur = i;
+      }
+      ixEl.textContent = String(cur + 1).padStart(2, '0');
+      titleEl.textContent = pages[cur].dataset.title || '';
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+
+    window.pageNav = function(dir) {
+      const mid = window.scrollY + window.innerHeight * 0.4;
+      let cur = 0;
+      for (let i = 0; i < pages.length; i++) {
+        if (pages[i].offsetTop <= mid) cur = i;
+      }
+      const target = Math.max(0, Math.min(pages.length - 1, cur + dir));
+      window.scrollTo({ top: pages[target].offsetTop - 60, behavior: 'smooth' });
+    };
+
+    /* Keyboard nav */
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          window.pageNav(1);
+        }
+      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          window.pageNav(-1);
+        }
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

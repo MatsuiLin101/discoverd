@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A · 編輯雜誌風 — 找到了旅遊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5EFEA;
+    --ink: #1F1416;
+    --ink-2: #4A3236;
+    --ink-3: #8E7B7E;
+    --rule: #DCC9C2;
+    --accent: #E63E51;
+    --brand-dark: #7C2C39;
+    --brand-pink: #FFC9D1;
+    --serif: "Noto Serif TC", serif;
+    --sans: "Noto Sans TC", sans-serif;
+    --mono: "DM Mono", monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.65;
+    font-feature-settings: "palt";
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+  .mono { font-family: var(--mono); letter-spacing: 0.04em; }
+  .serif { font-family: var(--serif); }
+
+  /* ============================
+     NAV — 酒紅 + 印刷感版面
+     ============================ */
+  .nav {
+    background: var(--brand-dark);
+    color: #fff;
+    border-bottom: 4px double rgba(255,255,255,0.18);
+  }
+  .nav-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 48px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 32px;
+  }
+  .nav-meta-left {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.65);
+  }
+  .nav-meta-left b { color: #fff; font-weight: 500; }
+  .brand {
+    justify-self: center;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .brand-logo {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  .brand-logo svg { width: 20px; height: 20px; }
+  .brand-name {
+    font-family: var(--serif);
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    color: #fff;
+    font-weight: 500;
+  }
+  .nav-links {
+    justify-self: end;
+    display: flex; gap: 28px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .nav-links a { color: rgba(255,255,255,0.85); padding-bottom: 2px; border-bottom: 1px solid transparent; }
+  .nav-links a:hover { border-color: var(--brand-pink); color: var(--brand-pink); }
+
+  /* ============================
+     MASTHEAD — 期刊式封面標頭
+     ============================ */
+  .masthead {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 48px 32px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .masthead .left, .masthead .right {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    line-height: 1.7;
+  }
+  .masthead .right { text-align: right; }
+  .masthead .title {
+    font-family: var(--serif);
+    font-size: clamp(38px, 5.5vw, 64px);
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .masthead .title em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  /* ============================
+     HERO — 全幅 + 編輯說明
+     ============================ */
+  .hero {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 48px 0;
+  }
+  .hero-frame {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    background: var(--ink);
+  }
+  .hero-frame img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-caption {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px 48px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 14px;
+  }
+  .hero-caption .left b { color: var(--ink); font-weight: 500; }
+  .hero-caption .right { text-align: right; }
+
+  /* ============================
+     COVER STORY — 主標 + 編輯導言
+     ============================ */
+  .cover {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 48px 72px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .cover .head .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .cover h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(40px, 5.4vw, 64px);
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    margin: 0 0 24px;
+    color: var(--ink);
+  }
+  .cover h1 em { font-style: normal; color: var(--accent); }
+  .cover .head .sig {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--ink-3);
+    padding-top: 14px;
+    border-top: 1px solid var(--ink);
+    margin-top: 20px;
+    display: flex; justify-content: space-between;
+  }
+  .cover .body {
+    font-size: 14.5px;
+    line-height: 1.95;
+    color: var(--ink-2);
+  }
+  .cover .body p { margin: 0 0 14px; text-indent: 2em; }
+  .cover .body .drop::first-letter {
+    font-family: var(--serif);
+    font-size: 56px;
+    float: left;
+    line-height: 0.9;
+    padding: 6px 8px 0 0;
+    color: var(--accent);
+  }
+  .cover .body .drop { text-indent: 0; }
+
+  /* ============================
+     INDEX — 目錄式目的地
+     ============================ */
+  .toc {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 64px 48px;
+    border-top: 4px double var(--ink);
+    border-bottom: 4px double var(--ink);
+  }
+  .toc-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 36px;
+  }
+  .toc-head .l {
+    font-family: var(--serif);
+    font-size: 32px;
+    letter-spacing: 0.16em;
+    font-weight: 300;
+  }
+  .toc-head .r {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .toc-list {
+    display: grid;
+    gap: 0;
+  }
+  .toc-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 90px 30px;
+    gap: 24px;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule);
+    transition: padding .25s;
+    cursor: pointer;
+  }
+  .toc-row:hover { padding-left: 12px; }
+  .toc-row:hover .n { color: var(--accent); }
+  .toc-row .n {
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+    transition: color .25s;
+  }
+  .toc-row .nm {
+    font-family: var(--serif);
+    font-size: 24px;
+    letter-spacing: 0.12em;
+    font-weight: 300;
+  }
+  .toc-row .en {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .toc-row .pg {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--ink-2);
+    text-align: right;
+  }
+  .toc-row .ar {
+    color: var(--ink-3);
+    font-size: 18px;
+    text-align: right;
+  }
+
+  /* ============================
+     FEATURED — 編輯踩線（雙欄圖文）
+     ============================ */
+  .editorial {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 80px 48px;
+  }
+  .editorial-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 20px;
+  }
+  .editorial-head .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .editorial-head h2 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(28px, 3.6vw, 42px);
+    letter-spacing: 0.16em;
+    margin: 0;
+  }
+  .editorial-head .r {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+
+  .feature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    padding: 56px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .feature:last-child { border-bottom: 0; }
+  .feature.flip { grid-template-columns: 1fr 1fr; }
+  .feature.flip .img { order: 2; }
+  .feature .img {
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: var(--rule);
+  }
+  .feature .img img { width: 100%; height: 100%; object-fit: cover; }
+  .feature .txt { padding: 8px 0; display: flex; flex-direction: column; }
+  .feature .pg {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex; justify-content: space-between;
+  }
+  .feature h3 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(24px, 2.8vw, 32px);
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    margin: 0 0 18px;
+  }
+  .feature .lede {
+    font-size: 14.5px;
+    color: var(--ink-2);
+    line-height: 1.9;
+    margin: 0 0 24px;
+    flex: 1;
+  }
+  .feature .lede::first-letter {
+    font-family: var(--serif);
+    font-size: 38px;
+    float: left;
+    line-height: 0.95;
+    padding: 4px 8px 0 0;
+    color: var(--accent);
+  }
+  .feature .foot {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--ink-3);
+    padding-top: 16px;
+    border-top: 1px solid var(--ink);
+    display: flex; justify-content: space-between;
+    text-transform: uppercase;
+  }
+  .feature .foot b { color: var(--ink); font-weight: 500; }
+  .feature .foot .price { color: var(--accent); letter-spacing: 0.04em; font-weight: 500; }
+
+  /* ============================
+     FOOTER — 版權頁
+     ============================ */
+  .footer {
+    background: var(--brand-dark);
+    color: rgba(255,255,255,0.88);
+    padding: 64px 48px 28px;
+  }
+  .footer-inner { max-width: 1280px; margin: 0 auto; }
+  .footer-masthead {
+    text-align: center;
+    padding-bottom: 32px;
+    border-bottom: 4px double rgba(255,255,255,0.2);
+    margin-bottom: 36px;
+  }
+  .footer-masthead .nm {
+    font-family: var(--serif);
+    font-size: 36px;
+    letter-spacing: 0.18em;
+    font-weight: 300;
+  }
+  .footer-masthead .nm em { font-style: normal; color: var(--brand-pink); }
+  .footer-masthead .sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    color: rgba(255,255,255,0.65);
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+  .footer-cols {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    padding-bottom: 32px;
+    font-size: 12px;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.8);
+  }
+  .footer-cols h5 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    margin: 0 0 14px;
+    font-weight: 500;
+  }
+  .footer-cols ul { list-style: none; padding: 0; margin: 0; }
+  .footer-cols ul li { margin-bottom: 6px; }
+  .footer-cols ul a:hover { color: var(--brand-pink); }
+  .footer-bot {
+    border-top: 1px solid rgba(255,255,255,0.15);
+    padding-top: 18px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    display: flex; justify-content: space-between;
+  }
+
+  @media (max-width: 880px) {
+    .nav-inner, .masthead, .hero, .cover, .toc, .editorial, .footer { padding-left: 24px; padding-right: 24px; }
+    .cover, .feature, .feature.flip { grid-template-columns: 1fr; gap: 32px; }
+    .feature.flip .img { order: 0; }
+    .toc-row { grid-template-columns: 40px 1fr 60px 20px; }
+    .toc-row .en, .toc-row .pg { display: none; }
+    .footer-cols { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .nav-meta-left, .nav-links { display: none; }
+    .brand { justify-self: start; }
+  }
+</style>
+</head>
+<body>
+
+<template id="__bundler_thumbnail" data-bg-color="#7C2C39">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#7C2C39"/>
+    <rect x="240" y="220" width="720" height="60" fill="#FFC9D1" opacity="0.95"/>
+    <rect x="240" y="320" width="220" height="260" fill="#F5EFEA" opacity="0.9"/>
+    <rect x="490" y="320" width="220" height="120" fill="#F5EFEA" opacity="0.6"/>
+    <rect x="490" y="460" width="220" height="120" fill="#F5EFEA" opacity="0.6"/>
+    <rect x="740" y="320" width="220" height="260" fill="#E63E51"/>
+  </svg>
+</template>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-meta-left">VOL. <b>028</b> ・ 2026 / 02 ・ 春之卷</div>
+    <a class="brand" href="#">
+      <span class="brand-logo"><svg viewBox="0 0 24 24"><path d="M12 21.1l-1.4-1.3C5.4 15.1 2 12 2 8.3 2 5.3 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.3 22 8.3c0 3.7-3.4 6.8-8.6 11.5L12 21.1z" fill="currentColor"/></svg></span>
+      <span class="brand-name">找到了旅遊</span>
+    </a>
+    <div class="nav-links">
+      <a href="#cover">本期主題</a>
+      <a href="#index">目錄</a>
+      <a href="#editorial">編輯踩線</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="left">EST. 2009 ・ 17 YRS<br>62 COUNTRIES</div>
+  <div class="title">那 段 你 還 沒 走 過 的<em> 路</em></div>
+  <div class="right">VOL. 028 ／ 春<br>NT$ 0 ・ 不販售</div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-frame">
+    <img src="https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=1800&q=80" alt="">
+  </div>
+</section>
+<div class="hero-caption">
+  <div class="left">圖／<b>北海道 ・ 美瑛</b> ・ 攝於二月初的清晨六點，當地嚮導引領拍攝</div>
+  <div class="right">FIG. 01 ／ COVER</div>
+</div>
+
+<!-- COVER STORY -->
+<section class="cover" id="cover">
+  <div class="head">
+    <div class="label">★ EDITOR'S NOTE ／ 主編的話</div>
+    <h1>我們不<em>追逐</em>，<br>只走在當下。</h1>
+    <div class="sig">
+      <span>—— 主編 林宥彤</span>
+      <span>P.001 ／ 028</span>
+    </div>
+  </div>
+  <div class="body">
+    <p class="drop">第二十八期，我們把版面交給了「慢」。從北海道清晨的雪鄉，到京都尚未轉醒的茶屋，再到冰島還沒下車就讓人屏息的黑沙灘。這一季的選題不是熱門景點清單，而是十七年來陪客人走過的、那些不在 Google 第一頁的路線。</p>
+    <p>所有出現在本期的行程，都經過編輯團隊親自踩線一次以上；所有飯店，主編都住過至少一晚；所有餐廳，我們都點過超過五道菜。這些不是大家都會去的地方，但走過之後，會在心裡留得比較久。</p>
+    <p>歡迎您，翻到下一頁。</p>
+  </div>
+</section>
+
+<!-- TOC / INDEX -->
+<section class="toc" id="index">
+  <div class="toc-head">
+    <div class="l">本期目錄</div>
+    <div class="r">CONTENTS ／ VOL. 028</div>
+  </div>
+  <div class="toc-list">
+    <a class="toc-row" href="tours.html"><span class="n">01</span><span class="nm">日本</span><span class="en">JAPAN</span><span class="pg">P.012 起</span><span class="ar">→</span></a>
+    <a class="toc-row" href="tours.html"><span class="n">02</span><span class="nm">韓國</span><span class="en">KOREA</span><span class="pg">P.038 起</span><span class="ar">→</span></a>
+    <a class="toc-row" href="tours.html"><span class="n">03</span><span class="nm">歐洲</span><span class="en">EUROPE</span><span class="pg">P.054 起</span><span class="ar">→</span></a>
+    <a class="toc-row" href="tours.html"><span class="n">04</span><span class="nm">東南亞</span><span class="en">SOUTHEAST ASIA</span><span class="pg">P.092 起</span><span class="ar">→</span></a>
+    <a class="toc-row" href="tours.html"><span class="n">05</span><span class="nm">中國</span><span class="en">CHINA</span><span class="pg">P.118 起</span><span class="ar">→</span></a>
+    <a class="toc-row" href="tours.html"><span class="n">06</span><span class="nm">國旅</span><span class="en">TAIWAN</span><span class="pg">P.140 起</span><span class="ar">→</span></a>
+  </div>
+</section>
+
+<!-- EDITORIAL FEATURES -->
+<section class="editorial" id="editorial">
+  <div class="editorial-head">
+    <div>
+      <div class="label">★ THE FIELD NOTES ／ 編輯踩線</div>
+      <h2>本期，主編們親自走過的三條路</h2>
+    </div>
+    <div class="r">FEATURED ／ 03 ITEMS</div>
+  </div>
+
+  <article class="feature">
+    <div class="img"><img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1200&q=80" alt=""></div>
+    <div class="txt">
+      <div class="pg"><span>FEATURE 01 ／ 京都</span><span>P.014 — 020</span></div>
+      <h3>清晨六點的嵐山，<br>沒有人的竹林。</h3>
+      <p class="lede">我們和當地寺方協商，把嵐山竹林的清晨第一小時包了下來。沒有人潮、沒有自拍棒、只有風穿過竹葉的聲音。這是過去十七年，主編去京都最喜歡的一個小時。八天的行程裡，我們把這個小時放進去了。</p>
+      <div class="foot"><span>JP-028 ・ <b>8 天 7 夜</b> ・ 03 / 18 出發</span><span class="price">NT$ 89,800 起</span></div>
+    </div>
+  </article>
+
+  <article class="feature flip">
+    <div class="img"><img src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=1200&q=80" alt=""></div>
+    <div class="txt">
+      <div class="pg"><span>FEATURE 02 ／ 冰島</span><span>P.064 — 072</span></div>
+      <h3>環島十天，<br>追到四場極光。</h3>
+      <p class="lede">冰島不是「去」一次的地方，是「待」一段時間的地方。十天環島，兩晚住在 KP 指數最高的追光營地，攝影師全程隨行，調好相機參數讓你只負責站在那裡看。完整黑沙灘、冰川健行、冰河湖船遊三大主題都收。</p>
+      <div class="foot"><span>IS-014 ・ <b>10 天 8 夜</b> ・ 03 / 05 出發</span><span class="price">NT$ 158,000 起</span></div>
+    </div>
+  </article>
+
+  <article class="feature">
+    <div class="img"><img src="https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=1200&q=80" alt=""></div>
+    <div class="txt">
+      <div class="pg"><span>FEATURE 03 ／ 義大利</span><span>P.078 — 088</span></div>
+      <h3>沿著葡萄藤，<br>從北走到中。</h3>
+      <p class="lede">不去米蘭、不上比薩斜塔。我們沿著亞德里亞海北上，從威尼斯走進托斯卡尼。三座 UNESCO 老城、九個葡萄產區小鎮、午後一杯 Chianti、傍晚回到當地家庭式 trattoria 吃晚餐。十一天，沒有一天踩點。</p>
+      <div class="foot"><span>IT-021 ・ <b>11 天 9 夜</b> ・ 04 / 16 出發</span><span class="price">NT$ 146,500 起</span></div>
+    </div>
+  </article>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-masthead">
+      <div class="nm">找到了<em>旅遊</em></div>
+      <div class="sub">FOUND HOLIDAY ・ EST. 2009 ／ TAIPEI</div>
+    </div>
+    <div class="footer-cols">
+      <div>
+        <h5>地址 ／ ADDRESS</h5>
+        <p style="margin:0;">10688 台北市大安區<br>忠孝東路四段 137 號 2 樓<br>板南線 ・ 忠孝復興站</p>
+      </div>
+      <div>
+        <h5>聯絡 ／ CONTACT</h5>
+        <ul>
+          <li>02 7729 0001</li>
+          <li><a href="#">線上諮詢</a></li>
+          <li><a href="#">門市資訊</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>瀏覽 ／ INDEX</h5>
+        <ul>
+          <li><a href="#index">本期目錄</a></li>
+          <li><a href="#editorial">編輯踩線</a></li>
+          <li><a href="about.html">關於我們</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>許可 ／ LICENSE</h5>
+        <ul>
+          <li>交觀甲 9876</li>
+          <li>品保中 0123</li>
+          <li>統編 24681357</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bot">
+      <span>© 2026 FOUND HOLIDAY TRAVEL CO., LTD.</span>
+      <span>VOL. 028 ／ COL. 01</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
