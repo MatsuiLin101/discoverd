@@ -9,7 +9,7 @@ export default async function NewSubRegionPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect("/admin");
+  if (!session) redirect("/admin/login");
 
   const { id } = await params;
   const region = await db.region.findUnique({

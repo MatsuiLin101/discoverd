@@ -6,7 +6,7 @@ import SortableRegionList from "@/components/admin/regions/SortableRegionList";
 
 export default async function RegionsPage() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect("/admin");
+  if (!session) redirect("/admin/login");
 
   const regions = await db.region.findMany({
     select: {

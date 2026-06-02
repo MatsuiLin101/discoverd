@@ -9,8 +9,8 @@ const schema = z.object({
 
 export async function PATCH(req: NextRequest) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
-    return NextResponse.json({ error: "權限不足" }, { status: 403 });
+  if (!session) {
+    return NextResponse.json({ error: "請先登入" }, { status: 403 });
   }
 
   const body = await req.json();

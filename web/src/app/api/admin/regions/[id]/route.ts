@@ -15,8 +15,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
-    return NextResponse.json({ error: "權限不足" }, { status: 403 });
+  if (!session) {
+    return NextResponse.json({ error: "請先登入" }, { status: 403 });
   }
 
   const { id } = await params;
@@ -68,8 +68,8 @@ export async function DELETE(
 ) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ADMIN") {
-      return NextResponse.json({ error: "權限不足" }, { status: 403 });
+    if (!session) {
+      return NextResponse.json({ error: "請先登入" }, { status: 403 });
     }
 
     const { id } = await params;

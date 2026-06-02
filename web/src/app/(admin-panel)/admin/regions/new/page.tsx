@@ -4,7 +4,7 @@ import RegionForm from "@/components/admin/regions/RegionForm";
 
 export default async function NewRegionPage() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect("/admin");
+  if (!session) redirect("/admin/login");
 
   return (
     <div>

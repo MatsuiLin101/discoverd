@@ -9,7 +9,7 @@ export default async function EditSubRegionPage({
   params: Promise<{ id: string; subId: string }>;
 }) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect("/admin");
+  if (!session) redirect("/admin/login");
 
   const { id, subId } = await params;
   const [region, sub] = await Promise.all([
