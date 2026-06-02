@@ -69,18 +69,19 @@ model Tag {
 }
 
 model Tour {
-  id          String     @id @default(cuid())
-  subRegionId String
-  subRegion   SubRegion  @relation(fields: [subRegionId], references: [id], onDelete: Restrict)
-  name        String
-  slug        String     @unique
-  thumbnail   String?
-  price       Int
-  tags        Tag[]      @relation("TourTags")
-  files       TourFile[]
-  published   Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id                String     @id @default(cuid())
+  subRegionId       String
+  subRegion         SubRegion  @relation(fields: [subRegionId], references: [id], onDelete: Restrict)
+  name              String
+  slug              String     @unique
+  thumbnail         String?
+  thumbnailPublicId String?
+  price             Int
+  tags              Tag[]      @relation("TourTags")
+  files             TourFile[]
+  published         Boolean    @default(false)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 }
 
 // Plan A: uploaded PDF or image files stored on Cloudinary
@@ -91,6 +92,7 @@ model TourFile {
   url       String
   publicId  String
   mimeType  String
+  filename  String?
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 }
