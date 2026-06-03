@@ -4,7 +4,7 @@ import Link from "next/link";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import SiteFooter from "@/components/frontend/SiteFooter";
 import TourSection from "@/components/frontend/TourSection";
-import { REGIONS } from "@/lib/frontend-data";
+import { getRegionTours } from "@/lib/frontend-queries";
 
 interface Props {
   params: Promise<{ slug: string; subSlug: string }>;
@@ -12,24 +12,25 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, subSlug } = await params;
-  const region = REGIONS.find((r) => r.slug === slug);
-  const sub = region?.subRegions.find((sr) => sr.slug === subSlug);
-  if (!region || !sub) return {};
+  const data = await getRegionTours(slug);
+  if (!data) return {};
+  const sub = data.subRegions.find((sr) => sr.slug === subSlug);
+  if (!sub) return {};
   return {
-    title: `${sub.zh} ／ ${region.zh} — 找到了旅遊 FOUND HOLIDAY`,
+    title: `${sub.name} ／ ${data.region.name} — 找到了旅遊 FOUND HOLIDAY`,
   };
 }
 
 export default async function ToursPage({ params }: Props) {
   const { slug, subSlug } = await params;
-  const region = REGIONS.find((r) => r.slug === slug);
-  if (!region) notFound();
+  const data = await getRegionTours(slug);
+  if (!data) notFound();
 
-  const validSlug = region.subRegions.some((sr) => sr.slug === subSlug)
+  const validSlug = data.subRegions.some((sr) => sr.slug === subSlug)
     ? subSlug
-    : region.subRegions[0]?.slug ?? "";
+    : data.subRegions[0]?.slug ?? "";
 
-  const currentSub = region.subRegions.find((sr) => sr.slug === validSlug);
+  const currentSub = data.subRegions.find((sr) => sr.slug === validSlug);
   if (!currentSub) notFound();
 
   return (
@@ -41,17 +42,17 @@ export default async function ToursPage({ params }: Props) {
           <span className="crumb">
             <Link href="/">首頁</Link>
             <span className="sep">／</span>
-            <Link href={`/regions/${slug}`}>{region.zh}</Link>
+            <Link href={`/regions/${slug}`}>{data.region.name}</Link>
             <span className="sep">／</span>
-            <span className="cur">{currentSub.zh}</span>
+            <span className="cur">{currentSub.name}</span>
           </span>
         </div>
       </nav>
 
       <section className="fh-listing">
         <TourSection
-          parent={{ zh: region.zh, en: region.en }}
-          regions={region.subRegions}
+          parent={{ name: data.region.name }}
+          regions={data.subRegions}
           initialSlug={validSlug}
         />
       </section>

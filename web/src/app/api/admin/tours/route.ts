@@ -9,6 +9,10 @@ const createSchema = z.object({
   name: z.string().min(1, "請輸入行程名稱"),
   price: z.coerce.number().int().min(0, "價格不可為負數"),
   subRegionId: z.string().min(1, "請選擇次分類"),
+  description: z
+    .union([z.string().max(500), z.literal("").transform(() => null)])
+    .optional()
+    .nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -21,11 +25,12 @@ export async function POST(req: NextRequest) {
       name: fd.get("name"),
       price: fd.get("price"),
       subRegionId: fd.get("subRegionId"),
+      description: fd.get("description"),
     });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
-    const { name, price, subRegionId } = parsed.data;
+    const { name, price, subRegionId, description } = parsed.data;
     const tagIds = fd.getAll("tagIds") as string[];
     const published = fd.get("published") === "true";
 
@@ -54,6 +59,7 @@ export async function POST(req: NextRequest) {
         name,
         slug,
         price,
+        description: description ?? null,
         subRegionId,
         published,
         thumbnail,

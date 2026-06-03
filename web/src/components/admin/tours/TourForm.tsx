@@ -25,6 +25,7 @@ interface Tour {
   id: string;
   name: string;
   price: number;
+  description: string | null;
   thumbnail: string | null;
   published: boolean;
   subRegionId: string;
@@ -66,6 +67,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles }: 
 
   const [name, setName] = useState(tour?.name ?? "");
   const [price, setPrice] = useState(tour?.price.toString() ?? "");
+  const [description, setDescription] = useState(tour?.description ?? "");
   const [selectedRegionId, setSelectedRegionId] = useState(initialRegionId);
   const [subRegionId, setSubRegionId] = useState(tour?.subRegionId ?? "");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
@@ -131,6 +133,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles }: 
     const fd = new FormData();
     fd.append("name", name);
     fd.append("price", price);
+    fd.append("description", description);
     fd.append("subRegionId", subRegionId);
     fd.append("published", published ? "true" : "false");
     selectedTagIds.forEach((id) => fd.append("tagIds", id));
@@ -192,6 +195,19 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles }: 
           className={inputClass}
           placeholder="例如：29800"
         />
+      </div>
+
+      <div>
+        <label className={labelClass}>行程簡介</label>
+        <textarea
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className={inputClass}
+          placeholder="簡短描述此行程的特色（選填）"
+          maxLength={500}
+        />
+        <p className="mt-1 text-xs text-gray-400">最多 500 字</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -5,7 +5,8 @@ import SiteHeader from "@/components/frontend/SiteHeader";
 import SiteFooter from "@/components/frontend/SiteFooter";
 import HeroCarousel from "@/components/frontend/HeroCarousel";
 import CategoryList from "@/components/frontend/CategoryList";
-import { HERO_SLIDES, REGIONS } from "@/lib/frontend-data";
+import { HERO_SLIDES } from "@/lib/frontend-data";
+import { getRegionDetail } from "@/lib/frontend-queries";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -13,27 +14,26 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const region = REGIONS.find((r) => r.slug === slug);
+  const region = await getRegionDetail(slug);
   if (!region) return {};
   return {
-    title: `${region.zh} ／ 找到了旅遊 FOUND HOLIDAY`,
+    title: `${region.name} ／ 找到了旅遊 FOUND HOLIDAY`,
   };
 }
 
 export default async function RegionPage({ params }: Props) {
   const { slug } = await params;
-  const region = REGIONS.find((r) => r.slug === slug);
+  const region = await getRegionDetail(slug);
   if (!region) notFound();
 
   const subCategories = region.subRegions.map((sr) => ({
     href: `/regions/${slug}/${sr.slug}`,
-    zh: sr.zh,
-    en: sr.en,
-    count: String(sr.tours.length),
-    img: sr.tours[0]?.img ?? region.img,
+    name: sr.name,
+    count: sr.tourCount,
+    img: sr.thumbnail ?? "",
   }));
 
-  const totalTours = region.subRegions.reduce((s, sr) => s + sr.tours.length, 0);
+  const totalTours = region.subRegions.reduce((sum, sr) => sum + sr.tourCount, 0);
 
   return (
     <>
@@ -46,7 +46,7 @@ export default async function RegionPage({ params }: Props) {
           <span className="crumb">
             <Link href="/">首頁</Link>
             <span className="sep">／</span>
-            <span className="cur">{region.zh}</span>
+            <span className="cur">{region.name}</span>
           </span>
         </div>
       </nav>

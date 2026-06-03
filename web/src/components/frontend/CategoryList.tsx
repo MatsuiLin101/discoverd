@@ -3,9 +3,8 @@ import Image from "next/image";
 
 export interface CategoryItem {
   href: string;
-  zh: string;
-  en?: string;
-  count: string;
+  name: string;
+  count: string | number;
   img: string;
 }
 
@@ -42,18 +41,21 @@ export default function CategoryList({ title, stats, categories }: Props) {
         {categories.map((cat) => (
           <Link key={cat.href} className="fh-cat-row" href={cat.href}>
             <div className="cat-txt">
-              <span className="cat-nm">{cat.zh}</span>
-              {cat.en && <span className="cat-en">{cat.en}</span>}
+              <span className="cat-nm">{cat.name}</span>
               <span className="cat-ct">{cat.count} 條路線</span>
             </div>
             <div className="cat-thumb">
-              <Image
-                src={cat.img}
-                alt={cat.zh}
-                fill
-                sizes="240px"
-                style={{ objectFit: "cover" }}
-              />
+              {cat.img ? (
+                <Image
+                  src={cat.img}
+                  alt={cat.name}
+                  fill
+                  sizes="240px"
+                  style={{ objectFit: "cover" }}
+                />
+              ) : (
+                <div style={{ width: "100%", height: "100%", background: "var(--line)" }} />
+              )}
             </div>
             <span className="cat-arrow">
               <ArrowSvg />

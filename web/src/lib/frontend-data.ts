@@ -450,6 +450,62 @@ export const REGIONS: Region[] = [
   },
 ];
 
+// ─────────────────────────────────────────────────────────────
+// DB-sourced types — used by frontend-queries.ts and API routes
+// (The legacy Tour / SubRegion / Region interfaces above are kept
+//  for HERO_SLIDES / SEARCH_DATA; do NOT use them for live pages)
+// ─────────────────────────────────────────────────────────────
+
+/** Returned by GET /api/regions and getRegionList() */
+export interface RegionListItem {
+  slug: string;
+  name: string;
+  thumbnail: string | null;
+  tourCount: number;
+}
+
+/** Returned by GET /api/regions/[slug] and getRegionDetail() */
+export interface RegionDetail {
+  slug: string;
+  name: string;
+  thumbnail: string | null;
+  subRegions: SubRegionListItem[];
+}
+
+export interface SubRegionListItem {
+  slug: string;
+  name: string;
+  thumbnail: string | null;
+  tourCount: number;
+}
+
+/** Returned by GET /api/regions/[slug]/tours and getRegionTours() */
+export interface RegionTours {
+  region: {
+    slug: string;
+    name: string;
+  };
+  subRegions: SubRegionWithTours[];
+}
+
+export interface SubRegionWithTours {
+  slug: string;
+  name: string;
+  tours: TourItem[];
+}
+
+export interface TourItem {
+  id: string;
+  slug: string;
+  name: string;
+  thumbnail: string | null;
+  price: number;
+  description: string | null;
+  tags: string[];
+  /** URLs of TourFile records where mimeType starts with "image/". Empty = use thumbnail. */
+  images: string[];
+}
+
 export const SEARCH_DATA: SearchItem[] = [
   { nm: "北海道 美瑛・富良野 花田", region: "日本", tags: ["花季", "溫泉", "5 日"], price: "42,900", img: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=200&q=70", kw: "北海道 美瑛 富良野 花 日本 hokkaido" },
   { nm: "京都 嵐山・嵯峨野祕境", region: "日本", tags: ["世界遺產", "美食", "6 日"], price: "48,500", img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&q=70", kw: "京都 嵐山 嵯峨野 日本 kyoto" },

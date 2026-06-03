@@ -2,16 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import type { SubRegion, Tour } from "@/lib/frontend-data";
-
-interface Parent {
-  zh: string;
-  en: string;
-}
+import type { SubRegionWithTours, TourItem } from "@/lib/frontend-data";
 
 interface Props {
-  parent: Parent;
-  regions: SubRegion[];
+  parent: { name: string };
+  regions: SubRegionWithTours[];
   initialSlug: string;
 }
 
@@ -25,11 +20,12 @@ interface FormErrors {
 export default function TourSection({ parent, regions, initialSlug }: Props) {
   const [activeSlug, setActiveSlug] = useState(initialSlug);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalTour, setModalTour] = useState<Tour | null>(null);
+  const [modalTour, setModalTour] = useState<TourItem | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [mobileCollapsed, setMobileCollapsed] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -66,7 +62,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [formOpen, modalOpen]);
 
-  function openModal(tour: Tour) {
+  function openModal(tour: TourItem) {
     setModalTour(tour);
     setMobileCollapsed(false);
     setModalOpen(true);
@@ -82,6 +78,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
   function openForm() {
     setFormSubmitted(false);
     setErrors({});
+    setSubmitError(null);
     if (nameRef.current) nameRef.current.value = "";
     if (phoneRef.current) phoneRef.current.value = "";
     if (emailRef.current) emailRef.current.value = "";
@@ -91,7 +88,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
     setTimeout(() => nameRef.current?.focus(), 60);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const newErrors: FormErrors = {};
     const name = nameRef.current?.value.trim() ?? "";
@@ -117,11 +114,36 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
       return;
     }
 
-    setFormSubmitted(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tourId: modalTour?.id ?? null,
+          name: nameRef.current!.value.trim(),
+          phone: phoneRef.current!.value.trim(),
+          email: emailRef.current?.value.trim() || null,
+          lineId: lineRef.current?.value.trim() || null,
+          content: messageRef.current!.value.trim(),
+        }),
+      });
+      if (res.status === 201) {
+        setFormSubmitted(true);
+      } else {
+        setSubmitError("提交失敗，請稍後再試");
+      }
+    } catch {
+      setSubmitError("提交失敗，請稍後再試");
+    }
   }
 
-  const galleryImgs = modalTour
-    ? [...new Set([modalTour.img, ...activeRegion.tours.map((t) => t.img)])]
+  const galleryImgs: string[] = modalTour
+    ? modalTour.images.length > 0
+      ? modalTour.images
+      : modalTour.thumbnail
+        ? [modalTour.thumbnail]
+        : []
     : [];
 
   return (
@@ -135,7 +157,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
         </div>
         <div className="r">
           <span>
-            {parent.zh} ・ {activeRegion.zh}
+            {parent.name} ・ {activeRegion.name}
           </span>
           <span>
             <b>{activeRegion.tours.length}</b> 條路線
@@ -151,7 +173,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
             className={r.slug === activeSlug ? "active" : ""}
             onClick={() => setActiveSlug(r.slug)}
           >
-            {r.zh}
+            {r.name}
           </button>
         ))}
       </nav>
@@ -169,7 +191,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
             >
               <div className="t-img">
                 <Image
-                  src={tour.img}
+                  src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
                   alt={tour.name}
                   fill
                   sizes="300px"
@@ -187,12 +209,11 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                   )}
                 </div>
                 <h3 className="t-name">{tour.name}</h3>
-                <p className="t-en">{tour.en}</p>
-                <p className="t-lede">{tour.lede}</p>
+                {tour.description && <p className="t-lede">{tour.description}</p>}
                 <div className="t-foot">
                   <span className="t-amt">
                     <span className="cur">$</span>
-                    <span className="num">{tour.price}</span>
+                    <span className="num">{tour.price.toLocaleString("zh-TW")}</span>
                     <span className="unit">起</span>
                   </span>
                   <span className="t-cta">查看行程 →</span>
@@ -243,9 +264,12 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
 
             <div className="m-top">
               <div className="m-eyebrow">
-                {parent.zh} ・ {activeRegion.zh}
+                {parent.name} ・ {activeRegion.name}
               </div>
               <h3 className="m-name">{modalTour?.name}</h3>
+              {modalTour?.description && (
+                <p className="m-lede">{modalTour.description}</p>
+              )}
               <div className="m-tags">
                 {modalTour?.tags.map((tag) => (
                   <span key={tag}>{tag === "hot" ? "熱門" : tag}</span>
@@ -257,7 +281,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
               <div>
                 <div className="m-price">
                   <span className="cur">NT$</span>
-                  <span className="num">{modalTour?.price}</span>
+                  <span className="num">{modalTour?.price.toLocaleString("zh-TW")}</span>
                   <span className="unit">起</span>
                 </div>
                 <p className="m-note">※ 優惠方案及出發日期請洽服務專員</p>
@@ -399,6 +423,9 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
               </div>
 
               <div className="fh-form-foot">
+                {submitError && (
+                  <p className="text-sm text-rose-600">{submitError}</p>
+                )}
                 <button
                   type="button"
                   className="fh-form-cancel"
