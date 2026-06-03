@@ -3,9 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import SiteFooter from "@/components/frontend/SiteFooter";
-import HeroCarousel from "@/components/frontend/HeroCarousel";
 import CategoryList from "@/components/frontend/CategoryList";
-import { HERO_SLIDES } from "@/lib/frontend-data";
 import { getRegionDetail } from "@/lib/frontend-queries";
 
 interface Props {
@@ -38,8 +36,6 @@ export default async function RegionPage({ params }: Props) {
   return (
     <>
       <SiteHeader />
-
-      <HeroCarousel slides={HERO_SLIDES} />
 
       <nav className="fh-page-bar">
         <div className="fh-page-bar-inner">
