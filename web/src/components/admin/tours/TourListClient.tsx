@@ -113,7 +113,7 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
       <td className="px-4 py-3 text-gray-700">NT${tour.price.toLocaleString()}</td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
-          {tour.tags.slice(0, 3).map((tag) => (
+          {tour.tags.map((tag) => (
             <span
               key={tag.id}
               className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
@@ -121,9 +121,6 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
               {tag.name}
             </span>
           ))}
-          {tour.tags.length > 3 && (
-            <span className="text-xs text-gray-400">+{tour.tags.length - 3}</span>
-          )}
         </div>
       </td>
       <td className="px-4 py-3 text-gray-500">{tour._count.files} 個</td>
@@ -157,9 +154,27 @@ interface TourListClientProps {
   tours: TourRow[];
   tags: TagOption[];
   hasFilters: boolean;
+  filteredCount: number;
+  allCount: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  prevHref: string | null;
+  nextHref: string | null;
 }
 
-export default function TourListClient({ tours: initial, tags, hasFilters }: TourListClientProps) {
+export default function TourListClient({
+  tours: initial,
+  tags,
+  hasFilters,
+  filteredCount,
+  allCount,
+  currentPage,
+  totalPages,
+  pageSize,
+  prevHref,
+  nextHref,
+}: TourListClientProps) {
   const [tours, setTours] = useState(initial);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -167,14 +182,19 @@ export default function TourListClient({ tours: initial, tags, hasFilters }: Tou
     setTours(initial);
     setSelectedIds(new Set());
   }, [initial]);
+
   const [batchMode, setBatchMode] = useState<"add" | "remove" | null>(null);
   const [batchTagIds, setBatchTagIds] = useState<Set<string>>(new Set());
+  const [tagSearch, setTagSearch] = useState("");
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchError, setBatchError] = useState<string | null>(null);
   const [dragError, setDragError] = useState<string | null>(null);
 
   const router = useRouter();
   const sensors = useSensors(useSensor(PointerSensor));
+
+  // Drag is only available when no filters AND all tours fit in one view
+  const canDrag = !hasFilters && (pageSize === 0 || allCount <= pageSize);
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -221,7 +241,12 @@ export default function TourListClient({ tours: initial, tags, hasFilters }: Tou
     setBatchMode(mode);
     setBatchTagIds(new Set());
     setBatchError(null);
+    setTagSearch("");
   }
+
+  const visibleTags = tagSearch
+    ? tags.filter((t) => t.name.includes(tagSearch))
+    : tags;
 
   function toggleBatchTag(id: string) {
     setBatchTagIds((prev) => {
@@ -292,8 +317,12 @@ export default function TourListClient({ tours: initial, tags, hasFilters }: Tou
         </div>
       )}
 
-      {hasFilters && (
-        <p className="mb-2 text-xs text-gray-400">清除所有篩選條件後可拖曳調整排序</p>
+      {!canDrag && (
+        <p className="mb-2 text-xs text-gray-400">
+          {hasFilters
+            ? "清除所有篩選條件後可拖曳調整排序"
+            : "選擇「全部」顯示才可拖曳調整排序"}
+        </p>
       )}
       {dragError && (
         <p className="mb-2 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-600">{dragError}</p>
@@ -346,7 +375,7 @@ export default function TourListClient({ tours: initial, tags, hasFilters }: Tou
                     tour={tour}
                     isSelected={selectedIds.has(tour.id)}
                     onToggle={toggleOne}
-                    showDragHandle={!hasFilters}
+                    showDragHandle={canDrag}
                   />
                 ))}
               </tbody>
@@ -355,21 +384,90 @@ export default function TourListClient({ tours: initial, tags, hasFilters }: Tou
         </div>
       </DndContext>
 
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            第 {currentPage} / {totalPages} 頁（篩選後共 {filteredCount} 筆）
+          </p>
+          <div className="flex gap-2">
+            {prevHref ? (
+              <Link
+                href={prevHref}
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                « 上一頁
+              </Link>
+            ) : (
+              <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-300">
+                « 上一頁
+              </span>
+            )}
+            {nextHref ? (
+              <Link
+                href={nextHref}
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                下一頁 »
+              </Link>
+            ) : (
+              <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-300">
+                下一頁 »
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {batchMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-base font-semibold text-gray-800">
+            <h3 className="mb-1 text-base font-semibold text-gray-800">
               {batchMode === "add" ? "批次新增標籤" : "批次移除標籤"}
             </h3>
-            <p className="mb-3 text-sm text-gray-500">
+            <p className="mb-4 text-sm text-gray-500">
               {batchMode === "add"
-                ? `將以下標籤新增至 ${selectedIds.size} 個方案：`
-                : `從 ${selectedIds.size} 個方案移除以下標籤：`}
+                ? `對象：${selectedIds.size} 個方案`
+                : `對象：${selectedIds.size} 個方案`}
             </p>
-            <div className="mb-4 max-h-52 space-y-2 overflow-y-auto">
-              {tags.length === 0 && <p className="text-sm text-gray-400">尚無標籤</p>}
-              {tags.map((tag) => (
-                <label key={tag.id} className="flex cursor-pointer items-center gap-2">
+
+            {tags.length > 5 && (
+              <input
+                type="search"
+                value={tagSearch}
+                onChange={(e) => setTagSearch(e.target.value)}
+                placeholder="搜尋標籤…"
+                className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351]"
+              />
+            )}
+
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs text-gray-400">
+                已選 {batchTagIds.size} 個標籤
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setBatchTagIds(new Set(visibleTags.map((t) => t.id)))}
+                  className="text-xs text-[#D12351] hover:underline"
+                >
+                  全選
+                </button>
+                <button
+                  onClick={() => setBatchTagIds(new Set())}
+                  className="text-xs text-gray-400 hover:underline"
+                >
+                  取消全選
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-4 max-h-52 space-y-2 overflow-y-auto rounded-lg border border-gray-100 p-2">
+              {visibleTags.length === 0 && (
+                <p className="text-sm text-gray-400">
+                  {tagSearch ? "沒有符合的標籤" : "尚無標籤"}
+                </p>
+              )}
+              {visibleTags.map((tag) => (
+                <label key={tag.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-gray-50">
                   <input
                     type="checkbox"
                     checked={batchTagIds.has(tag.id)}
@@ -380,6 +478,7 @@ export default function TourListClient({ tours: initial, tags, hasFilters }: Tou
                 </label>
               ))}
             </div>
+
             {batchError && <p className="mb-3 text-sm text-rose-600">{batchError}</p>}
             <div className="flex justify-end gap-2">
               <button
@@ -395,7 +494,11 @@ export default function TourListClient({ tours: initial, tags, hasFilters }: Tou
                 className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                 style={{ backgroundColor: "#D12351" }}
               >
-                {batchLoading ? "處理中…" : "確認"}
+                {batchLoading
+                  ? "處理中…"
+                  : batchMode === "add"
+                  ? `新增至 ${selectedIds.size} 個方案`
+                  : `從 ${selectedIds.size} 個方案移除`}
               </button>
             </div>
           </div>

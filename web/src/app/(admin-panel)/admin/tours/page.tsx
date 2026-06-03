@@ -7,6 +7,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import TourFilterBar from "@/components/admin/tours/TourFilterBar";
 import TourListClient from "@/components/admin/tours/TourListClient";
 
+const VALID_LIMITS = [0, 10, 20, 50, 100];
+
 export default async function ToursPage({
   searchParams,
 }: {
@@ -15,13 +17,23 @@ export default async function ToursPage({
     regionId?: string;
     subRegionId?: string;
     tagId?: string;
+    page?: string;
+    limit?: string;
   }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const { q, regionId, subRegionId, tagId } = await searchParams;
+  const { q, regionId, subRegionId, tagId, page: pageParam, limit: limitParam } =
+    await searchParams;
+
   const hasFilters = !!(q || regionId || subRegionId || tagId);
+
+  const parsedLimit = parseInt(limitParam ?? "20", 10);
+  const pageSize = VALID_LIMITS.includes(parsedLimit) ? parsedLimit : 20;
+  const currentPage = Math.max(1, parseInt(pageParam ?? "1", 10));
+  const skip = pageSize === 0 ? undefined : (currentPage - 1) * pageSize;
+  const take = pageSize === 0 ? undefined : pageSize;
 
   const where: Prisma.TourWhereInput = {};
   if (q) where.name = { contains: q, mode: "insensitive" };
@@ -29,7 +41,7 @@ export default async function ToursPage({
   else if (regionId) where.subRegion = { regionId };
   if (tagId) where.tags = { some: { id: tagId } };
 
-  const [tours, regions, tags] = await Promise.all([
+  const [tours, filteredCount, allCount, regions, tags] = await Promise.all([
     db.tour.findMany({
       where,
       include: {
@@ -38,7 +50,11 @@ export default async function ToursPage({
         _count: { select: { files: true } },
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      ...(skip !== undefined && { skip }),
+      ...(take !== undefined && { take }),
     }),
+    db.tour.count({ where }),
+    db.tour.count(),
     db.region.findMany({
       select: {
         id: true,
@@ -56,7 +72,27 @@ export default async function ToursPage({
     }),
   ]);
 
-  const listKey = `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagId ?? ""}`;
+  const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredCount / pageSize);
+
+  // Build base query string for pagination links (without page param)
+  const baseQs = new URLSearchParams();
+  if (q) baseQs.set("q", q);
+  if (regionId) baseQs.set("regionId", regionId);
+  if (subRegionId) baseQs.set("subRegionId", subRegionId);
+  if (tagId) baseQs.set("tagId", tagId);
+  if (pageSize !== 20) baseQs.set("limit", String(pageSize));
+
+  function pageHref(p: number) {
+    const ps = new URLSearchParams(baseQs.toString());
+    if (p > 1) ps.set("page", String(p));
+    const qs = ps.toString();
+    return `/admin/tours${qs ? `?${qs}` : ""}`;
+  }
+
+  const prevHref = currentPage > 1 ? pageHref(currentPage - 1) : null;
+  const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : null;
+
+  const listKey = `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagId ?? ""}|${currentPage}|${pageSize}`;
 
   return (
     <div>
@@ -77,7 +113,26 @@ export default async function ToursPage({
       <Suspense>
         <TourFilterBar regions={regions} tags={tags} />
       </Suspense>
-      <TourListClient key={listKey} tours={tours} tags={tags} hasFilters={hasFilters} />
+
+      <p className="mb-2 text-xs text-gray-400">
+        {hasFilters
+          ? `篩選後 ${filteredCount} 筆（共 ${allCount} 筆）`
+          : `共 ${allCount} 筆`}
+      </p>
+
+      <TourListClient
+        key={listKey}
+        tours={tours}
+        tags={tags}
+        hasFilters={hasFilters}
+        filteredCount={filteredCount}
+        allCount={allCount}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        prevHref={prevHref}
+        nextHref={nextHref}
+      />
     </div>
   );
 }
