@@ -193,8 +193,8 @@ export default function TourListClient({
   const router = useRouter();
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // Drag is only available when no filters AND all tours fit in one view
-  const canDrag = !hasFilters && (pageSize === 0 || allCount <= pageSize);
+  // Drag is available whenever all filtered results fit on a single page
+  const canDrag = pageSize === 0 || filteredCount <= pageSize;
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -319,9 +319,7 @@ export default function TourListClient({
 
       {!canDrag && (
         <p className="mb-2 text-xs text-gray-400">
-          {hasFilters
-            ? "清除所有篩選條件後可拖曳調整排序"
-            : "選擇「全部」顯示才可拖曳調整排序"}
+          目前篩選結果有多頁，請選擇「全部」顯示才可拖曳排序
         </p>
       )}
       {dragError && (
