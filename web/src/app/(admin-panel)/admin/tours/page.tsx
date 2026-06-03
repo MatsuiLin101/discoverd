@@ -124,6 +124,7 @@ export default async function ToursPage({
         key={listKey}
         tours={tours}
         tags={tags}
+        regions={regions}
         hasFilters={hasFilters}
         filteredCount={filteredCount}
         allCount={allCount}

@@ -38,6 +38,12 @@ type TourRow = {
 
 type TagOption = { id: string; name: string };
 
+type RegionOption = {
+  id: string;
+  name: string;
+  subRegions: { id: string; name: string }[];
+};
+
 function GripIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -153,6 +159,7 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
 interface TourListClientProps {
   tours: TourRow[];
   tags: TagOption[];
+  regions: RegionOption[];
   hasFilters: boolean;
   filteredCount: number;
   allCount: number;
@@ -166,6 +173,7 @@ interface TourListClientProps {
 export default function TourListClient({
   tours: initial,
   tags,
+  regions,
   hasFilters,
   filteredCount,
   allCount,
@@ -183,17 +191,33 @@ export default function TourListClient({
     setSelectedIds(new Set());
   }, [initial]);
 
+  // Batch tags state
   const [batchMode, setBatchMode] = useState<"add" | "remove" | null>(null);
   const [batchTagIds, setBatchTagIds] = useState<Set<string>>(new Set());
   const [tagSearch, setTagSearch] = useState("");
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchError, setBatchError] = useState<string | null>(null);
+
+  // Batch publish state
+  const [publishLoading, setPublishLoading] = useState(false);
+
+  // Batch delete state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Batch region state
+  const [regionModalOpen, setRegionModalOpen] = useState(false);
+  const [selectedRegionId, setSelectedRegionId] = useState("");
+  const [selectedSubRegionId, setSelectedSubRegionId] = useState("");
+  const [regionLoading, setRegionLoading] = useState(false);
+  const [regionError, setRegionError] = useState<string | null>(null);
+
   const [dragError, setDragError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const router = useRouter();
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // Drag is available whenever all filtered results fit on a single page
   const canDrag = pageSize === 0 || filteredCount <= pageSize;
 
   async function handleDragEnd(event: DragEndEvent) {
@@ -237,6 +261,7 @@ export default function TourListClient({
     });
   }
 
+  // Batch tags
   function openBatchModal(mode: "add" | "remove") {
     setBatchMode(mode);
     setBatchTagIds(new Set());
@@ -289,6 +314,99 @@ export default function TourListClient({
     }
   }
 
+  // Batch publish
+  async function applyBatchPublish(published: boolean) {
+    setPublishLoading(true);
+    setActionError(null);
+    try {
+      const res = await fetch("/api/admin/tours/batch-publish", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tourIds: Array.from(selectedIds), published }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setActionError(data.error ?? "操作失敗");
+        return;
+      }
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch {
+      setActionError("操作失敗，請重試");
+    } finally {
+      setPublishLoading(false);
+    }
+  }
+
+  // Batch delete
+  async function applyBatchDelete() {
+    setDeleteLoading(true);
+    setActionError(null);
+    try {
+      const res = await fetch("/api/admin/tours/batch-delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tourIds: Array.from(selectedIds) }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setActionError(data.error ?? "刪除失敗");
+        setDeleteConfirmOpen(false);
+        return;
+      }
+      setDeleteConfirmOpen(false);
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch {
+      setActionError("刪除失敗，請重試");
+      setDeleteConfirmOpen(false);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
+  // Batch region
+  function openRegionModal() {
+    setRegionModalOpen(true);
+    setSelectedRegionId("");
+    setSelectedSubRegionId("");
+    setRegionError(null);
+  }
+
+  async function applyBatchRegion() {
+    if (!selectedSubRegionId) {
+      setRegionError("請選擇次分類");
+      return;
+    }
+    setRegionLoading(true);
+    setRegionError(null);
+    try {
+      const res = await fetch("/api/admin/tours/batch-region", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tourIds: Array.from(selectedIds),
+          subRegionId: selectedSubRegionId,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setRegionError(data.error ?? "操作失敗");
+        return;
+      }
+      setRegionModalOpen(false);
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch {
+      setRegionError("操作失敗，請重試");
+    } finally {
+      setRegionLoading(false);
+    }
+  }
+
+  const subRegionsForModal =
+    regions.find((r) => r.id === selectedRegionId)?.subRegions ?? [];
+
   return (
     <>
       {selectedIds.size > 0 && (
@@ -309,12 +427,42 @@ export default function TourListClient({
             批次移除標籤
           </button>
           <button
+            onClick={openRegionModal}
+            className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100"
+          >
+            批次更改分類
+          </button>
+          <button
+            onClick={() => applyBatchPublish(true)}
+            disabled={publishLoading}
+            className="rounded-md border border-emerald-500 px-3 py-1 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-50"
+          >
+            批次發布
+          </button>
+          <button
+            onClick={() => applyBatchPublish(false)}
+            disabled={publishLoading}
+            className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50"
+          >
+            批次取消發布
+          </button>
+          <button
+            onClick={() => { setDeleteConfirmOpen(true); setActionError(null); }}
+            className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50"
+          >
+            批次刪除
+          </button>
+          <button
             onClick={() => setSelectedIds(new Set())}
             className="ml-auto text-xs text-gray-400 hover:text-gray-600"
           >
             取消選取
           </button>
         </div>
+      )}
+
+      {actionError && (
+        <p className="mb-2 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-600">{actionError}</p>
       )}
 
       {!canDrag && (
@@ -416,17 +564,14 @@ export default function TourListClient({
         </div>
       )}
 
+      {/* Batch tags modal */}
       {batchMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
             <h3 className="mb-1 text-base font-semibold text-gray-800">
               {batchMode === "add" ? "批次新增標籤" : "批次移除標籤"}
             </h3>
-            <p className="mb-4 text-sm text-gray-500">
-              {batchMode === "add"
-                ? `對象：${selectedIds.size} 個方案`
-                : `對象：${selectedIds.size} 個方案`}
-            </p>
+            <p className="mb-4 text-sm text-gray-500">對象：{selectedIds.size} 個方案</p>
 
             {tags.length > 5 && (
               <input
@@ -439,9 +584,7 @@ export default function TourListClient({
             )}
 
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs text-gray-400">
-                已選 {batchTagIds.size} 個標籤
-              </span>
+              <span className="text-xs text-gray-400">已選 {batchTagIds.size} 個標籤</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setBatchTagIds(new Set(visibleTags.map((t) => t.id)))}
@@ -465,7 +608,10 @@ export default function TourListClient({
                 </p>
               )}
               {visibleTags.map((tag) => (
-                <label key={tag.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-gray-50">
+                <label
+                  key={tag.id}
+                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-gray-50"
+                >
                   <input
                     type="checkbox"
                     checked={batchTagIds.has(tag.id)}
@@ -497,6 +643,102 @@ export default function TourListClient({
                   : batchMode === "add"
                   ? `新增至 ${selectedIds.size} 個方案`
                   : `從 ${selectedIds.size} 個方案移除`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch region modal */}
+      {regionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="mb-1 text-base font-semibold text-gray-800">批次更改分類</h3>
+            <p className="mb-4 text-sm text-gray-500">對象：{selectedIds.size} 個方案</p>
+
+            <div className="mb-3 flex flex-col gap-1">
+              <label className="text-xs font-medium text-gray-500">主分類</label>
+              <select
+                value={selectedRegionId}
+                onChange={(e) => {
+                  setSelectedRegionId(e.target.value);
+                  setSelectedSubRegionId("");
+                }}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351]"
+              >
+                <option value="">請選擇主分類</option>
+                {regions.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-4 flex flex-col gap-1">
+              <label className="text-xs font-medium text-gray-500">次分類</label>
+              <select
+                value={selectedSubRegionId}
+                onChange={(e) => setSelectedSubRegionId(e.target.value)}
+                disabled={!selectedRegionId}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351] disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                <option value="">請選擇次分類</option>
+                {subRegionsForModal.map((sr) => (
+                  <option key={sr.id} value={sr.id}>
+                    {sr.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {regionError && <p className="mb-3 text-sm text-rose-600">{regionError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setRegionModalOpen(false)}
+                disabled={regionLoading}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={applyBatchRegion}
+                disabled={regionLoading || !selectedSubRegionId}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                style={{ backgroundColor: "#D12351" }}
+              >
+                {regionLoading ? "處理中…" : `更改 ${selectedIds.size} 個方案的分類`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch delete confirm modal */}
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-base font-semibold text-gray-800">確認批次刪除</h3>
+            <p className="mb-1 text-sm text-gray-700">
+              確定要刪除 <span className="font-semibold text-rose-600">{selectedIds.size} 個方案</span>？
+            </p>
+            <p className="mb-5 text-sm text-gray-500">
+              刪除後無法復原，相關圖片與檔案也會一併刪除。
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                disabled={deleteLoading}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={applyBatchDelete}
+                disabled={deleteLoading}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+              >
+                {deleteLoading ? "刪除中…" : `刪除 ${selectedIds.size} 個方案`}
               </button>
             </div>
           </div>
