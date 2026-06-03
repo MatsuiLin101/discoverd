@@ -5,6 +5,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 interface SearchResult {
   id: string;
+  slug: string;
   name: string;
   thumbnail: string | null;
   price: number;
@@ -152,7 +153,7 @@ export default function SiteHeader() {
                   {matches.map((m, i) => (
                     <Link
                       key={m.id}
-                      href={`/regions/${m.regionSlug}/${m.subRegionSlug}`}
+                      href={`/regions/${m.regionSlug}/${m.subRegionSlug}?tour=${m.slug}`}
                       className={`fh-sr-item${i === activeIndex ? " sr-active" : ""}`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setOpen(false)}

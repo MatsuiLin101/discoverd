@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { SubRegionWithTours, TourItem } from "@/lib/frontend-data";
 
 interface Props {
@@ -27,6 +28,10 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -46,6 +51,22 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
       document.body.style.overflow = "";
     };
   }, [modalOpen]);
+
+  // Open modal when ?tour= query param is present (e.g. navigated from search)
+  useEffect(() => {
+    const tourSlug = searchParams.get("tour");
+    if (!tourSlug) return;
+    for (const region of regions) {
+      const tour = region.tours.find((t) => t.slug === tourSlug);
+      if (tour) {
+        setModalTour(tour);
+        setMobileCollapsed(false);
+        setModalOpen(true);
+        router.replace(pathname, { scroll: false });
+        return;
+      }
+    }
+  }, [searchParams, regions, pathname, router]);
 
   // Escape key to close modals
   useEffect(() => {

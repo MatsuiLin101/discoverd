@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import SiteHeader from "@/components/frontend/SiteHeader";
@@ -50,11 +51,13 @@ export default async function ToursPage({ params }: Props) {
       </nav>
 
       <section className="fh-listing">
-        <TourSection
-          parent={{ name: data.region.name }}
-          regions={data.subRegions}
-          initialSlug={validSlug}
-        />
+        <Suspense fallback={null}>
+          <TourSection
+            parent={{ name: data.region.name }}
+            regions={data.subRegions}
+            initialSlug={validSlug}
+          />
+        </Suspense>
       </section>
 
       <SiteFooter />
