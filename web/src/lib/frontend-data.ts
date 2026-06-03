@@ -1,12 +1,3 @@
-export interface SearchItem {
-  nm: string;
-  region: string;
-  tags: string[];
-  price: string;
-  img: string;
-  kw: string;
-}
-
 export interface Tour {
   img: string;
   code: string;
@@ -506,16 +497,3 @@ export interface TourItem {
   images: string[];
 }
 
-export const SEARCH_DATA: SearchItem[] = [
-  { nm: "北海道 美瑛・富良野 花田", region: "日本", tags: ["花季", "溫泉", "5 日"], price: "42,900", img: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=200&q=70", kw: "北海道 美瑛 富良野 花 日本 hokkaido" },
-  { nm: "京都 嵐山・嵯峨野祕境", region: "日本", tags: ["世界遺產", "美食", "6 日"], price: "48,500", img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=200&q=70", kw: "京都 嵐山 嵯峨野 日本 kyoto" },
-  { nm: "沖繩 離島跳島漫遊", region: "日本", tags: ["海島", "跳島", "5 日"], price: "39,800", img: "https://images.unsplash.com/photo-1528127269322-539801943592?w=200&q=70", kw: "沖繩 離島 跳島 日本 okinawa 海" },
-  { nm: "首爾 美食與宮殿散策", region: "韓國", tags: ["美食", "購物", "4 日"], price: "25,900", img: "https://images.unsplash.com/photo-1538485399081-7191377e8241?w=200&q=70", kw: "首爾 韓國 美食 宮殿 seoul" },
-  { nm: "釜山 海雲台・甘川文化村", region: "韓國", tags: ["海景", "文化", "5 日"], price: "28,500", img: "https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=200&q=70", kw: "釜山 韓國 海雲台 甘川 busan" },
-  { nm: "冰島 環島・極光獵旅", region: "歐洲", tags: ["極光", "環島", "8 日"], price: "128,000", img: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=200&q=70", kw: "冰島 歐洲 極光 環島 iceland 北歐" },
-  { nm: "義大利 托斯卡尼莊園", region: "歐洲", tags: ["莊園", "美食", "9 日"], price: "138,000", img: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=200&q=70", kw: "義大利 托斯卡尼 歐洲 italy tuscany" },
-  { nm: "峇里島 烏布森林療癒", region: "東南亞", tags: ["療癒", "SPA", "5 日"], price: "32,900", img: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=200&q=70", kw: "峇里島 烏布 東南亞 bali 印尼" },
-  { nm: "清邁 古城與山林咖啡", region: "東南亞", tags: ["咖啡", "古城", "5 日"], price: "26,800", img: "https://images.unsplash.com/photo-1528181304800-259b08848526?w=200&q=70", kw: "清邁 泰國 東南亞 chiang mai 咖啡" },
-  { nm: "張家界 天門山奇景", region: "中國", tags: ["奇景", "健行", "6 日"], price: "34,900", img: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=200&q=70", kw: "張家界 天門山 中國 china" },
-  { nm: "花蓮 太魯閣・海岸縱谷", region: "國旅", tags: ["山海", "輕旅行", "3 日"], price: "12,800", img: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=200&q=70", kw: "花蓮 太魯閣 國旅 台灣 taiwan" },
-];

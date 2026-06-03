@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { SEARCH_DATA, type SearchItem } from "@/lib/frontend-data";
+
+interface SearchResult {
+  id: string;
+  name: string;
+  thumbnail: string | null;
+  price: number;
+  tags: string[];
+  regionName: string;
+  regionSlug: string;
+  subRegionSlug: string;
+}
 
 function highlight(name: string, q: string): string {
   if (!q) return name;
@@ -17,27 +27,34 @@ function highlight(name: string, q: string): string {
 
 export default function SiteHeader() {
   const [query, setQuery] = useState("");
-  const [matches, setMatches] = useState<SearchItem[]>([]);
+  const [matches, setMatches] = useState<SearchResult[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const search = useCallback((q: string) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     if (!q.trim()) {
       setMatches([]);
       setOpen(false);
       return;
     }
-    const ql = q.toLowerCase();
-    const results = SEARCH_DATA.filter(
-      (d) =>
-        d.nm.toLowerCase().includes(ql) ||
-        d.kw.toLowerCase().includes(ql) ||
-        d.region.includes(q)
-    ).slice(0, 8);
-    setMatches(results);
-    setActiveIndex(-1);
-    setOpen(true);
+    timerRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
+        const data: SearchResult[] = await res.json();
+        setMatches(data);
+        setActiveIndex(-1);
+        setOpen(true);
+      } catch {
+        setMatches([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
   }, []);
 
   useEffect(() => {
@@ -116,7 +133,9 @@ export default function SiteHeader() {
 
           {open && query.trim() && (
             <div className="fh-search-results">
-              {matches.length === 0 ? (
+              {loading ? (
+                <div className="fh-sr-empty">搜尋中⋯</div>
+              ) : matches.length === 0 ? (
                 <div className="fh-sr-empty">
                   找不到符合「<span className="k">{query}</span>」的行程
                   <br />
@@ -131,23 +150,22 @@ export default function SiteHeader() {
                     </span>
                   </div>
                   {matches.map((m, i) => (
-                    <div
-                      key={i}
+                    <Link
+                      key={m.id}
+                      href={`/regions/${m.regionSlug}/${m.subRegionSlug}`}
                       className={`fh-sr-item${i === activeIndex ? " sr-active" : ""}`}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setOpen(false);
-                      }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setOpen(false)}
                     >
                       <div className="fh-sr-thumb">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={m.img} alt="" />
+                        <img src={m.thumbnail ?? ""} alt="" />
                       </div>
                       <div className="fh-sr-txt">
                         <div
                           className="fh-sr-nm"
                           dangerouslySetInnerHTML={{
-                            __html: highlight(m.nm, query),
+                            __html: highlight(m.name, query),
                           }}
                         />
                         <div className="fh-sr-tags">
@@ -160,10 +178,10 @@ export default function SiteHeader() {
                       </div>
                       <div className="fh-sr-price">
                         <span className="cur">$</span>
-                        <span className="num">{m.price}</span>
+                        <span className="num">{m.price.toLocaleString()}</span>
                         <span className="unit">起</span>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </>
               )}
