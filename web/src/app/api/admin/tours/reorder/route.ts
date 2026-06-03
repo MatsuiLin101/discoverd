@@ -7,16 +7,12 @@ const schema = z.object({
   items: z.array(z.object({ id: z.string(), sortOrder: z.number().int() })).min(1),
 });
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(req: NextRequest) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "請先登入" }, { status: 403 });
   }
 
-  const { id: regionId } = await params;
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -25,7 +21,7 @@ export async function PATCH(
 
   await db.$transaction(
     parsed.data.items.map(({ id, sortOrder }) =>
-      db.subRegion.update({ where: { id, regionId }, data: { sortOrder } })
+      db.tour.update({ where: { id }, data: { sortOrder } })
     )
   );
 

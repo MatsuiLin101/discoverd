@@ -1,0 +1,406 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import DeleteTourButton from "./DeleteTourButton";
+
+type TourRow = {
+  id: string;
+  name: string;
+  thumbnail: string | null;
+  price: number;
+  published: boolean;
+  sortOrder: number;
+  subRegion: {
+    name: string;
+    region: { name: string };
+  };
+  tags: { id: string; name: string }[];
+  _count: { files: number };
+};
+
+type TagOption = { id: string; name: string };
+
+function GripIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <circle cx="5" cy="4" r="1.5" />
+      <circle cx="11" cy="4" r="1.5" />
+      <circle cx="5" cy="8" r="1.5" />
+      <circle cx="11" cy="8" r="1.5" />
+      <circle cx="5" cy="12" r="1.5" />
+      <circle cx="11" cy="12" r="1.5" />
+    </svg>
+  );
+}
+
+interface SortableTourRowProps {
+  tour: TourRow;
+  isSelected: boolean;
+  onToggle: (id: string) => void;
+  showDragHandle: boolean;
+}
+
+function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: SortableTourRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: tour.id,
+  });
+
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={`border-b border-gray-100 ${
+        isDragging ? "bg-blue-50 opacity-80 shadow-sm" : "hover:bg-gray-50"
+      }`}
+    >
+      <td className="px-3 py-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggle(tour.id)}
+          className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
+        />
+      </td>
+      <td className="px-2 py-3">
+        {showDragHandle ? (
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab touch-none p-1 text-gray-300 hover:text-gray-500 active:cursor-grabbing"
+            aria-label="拖曳排序"
+          >
+            <GripIcon />
+          </button>
+        ) : (
+          <span className="inline-block w-6" />
+        )}
+      </td>
+      <td className="px-4 py-3">
+        <div className="relative h-10 w-14 overflow-hidden rounded bg-gray-100">
+          <Image
+            src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
+            alt={tour.name}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
+      </td>
+      <td className="px-4 py-3 font-medium text-gray-800">{tour.name}</td>
+      <td className="px-4 py-3 text-gray-500">
+        {tour.subRegion.region.name} › {tour.subRegion.name}
+      </td>
+      <td className="px-4 py-3 text-gray-700">NT${tour.price.toLocaleString()}</td>
+      <td className="px-4 py-3">
+        <div className="flex flex-wrap gap-1">
+          {tour.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag.id}
+              className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+            >
+              {tag.name}
+            </span>
+          ))}
+          {tour.tags.length > 3 && (
+            <span className="text-xs text-gray-400">+{tour.tags.length - 3}</span>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-3 text-gray-500">{tour._count.files} 個</td>
+      <td className="px-4 py-3">
+        {tour.published ? (
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+            已發布
+          </span>
+        ) : (
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+            未發布
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/admin/tours/${tour.id}`}
+            className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+          >
+            編輯
+          </Link>
+          <DeleteTourButton tourId={tour.id} />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+interface TourListClientProps {
+  tours: TourRow[];
+  tags: TagOption[];
+  hasFilters: boolean;
+}
+
+export default function TourListClient({ tours: initial, tags, hasFilters }: TourListClientProps) {
+  const [tours, setTours] = useState(initial);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setTours(initial);
+    setSelectedIds(new Set());
+  }, [initial]);
+  const [batchMode, setBatchMode] = useState<"add" | "remove" | null>(null);
+  const [batchTagIds, setBatchTagIds] = useState<Set<string>>(new Set());
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchError, setBatchError] = useState<string | null>(null);
+  const [dragError, setDragError] = useState<string | null>(null);
+
+  const router = useRouter();
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = tours.findIndex((t) => t.id === active.id);
+    const newIndex = tours.findIndex((t) => t.id === over.id);
+    const prev = tours;
+    const next = arrayMove(tours, oldIndex, newIndex);
+    setTours(next);
+    setDragError(null);
+
+    try {
+      const res = await fetch("/api/admin/tours/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: next.map((t, i) => ({ id: t.id, sortOrder: i })) }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setTours(prev);
+      setDragError("排序儲存失敗，已還原");
+    }
+  }
+
+  const allSelected = tours.length > 0 && tours.every((t) => selectedIds.has(t.id));
+  const someSelected = tours.some((t) => selectedIds.has(t.id)) && !allSelected;
+
+  function toggleAll(checked: boolean) {
+    if (checked) setSelectedIds(new Set(tours.map((t) => t.id)));
+    else setSelectedIds(new Set());
+  }
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function openBatchModal(mode: "add" | "remove") {
+    setBatchMode(mode);
+    setBatchTagIds(new Set());
+    setBatchError(null);
+  }
+
+  function toggleBatchTag(id: string) {
+    setBatchTagIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function applyBatchTags() {
+    if (batchTagIds.size === 0) {
+      setBatchError("請選擇至少一個標籤");
+      return;
+    }
+    setBatchLoading(true);
+    setBatchError(null);
+    try {
+      const res = await fetch("/api/admin/tours/batch-tags", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tourIds: Array.from(selectedIds),
+          action: batchMode,
+          tagIds: Array.from(batchTagIds),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setBatchError(data.error ?? "操作失敗");
+        return;
+      }
+      setBatchMode(null);
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch {
+      setBatchError("操作失敗，請重試");
+    } finally {
+      setBatchLoading(false);
+    }
+  }
+
+  return (
+    <>
+      {selectedIds.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-[#D12351]/20 bg-rose-50 px-4 py-2">
+          <span className="text-sm font-medium text-[#D12351]">
+            已選取 {selectedIds.size} 個方案
+          </span>
+          <button
+            onClick={() => openBatchModal("add")}
+            className="rounded-md border border-[#D12351] px-3 py-1 text-xs font-medium text-[#D12351] transition-colors hover:bg-[#D12351] hover:text-white"
+          >
+            批次新增標籤
+          </button>
+          <button
+            onClick={() => openBatchModal("remove")}
+            className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100"
+          >
+            批次移除標籤
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="ml-auto text-xs text-gray-400 hover:text-gray-600"
+          >
+            取消選取
+          </button>
+        </div>
+      )}
+
+      {hasFilters && (
+        <p className="mb-2 text-xs text-gray-400">清除所有篩選條件後可拖曳調整排序</p>
+      )}
+      {dragError && (
+        <p className="mb-2 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-600">{dragError}</p>
+      )}
+
+      <DndContext
+        id="tours-sortable"
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50 text-left">
+                <th className="px-3 py-3">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={(el: HTMLInputElement | null) => {
+                      if (el) el.indeterminate = someSelected;
+                    }}
+                    onChange={(e) => toggleAll(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
+                  />
+                </th>
+                <th className="w-8 px-2 py-3" />
+                <th className="px-4 py-3 font-medium text-gray-600">縮圖</th>
+                <th className="px-4 py-3 font-medium text-gray-600">名稱</th>
+                <th className="px-4 py-3 font-medium text-gray-600">分類</th>
+                <th className="px-4 py-3 font-medium text-gray-600">價格</th>
+                <th className="px-4 py-3 font-medium text-gray-600">標籤</th>
+                <th className="px-4 py-3 font-medium text-gray-600">檔案</th>
+                <th className="px-4 py-3 font-medium text-gray-600">狀態</th>
+                <th className="px-4 py-3 font-medium text-gray-600">操作</th>
+              </tr>
+            </thead>
+            <SortableContext items={tours.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+              <tbody>
+                {tours.length === 0 && (
+                  <tr>
+                    <td colSpan={10} className="px-4 py-12 text-center text-sm text-gray-400">
+                      沒有符合條件的旅遊方案
+                    </td>
+                  </tr>
+                )}
+                {tours.map((tour) => (
+                  <SortableTourRow
+                    key={tour.id}
+                    tour={tour}
+                    isSelected={selectedIds.has(tour.id)}
+                    onToggle={toggleOne}
+                    showDragHandle={!hasFilters}
+                  />
+                ))}
+              </tbody>
+            </SortableContext>
+          </table>
+        </div>
+      </DndContext>
+
+      {batchMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-base font-semibold text-gray-800">
+              {batchMode === "add" ? "批次新增標籤" : "批次移除標籤"}
+            </h3>
+            <p className="mb-3 text-sm text-gray-500">
+              {batchMode === "add"
+                ? `將以下標籤新增至 ${selectedIds.size} 個方案：`
+                : `從 ${selectedIds.size} 個方案移除以下標籤：`}
+            </p>
+            <div className="mb-4 max-h-52 space-y-2 overflow-y-auto">
+              {tags.length === 0 && <p className="text-sm text-gray-400">尚無標籤</p>}
+              {tags.map((tag) => (
+                <label key={tag.id} className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={batchTagIds.has(tag.id)}
+                    onChange={() => toggleBatchTag(tag.id)}
+                    className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
+                  />
+                  <span className="text-sm text-gray-700">{tag.name}</span>
+                </label>
+              ))}
+            </div>
+            {batchError && <p className="mb-3 text-sm text-rose-600">{batchError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setBatchMode(null)}
+                disabled={batchLoading}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={applyBatchTags}
+                disabled={batchLoading}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                style={{ backgroundColor: "#D12351" }}
+              >
+                {batchLoading ? "處理中…" : "確認"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

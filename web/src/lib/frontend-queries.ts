@@ -76,7 +76,7 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
           name: true,
           tours: {
             where: { published: true },
-            orderBy: { createdAt: "asc" },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
             select: {
               id: true,
               slug: true,

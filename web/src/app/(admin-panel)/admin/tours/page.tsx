@@ -1,22 +1,62 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import DeleteTourButton from "@/components/admin/tours/DeleteTourButton";
+import type { Prisma } from "@/generated/prisma/client";
+import TourFilterBar from "@/components/admin/tours/TourFilterBar";
+import TourListClient from "@/components/admin/tours/TourListClient";
 
-export default async function ToursPage() {
+export default async function ToursPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    q?: string;
+    regionId?: string;
+    subRegionId?: string;
+    tagId?: string;
+  }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const tours = await db.tour.findMany({
-    include: {
-      subRegion: { include: { region: true } },
-      tags: true,
-      _count: { select: { files: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const { q, regionId, subRegionId, tagId } = await searchParams;
+  const hasFilters = !!(q || regionId || subRegionId || tagId);
+
+  const where: Prisma.TourWhereInput = {};
+  if (q) where.name = { contains: q, mode: "insensitive" };
+  if (subRegionId) where.subRegionId = subRegionId;
+  else if (regionId) where.subRegion = { regionId };
+  if (tagId) where.tags = { some: { id: tagId } };
+
+  const [tours, regions, tags] = await Promise.all([
+    db.tour.findMany({
+      where,
+      include: {
+        subRegion: { include: { region: true } },
+        tags: true,
+        _count: { select: { files: true } },
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    }),
+    db.region.findMany({
+      select: {
+        id: true,
+        name: true,
+        subRegions: {
+          orderBy: { sortOrder: "asc" },
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { sortOrder: "asc" },
+    }),
+    db.tag.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const listKey = `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagId ?? ""}`;
 
   return (
     <div>
@@ -34,91 +74,10 @@ export default async function ToursPage() {
         </Link>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 bg-gray-50 text-left">
-              <th className="px-4 py-3 font-medium text-gray-600">縮圖</th>
-              <th className="px-4 py-3 font-medium text-gray-600">名稱</th>
-              <th className="px-4 py-3 font-medium text-gray-600">分類</th>
-              <th className="px-4 py-3 font-medium text-gray-600">價格</th>
-              <th className="px-4 py-3 font-medium text-gray-600">標籤</th>
-              <th className="px-4 py-3 font-medium text-gray-600">檔案</th>
-              <th className="px-4 py-3 font-medium text-gray-600">狀態</th>
-              <th className="px-4 py-3 font-medium text-gray-600">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tours.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-400">
-                  尚無旅遊方案，請點擊右上角新增
-                </td>
-              </tr>
-            )}
-            {tours.map((tour) => (
-              <tr key={tour.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div className="relative h-10 w-14 overflow-hidden rounded bg-gray-100">
-                    <Image
-                      src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
-                      alt={tour.name}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                </td>
-                <td className="px-4 py-3 font-medium text-gray-800">{tour.name}</td>
-                <td className="px-4 py-3 text-gray-500">
-                  {tour.subRegion.region.name} › {tour.subRegion.name}
-                </td>
-                <td className="px-4 py-3 text-gray-700">
-                  NT${tour.price.toLocaleString()}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    {tour.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag.id}
-                        className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
-                      >
-                        {tag.name}
-                      </span>
-                    ))}
-                    {tour.tags.length > 3 && (
-                      <span className="text-xs text-gray-400">+{tour.tags.length - 3}</span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-500">{tour._count.files} 個</td>
-                <td className="px-4 py-3">
-                  {tour.published ? (
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
-                      已發布
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                      未發布
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/admin/tours/${tour.id}`}
-                      className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
-                    >
-                      編輯
-                    </Link>
-                    <DeleteTourButton tourId={tour.id} />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Suspense>
+        <TourFilterBar regions={regions} tags={tags} />
+      </Suspense>
+      <TourListClient key={listKey} tours={tours} tags={tags} hasFilters={hasFilters} />
     </div>
   );
 }
