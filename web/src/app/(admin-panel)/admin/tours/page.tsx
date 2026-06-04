@@ -16,7 +16,8 @@ export default async function ToursPage({
     q?: string;
     regionId?: string;
     subRegionId?: string;
-    tagId?: string;
+    tagIds?: string;
+    published?: string;
     page?: string;
     limit?: string;
   }>;
@@ -24,10 +25,11 @@ export default async function ToursPage({
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const { q, regionId, subRegionId, tagId, page: pageParam, limit: limitParam } =
+  const { q, regionId, subRegionId, tagIds, published, page: pageParam, limit: limitParam } =
     await searchParams;
 
-  const hasFilters = !!(q || regionId || subRegionId || tagId);
+  const tagIdList = tagIds ? tagIds.split(",").filter(Boolean) : [];
+  const hasFilters = !!(q || regionId || subRegionId || tagIdList.length > 0 || published);
 
   const parsedLimit = parseInt(limitParam ?? "20", 10);
   const pageSize = VALID_LIMITS.includes(parsedLimit) ? parsedLimit : 20;
@@ -39,7 +41,9 @@ export default async function ToursPage({
   if (q) where.name = { contains: q, mode: "insensitive" };
   if (subRegionId) where.subRegionId = subRegionId;
   else if (regionId) where.subRegion = { regionId };
-  if (tagId) where.tags = { some: { id: tagId } };
+  if (tagIdList.length > 0) where.tags = { some: { id: { in: tagIdList } } };
+  if (published === "true") where.published = true;
+  else if (published === "false") where.published = false;
 
   const [tours, filteredCount, allCount, regions, tags] = await Promise.all([
     db.tour.findMany({
@@ -74,12 +78,12 @@ export default async function ToursPage({
 
   const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredCount / pageSize);
 
-  // Build base query string for pagination links (without page param)
   const baseQs = new URLSearchParams();
   if (q) baseQs.set("q", q);
   if (regionId) baseQs.set("regionId", regionId);
   if (subRegionId) baseQs.set("subRegionId", subRegionId);
-  if (tagId) baseQs.set("tagId", tagId);
+  if (tagIds) baseQs.set("tagIds", tagIds);
+  if (published) baseQs.set("published", published);
   if (pageSize !== 20) baseQs.set("limit", String(pageSize));
 
   function pageHref(p: number) {
@@ -92,18 +96,22 @@ export default async function ToursPage({
   const prevHref = currentPage > 1 ? pageHref(currentPage - 1) : null;
   const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : null;
 
-  const listKey = `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagId ?? ""}|${currentPage}|${pageSize}`;
+  const listKey = `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagIds ?? ""}|${published ?? ""}|${currentPage}|${pageSize}`;
+
+  const returnUrlQs = new URLSearchParams(baseQs.toString());
+  if (currentPage > 1) returnUrlQs.set("page", String(currentPage));
+  const returnUrl = `/admin/tours${returnUrlQs.toString() ? `?${returnUrlQs.toString()}` : ""}`;
 
   return (
     <div>
-      <div className="flex flex-col gap-3 mb-8 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">旅遊方案</h1>
           <p className="mt-1 text-sm text-gray-500">管理旅遊方案與行程</p>
         </div>
         <Link
-          href="/admin/tours/new"
-          className="px-4 py-2 text-sm font-medium text-white rounded-lg whitespace-nowrap"
+          href={`/admin/tours/new?returnUrl=${encodeURIComponent(returnUrl)}`}
+          className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg hover:opacity-85 whitespace-nowrap"
           style={{ backgroundColor: "#D12351" }}
         >
           新增旅遊方案
@@ -133,6 +141,7 @@ export default async function ToursPage({
         pageSize={pageSize}
         prevHref={prevHref}
         nextHref={nextHref}
+        returnUrl={returnUrl}
       />
     </div>
   );

@@ -20,6 +20,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteTourButton from "./DeleteTourButton";
+import FloatingToast from "@/components/admin/FloatingToast";
+import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 
 type TourRow = {
   id: string;
@@ -61,10 +63,16 @@ function TourMobileCard({
   tour,
   isSelected,
   onToggle,
+  onImageClick,
+  returnUrl,
+  onDelete,
 }: {
   tour: TourRow;
   isSelected: boolean;
   onToggle: (id: string) => void;
+  onImageClick: (src: string) => void;
+  returnUrl: string;
+  onDelete: (name: string) => void;
 }) {
   return (
     <div
@@ -79,7 +87,10 @@ function TourMobileCard({
           onChange={() => onToggle(tour.id)}
           className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#D12351]"
         />
-        <div className="relative h-10 overflow-hidden bg-gray-100 rounded w-14 shrink-0">
+        <div
+          className={`relative h-10 overflow-hidden bg-gray-100 rounded w-14 shrink-0${tour.thumbnail ? " cursor-zoom-in" : ""}`}
+          onClick={tour.thumbnail ? () => onImageClick(tour.thumbnail!) : undefined}
+        >
           <Image
             src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
             alt={tour.name}
@@ -119,12 +130,12 @@ function TourMobileCard({
           )}
           <div className="flex items-center gap-2 mt-2">
             <Link
-              href={`/admin/tours/${tour.id}`}
-              className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+              href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
+              className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
             >
               編輯
             </Link>
-            <DeleteTourButton tourId={tour.id} />
+            <DeleteTourButton tourId={tour.id} name={tour.name} onDelete={onDelete} />
           </div>
         </div>
       </div>
@@ -137,9 +148,20 @@ interface SortableTourRowProps {
   isSelected: boolean;
   onToggle: (id: string) => void;
   showDragHandle: boolean;
+  onImageClick: (src: string) => void;
+  returnUrl: string;
+  onDelete: (name: string) => void;
 }
 
-function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: SortableTourRowProps) {
+function SortableTourRow({
+  tour,
+  isSelected,
+  onToggle,
+  showDragHandle,
+  onImageClick,
+  returnUrl,
+  onDelete,
+}: SortableTourRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tour.id,
   });
@@ -177,7 +199,10 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
         )}
       </td>
       <td className="px-4 py-3">
-        <div className="relative h-10 overflow-hidden bg-gray-100 rounded w-14">
+        <div
+          className={`relative h-10 overflow-hidden bg-gray-100 rounded w-14${tour.thumbnail ? " cursor-zoom-in" : ""}`}
+          onClick={tour.thumbnail ? () => onImageClick(tour.thumbnail!) : undefined}
+        >
           <Image
             src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
             alt={tour.name}
@@ -219,12 +244,12 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
-            href={`/admin/tours/${tour.id}`}
-            className="whitespace-nowrap rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+            href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
+            className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             編輯
           </Link>
-          <DeleteTourButton tourId={tour.id} />
+          <DeleteTourButton tourId={tour.id} name={tour.name} onDelete={onDelete} />
         </div>
       </td>
     </tr>
@@ -243,6 +268,7 @@ interface TourListClientProps {
   pageSize: number;
   prevHref: string | null;
   nextHref: string | null;
+  returnUrl: string;
 }
 
 export default function TourListClient({
@@ -257,14 +283,38 @@ export default function TourListClient({
   pageSize,
   prevHref,
   nextHref,
+  returnUrl,
 }: TourListClientProps) {
   const [tours, setTours] = useState(initial);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Toast state
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [toastError, setToastError] = useState<string | null>(null);
+
+  // Lightbox
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   useEffect(() => {
     setTours(initial);
     setSelectedIds(new Set());
   }, [initial]);
+
+  // Read sessionStorage on mount for post-form save messages
+  useEffect(() => {
+    const msg = sessionStorage.getItem("adminSaveMsg");
+    if (msg) {
+      sessionStorage.removeItem("adminSaveMsg");
+      setSaveMsg(msg);
+      setTimeout(() => setSaveMsg(null), 3000);
+    }
+  }, []);
+
+  function showSuccess(msg: string) {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(null), 3000);
+  }
 
   // Batch tags state
   const [batchMode, setBatchMode] = useState<"add" | "remove" | null>(null);
@@ -288,12 +338,12 @@ export default function TourListClient({
   const [regionError, setRegionError] = useState<string | null>(null);
 
   const [dragError, setDragError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   const router = useRouter();
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const canDrag = pageSize === 0 || filteredCount <= pageSize;
+  // 有篩選時禁止拖曳，防止 sortOrder 與未顯示的 tour 產生衝突
+  const canDrag = !hasFilters && (pageSize === 0 || filteredCount <= pageSize);
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -313,6 +363,7 @@ export default function TourListClient({
         body: JSON.stringify({ items: next.map((t, i) => ({ id: t.id, sortOrder: i })) }),
       });
       if (!res.ok) throw new Error();
+      showSuccess("排序已更新");
     } catch {
       setTours(prev);
       setDragError("排序儲存失敗，已還原");
@@ -334,6 +385,11 @@ export default function TourListClient({
       else next.add(id);
       return next;
     });
+  }
+
+  function handleTourDeleted(tourId: string, name: string) {
+    setTours((prev) => prev.filter((t) => t.id !== tourId));
+    showSuccess(`已刪除旅遊方案「${name}」`);
   }
 
   // Batch tags
@@ -381,6 +437,7 @@ export default function TourListClient({
       }
       setBatchMode(null);
       setSelectedIds(new Set());
+      showSuccess(batchMode === "add" ? "已批次新增標籤" : "已批次移除標籤");
       router.refresh();
     } catch {
       setBatchError("操作失敗，請重試");
@@ -392,7 +449,7 @@ export default function TourListClient({
   // Batch publish
   async function applyBatchPublish(published: boolean) {
     setPublishLoading(true);
-    setActionError(null);
+    setToastError(null);
     try {
       const res = await fetch("/api/admin/tours/batch-publish", {
         method: "PATCH",
@@ -401,13 +458,14 @@ export default function TourListClient({
       });
       if (!res.ok) {
         const data = await res.json();
-        setActionError(data.error ?? "操作失敗");
+        setToastError(data.error ?? "操作失敗");
         return;
       }
       setSelectedIds(new Set());
+      showSuccess(published ? "已批次發布" : "已批次取消發布");
       router.refresh();
     } catch {
-      setActionError("操作失敗，請重試");
+      setToastError("操作失敗，請重試");
     } finally {
       setPublishLoading(false);
     }
@@ -415,8 +473,9 @@ export default function TourListClient({
 
   // Batch delete
   async function applyBatchDelete() {
+    const count = selectedIds.size;
     setDeleteLoading(true);
-    setActionError(null);
+    setToastError(null);
     try {
       const res = await fetch("/api/admin/tours/batch-delete", {
         method: "DELETE",
@@ -425,15 +484,16 @@ export default function TourListClient({
       });
       if (!res.ok) {
         const data = await res.json();
-        setActionError(data.error ?? "刪除失敗");
+        setToastError(data.error ?? "刪除失敗");
         setDeleteConfirmOpen(false);
         return;
       }
       setDeleteConfirmOpen(false);
       setSelectedIds(new Set());
+      showSuccess(`已刪除 ${count} 個旅遊方案`);
       router.refresh();
     } catch {
-      setActionError("刪除失敗，請重試");
+      setToastError("刪除失敗，請重試");
       setDeleteConfirmOpen(false);
     } finally {
       setDeleteLoading(false);
@@ -471,6 +531,7 @@ export default function TourListClient({
       }
       setRegionModalOpen(false);
       setSelectedIds(new Set());
+      showSuccess("已批次更改分類");
       router.refresh();
     } catch {
       setRegionError("操作失敗，請重試");
@@ -482,67 +543,70 @@ export default function TourListClient({
   const subRegionsForModal =
     regions.find((r) => r.id === selectedRegionId)?.subRegions ?? [];
 
+  const btnBase = "cursor-pointer h-[30px] px-3 text-xs font-medium rounded-md transition-colors border whitespace-nowrap disabled:cursor-not-allowed";
+
   return (
     <>
       {selectedIds.size > 0 && (
-        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-[#D12351]/20 bg-rose-50 px-4 py-2">
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-[#D12351]/20 bg-rose-50 px-4 py-3">
           <span className="text-sm font-medium text-[#D12351]">
             已選取 {selectedIds.size} 個方案
           </span>
           <button
             onClick={() => openBatchModal("add")}
-            className="rounded-md border border-[#D12351] px-3 py-1 text-xs font-medium text-[#D12351] transition-colors hover:bg-[#D12351] hover:text-white"
+            className={`${btnBase} border-[#D12351] text-[#D12351] hover:bg-[#D12351] hover:text-white`}
           >
             批次新增標籤
           </button>
           <button
             onClick={() => openBatchModal("remove")}
-            className="px-3 py-1 text-xs font-medium text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-100"
+            className={`${btnBase} border-gray-300 bg-white text-gray-600 hover:bg-gray-100`}
           >
             批次移除標籤
           </button>
           <button
             onClick={openRegionModal}
-            className="px-3 py-1 text-xs font-medium text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-100"
+            className={`${btnBase} border-gray-300 bg-white text-gray-600 hover:bg-gray-100`}
           >
             批次更改分類
           </button>
           <button
             onClick={() => applyBatchPublish(true)}
             disabled={publishLoading}
-            className="px-3 py-1 text-xs font-medium transition-colors border rounded-md border-emerald-500 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"
+            className={`${btnBase} border-emerald-400 bg-white text-emerald-600 hover:bg-emerald-50 disabled:opacity-50`}
           >
             批次發布
           </button>
           <button
             onClick={() => applyBatchPublish(false)}
             disabled={publishLoading}
-            className="px-3 py-1 text-xs font-medium text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
+            className={`${btnBase} border-gray-300 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-50`}
           >
             批次取消發布
           </button>
           <button
-            onClick={() => { setDeleteConfirmOpen(true); setActionError(null); }}
-            className="px-3 py-1 text-xs font-medium transition-colors border rounded-md border-rose-300 text-rose-600 hover:bg-rose-50"
+            onClick={() => { setDeleteConfirmOpen(true); setToastError(null); }}
+            className={`${btnBase} border-rose-200 bg-white text-rose-600 hover:bg-rose-50`}
           >
             批次刪除
           </button>
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="ml-auto text-xs text-gray-400 hover:text-gray-600"
+            className="ml-auto cursor-pointer text-xs text-gray-400 hover:text-gray-600"
           >
             取消選取
           </button>
         </div>
       )}
 
-      {actionError && (
-        <p className="px-4 py-2 mb-2 text-sm rounded-lg bg-rose-50 text-rose-600">{actionError}</p>
+      {hasFilters && (
+        <p className="mb-2 text-xs text-amber-600">
+          有篩選條件時無法拖曳排序，請清除所有篩選後再調整
+        </p>
       )}
-
-      {!canDrag && (
+      {!hasFilters && !canDrag && (
         <p className="mb-2 text-xs text-gray-400">
-          目前篩選結果有多頁，請選擇「全部」顯示才可拖曳排序
+          目前結果有多頁，請選擇「全部」顯示才可拖曳排序
         </p>
       )}
       {dragError && (
@@ -562,6 +626,9 @@ export default function TourListClient({
             tour={tour}
             isSelected={selectedIds.has(tour.id)}
             onToggle={toggleOne}
+            onImageClick={setLightbox}
+            returnUrl={returnUrl}
+            onDelete={(name) => handleTourDeleted(tour.id, name)}
           />
         ))}
       </div>
@@ -616,6 +683,9 @@ export default function TourListClient({
                     isSelected={selectedIds.has(tour.id)}
                     onToggle={toggleOne}
                     showDragHandle={canDrag}
+                    onImageClick={setLightbox}
+                    returnUrl={returnUrl}
+                    onDelete={(name) => handleTourDeleted(tour.id, name)}
                   />
                 ))}
               </tbody>
@@ -628,31 +698,37 @@ export default function TourListClient({
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-gray-500">
-            第 {currentPage} / {totalPages} 頁（篩選後共 {filteredCount} 筆）
+            第 <span className="font-medium text-gray-700">{currentPage}</span> / {totalPages} 頁
+            <span className="ml-1 text-gray-400">（共 {filteredCount} 筆）</span>
           </p>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1">
             {prevHref ? (
               <Link
                 href={prevHref}
-                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
               >
-                « 上一頁
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8.5 10.5L5 7l3.5-3.5"/></svg>
+                上一頁
               </Link>
             ) : (
-              <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-300">
-                « 上一頁
+              <span className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-300 cursor-not-allowed">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8.5 10.5L5 7l3.5-3.5"/></svg>
+                上一頁
               </span>
             )}
+            <span className="px-2 text-sm text-gray-400">{currentPage} / {totalPages}</span>
             {nextHref ? (
               <Link
                 href={nextHref}
-                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+                className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
               >
-                下一頁 »
+                下一頁
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5.5 3.5L9 7l-3.5 3.5"/></svg>
               </Link>
             ) : (
-              <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-300">
-                下一頁 »
+              <span className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-300 cursor-not-allowed">
+                下一頁
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5.5 3.5L9 7l-3.5 3.5"/></svg>
               </span>
             )}
           </div>
@@ -839,6 +915,12 @@ export default function TourListClient({
           </div>
         </div>
       )}
+
+      {lightbox && (
+        <ImageLightbox src={lightbox} alt="縮圖預覽" onClose={() => setLightbox(null)} />
+      )}
+
+      <FloatingToast errorMsg={toastError} saveMsg={saveMsg} successMsg={successMsg} />
     </>
   );
 }

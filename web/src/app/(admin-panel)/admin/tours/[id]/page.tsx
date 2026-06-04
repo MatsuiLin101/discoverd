@@ -5,13 +5,16 @@ import TourForm from "@/components/admin/tours/TourForm";
 
 export default async function EditTourPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ returnUrl?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const { id } = await params;
+  const [{ id }, { returnUrl }] = await Promise.all([params, searchParams]);
+
   const [tour, regions, tags] = await Promise.all([
     db.tour.findUnique({
       where: { id },
@@ -42,6 +45,7 @@ export default async function EditTourPage({
         tags={tags}
         tourId={tour.id}
         initialFiles={tour.files}
+        returnUrl={returnUrl}
       />
     </div>
   );
