@@ -39,7 +39,7 @@ export default async function SubRegionsPage({
           ← 返回地區列表
         </Link>
       </div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
             {region.name} &gt; 次分類管理
@@ -48,7 +48,7 @@ export default async function SubRegionsPage({
         </div>
         <Link
           href={`/admin/regions/${id}/subs/new`}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-85"
+          className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg hover:opacity-85 whitespace-nowrap"
           style={{ backgroundColor: "#D12351" }}
         >
           新增次分類

@@ -210,7 +210,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles }: 
         <p className="mt-1 text-xs text-gray-400">最多 500 字</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass}>主分類</label>
           <select
@@ -275,7 +275,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles }: 
 
       <div>
         <label className={labelClass}>行程縮圖</label>
-        <div className="flex items-start gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="relative h-24 w-36 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
             <Image
               src={currentThumb ?? "/images/tour-placeholder.svg"}

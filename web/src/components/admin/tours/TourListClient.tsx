@@ -57,6 +57,81 @@ function GripIcon() {
   );
 }
 
+function TourMobileCard({
+  tour,
+  isSelected,
+  onToggle,
+}: {
+  tour: TourRow;
+  isSelected: boolean;
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div
+      className={`rounded-xl border bg-white p-3 ${
+        isSelected ? "border-[#D12351] bg-rose-50/30" : "border-gray-200"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggle(tour.id)}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#D12351]"
+        />
+        <div className="relative h-10 overflow-hidden bg-gray-100 rounded w-14 shrink-0">
+          <Image
+            src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
+            alt={tour.name}
+            fill
+            className="object-cover"
+            unoptimized
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-medium leading-snug text-gray-800">{tour.name}</p>
+            {tour.published ? (
+              <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                已發布
+              </span>
+            ) : (
+              <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                未發布
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-xs text-gray-500">
+            {tour.subRegion.region.name} › {tour.subRegion.name}
+          </p>
+          <p className="mt-1 text-sm text-gray-700">NT${tour.price.toLocaleString()}</p>
+          {tour.tags.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {tour.tags.map((tag) => (
+                <span
+                  key={tag.id}
+                  className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                >
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2 mt-2">
+            <Link
+              href={`/admin/tours/${tour.id}`}
+              className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+            >
+              編輯
+            </Link>
+            <DeleteTourButton tourId={tour.id} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface SortableTourRowProps {
   tour: TourRow;
   isSelected: boolean;
@@ -92,7 +167,7 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
           <button
             {...attributes}
             {...listeners}
-            className="cursor-grab touch-none p-1 text-gray-300 hover:text-gray-500 active:cursor-grabbing"
+            className="p-1 text-gray-300 cursor-grab touch-none hover:text-gray-500 active:cursor-grabbing"
             aria-label="拖曳排序"
           >
             <GripIcon />
@@ -102,7 +177,7 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
         )}
       </td>
       <td className="px-4 py-3">
-        <div className="relative h-10 w-14 overflow-hidden rounded bg-gray-100">
+        <div className="relative h-10 overflow-hidden bg-gray-100 rounded w-14">
           <Image
             src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
             alt={tour.name}
@@ -129,14 +204,14 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
           ))}
         </div>
       </td>
-      <td className="px-4 py-3 text-gray-500">{tour._count.files} 個</td>
+      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{tour._count.files} 個</td>
       <td className="px-4 py-3">
         {tour.published ? (
-          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-emerald-600">
             已發布
           </span>
         ) : (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-gray-500">
             未發布
           </span>
         )}
@@ -145,7 +220,7 @@ function SortableTourRow({ tour, isSelected, onToggle, showDragHandle }: Sortabl
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/tours/${tour.id}`}
-            className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+            className="whitespace-nowrap rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
           >
             編輯
           </Link>
@@ -422,33 +497,33 @@ export default function TourListClient({
           </button>
           <button
             onClick={() => openBatchModal("remove")}
-            className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100"
+            className="px-3 py-1 text-xs font-medium text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-100"
           >
             批次移除標籤
           </button>
           <button
             onClick={openRegionModal}
-            className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100"
+            className="px-3 py-1 text-xs font-medium text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-100"
           >
             批次更改分類
           </button>
           <button
             onClick={() => applyBatchPublish(true)}
             disabled={publishLoading}
-            className="rounded-md border border-emerald-500 px-3 py-1 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-50"
+            className="px-3 py-1 text-xs font-medium transition-colors border rounded-md border-emerald-500 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"
           >
             批次發布
           </button>
           <button
             onClick={() => applyBatchPublish(false)}
             disabled={publishLoading}
-            className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 disabled:opacity-50"
+            className="px-3 py-1 text-xs font-medium text-gray-600 transition-colors border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
           >
             批次取消發布
           </button>
           <button
             onClick={() => { setDeleteConfirmOpen(true); setActionError(null); }}
-            className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50"
+            className="px-3 py-1 text-xs font-medium transition-colors border rounded-md border-rose-300 text-rose-600 hover:bg-rose-50"
           >
             批次刪除
           </button>
@@ -462,7 +537,7 @@ export default function TourListClient({
       )}
 
       {actionError && (
-        <p className="mb-2 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-600">{actionError}</p>
+        <p className="px-4 py-2 mb-2 text-sm rounded-lg bg-rose-50 text-rose-600">{actionError}</p>
       )}
 
       {!canDrag && (
@@ -471,19 +546,38 @@ export default function TourListClient({
         </p>
       )}
       {dragError && (
-        <p className="mb-2 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-600">{dragError}</p>
+        <p className="px-4 py-2 mb-2 text-sm rounded-lg bg-rose-50 text-rose-600">{dragError}</p>
       )}
 
+      {/* 手機卡片 */}
+      <div className="min-[1165px]:hidden space-y-2">
+        {tours.length === 0 && (
+          <p className="px-4 py-12 text-sm text-center text-gray-400 bg-white border border-gray-200 rounded-xl">
+            沒有符合條件的旅遊方案
+          </p>
+        )}
+        {tours.map((tour) => (
+          <TourMobileCard
+            key={tour.id}
+            tour={tour}
+            isSelected={selectedIds.has(tour.id)}
+            onToggle={toggleOne}
+          />
+        ))}
+      </div>
+
+      {/* 桌機表格（含拖曳排序） */}
       <DndContext
         id="tours-sortable"
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
+        <div className="hidden min-[1165px]:block overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-215">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 text-left">
+              <tr className="text-left border-b border-gray-100 bg-gray-50">
                 <th className="px-3 py-3">
                   <input
                     type="checkbox"
@@ -496,21 +590,21 @@ export default function TourListClient({
                   />
                 </th>
                 <th className="w-8 px-2 py-3" />
-                <th className="px-4 py-3 font-medium text-gray-600">縮圖</th>
-                <th className="px-4 py-3 font-medium text-gray-600">名稱</th>
-                <th className="px-4 py-3 font-medium text-gray-600">分類</th>
-                <th className="px-4 py-3 font-medium text-gray-600">價格</th>
-                <th className="px-4 py-3 font-medium text-gray-600">標籤</th>
-                <th className="px-4 py-3 font-medium text-gray-600">檔案</th>
-                <th className="px-4 py-3 font-medium text-gray-600">狀態</th>
-                <th className="px-4 py-3 font-medium text-gray-600">操作</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">縮圖</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">名稱</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">分類</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">價格</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">標籤</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">檔案</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">狀態</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">操作</th>
               </tr>
             </thead>
             <SortableContext items={tours.map((t) => t.id)} strategy={verticalListSortingStrategy}>
               <tbody>
                 {tours.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="px-4 py-12 text-center text-sm text-gray-400">
+                    <td colSpan={10} className="px-4 py-12 text-sm text-center text-gray-400">
                       沒有符合條件的旅遊方案
                     </td>
                   </tr>
@@ -527,11 +621,12 @@ export default function TourListClient({
               </tbody>
             </SortableContext>
           </table>
+          </div>
         </div>
       </DndContext>
 
       {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
+        <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-gray-500">
             第 {currentPage} / {totalPages} 頁（篩選後共 {filteredCount} 筆）
           </p>
@@ -567,7 +662,7 @@ export default function TourListClient({
       {/* Batch tags modal */}
       {batchMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-sm p-6 mx-4 bg-white shadow-xl rounded-xl">
             <h3 className="mb-1 text-base font-semibold text-gray-800">
               {batchMode === "add" ? "批次新增標籤" : "批次移除標籤"}
             </h3>
@@ -583,7 +678,7 @@ export default function TourListClient({
               />
             )}
 
-            <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-gray-400">已選 {batchTagIds.size} 個標籤</span>
               <div className="flex gap-2">
                 <button
@@ -601,7 +696,7 @@ export default function TourListClient({
               </div>
             </div>
 
-            <div className="mb-4 max-h-52 space-y-2 overflow-y-auto rounded-lg border border-gray-100 p-2">
+            <div className="p-2 mb-4 space-y-2 overflow-y-auto border border-gray-100 rounded-lg max-h-52">
               {visibleTags.length === 0 && (
                 <p className="text-sm text-gray-400">
                   {tagSearch ? "沒有符合的標籤" : "尚無標籤"}
@@ -628,14 +723,14 @@ export default function TourListClient({
               <button
                 onClick={() => setBatchMode(null)}
                 disabled={batchLoading}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={applyBatchTags}
                 disabled={batchLoading}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50"
                 style={{ backgroundColor: "#D12351" }}
               >
                 {batchLoading
@@ -652,11 +747,11 @@ export default function TourListClient({
       {/* Batch region modal */}
       {regionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-sm p-6 mx-4 bg-white shadow-xl rounded-xl">
             <h3 className="mb-1 text-base font-semibold text-gray-800">批次更改分類</h3>
             <p className="mb-4 text-sm text-gray-500">對象：{selectedIds.size} 個方案</p>
 
-            <div className="mb-3 flex flex-col gap-1">
+            <div className="flex flex-col gap-1 mb-3">
               <label className="text-xs font-medium text-gray-500">主分類</label>
               <select
                 value={selectedRegionId}
@@ -675,7 +770,7 @@ export default function TourListClient({
               </select>
             </div>
 
-            <div className="mb-4 flex flex-col gap-1">
+            <div className="flex flex-col gap-1 mb-4">
               <label className="text-xs font-medium text-gray-500">次分類</label>
               <select
                 value={selectedSubRegionId}
@@ -697,14 +792,14 @@ export default function TourListClient({
               <button
                 onClick={() => setRegionModalOpen(false)}
                 disabled={regionLoading}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={applyBatchRegion}
                 disabled={regionLoading || !selectedSubRegionId}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50"
                 style={{ backgroundColor: "#D12351" }}
               >
                 {regionLoading ? "處理中…" : `更改 ${selectedIds.size} 個方案的分類`}
@@ -717,7 +812,7 @@ export default function TourListClient({
       {/* Batch delete confirm modal */}
       {deleteConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <div className="w-full max-w-sm p-6 mx-4 bg-white shadow-xl rounded-xl">
             <h3 className="mb-2 text-base font-semibold text-gray-800">確認批次刪除</h3>
             <p className="mb-1 text-sm text-gray-700">
               確定要刪除 <span className="font-semibold text-rose-600">{selectedIds.size} 個方案</span>？
@@ -729,14 +824,14 @@ export default function TourListClient({
               <button
                 onClick={() => setDeleteConfirmOpen(false)}
                 disabled={deleteLoading}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={applyBatchDelete}
                 disabled={deleteLoading}
-                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-50"
               >
                 {deleteLoading ? "刪除中…" : `刪除 ${selectedIds.size} 個方案`}
               </button>

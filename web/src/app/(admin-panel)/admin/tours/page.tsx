@@ -96,17 +96,17 @@ export default async function ToursPage({
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="flex flex-col gap-3 mb-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">旅遊方案</h1>
           <p className="mt-1 text-sm text-gray-500">管理旅遊方案與行程</p>
         </div>
         <Link
           href="/admin/tours/new"
-          className="rounded-lg px-4 py-2 text-sm font-medium text-white"
+          className="px-4 py-2 text-sm font-medium text-white rounded-lg whitespace-nowrap"
           style={{ backgroundColor: "#D12351" }}
         >
-          + 新增旅遊方案
+          新增旅遊方案
         </Link>
       </div>
 

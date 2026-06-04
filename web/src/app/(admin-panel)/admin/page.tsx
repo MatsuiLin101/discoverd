@@ -22,18 +22,18 @@ export default async function AdminDashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">
-          歡迎回來，{user?.email}
+        <h1 className="text-xl font-bold text-gray-800 sm:text-2xl">
+          歡迎回來，<span className="break-all">{user?.email}</span>
         </h1>
         <p className="mt-1 text-sm text-gray-500">選擇一個功能開始管理</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {quickLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className="rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-md"
+            className="rounded-xl border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md sm:p-5"
           >
             <p className="font-medium text-gray-800">{link.label}</p>
             <p className="mt-1 text-xs text-gray-400">{link.desc}</p>

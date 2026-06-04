@@ -60,14 +60,14 @@ function SortableRow({ sub, regionId }: { sub: SubRegion; regionId: string }) {
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab touch-none p-1 text-gray-300 hover:text-gray-500 active:cursor-grabbing"
+          className="p-1 text-gray-300 cursor-grab touch-none hover:text-gray-500 active:cursor-grabbing"
           aria-label="拖曳排序"
         >
           <GripIcon />
         </button>
       </td>
       <td className="px-4 py-3">
-        <div className="relative h-10 w-14 overflow-hidden rounded-md bg-gray-100">
+        <div className="relative w-16 h-12 overflow-hidden bg-gray-100 rounded-md">
           <Image
             src={sub.thumbnail ?? "/images/region-default.svg"}
             alt={sub.name}
@@ -78,13 +78,13 @@ function SortableRow({ sub, regionId }: { sub: SubRegion; regionId: string }) {
         </div>
       </td>
       <td className="px-4 py-3 font-medium text-gray-800">{sub.name}</td>
-      <td className="px-4 py-3 font-mono text-gray-500">{sub.slug}</td>
-      <td className="px-4 py-3 text-gray-500">{sub._count.tours} 個</td>
+      <td className="px-4 py-3 text-gray-500 break-all">{sub.slug}</td>
+      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{sub._count.tours} 個</td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/regions/${regionId}/subs/${sub.id}`}
-            className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+            className="whitespace-nowrap rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
           >
             編輯
           </Link>
@@ -138,26 +138,71 @@ export default function SortableSubRegionList({
   }
 
   return (
-    <DndContext
-      id="subs-sortable"
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <div>
-        {error && (
-          <p className="mb-3 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-600">{error}</p>
+    <div>
+      {error && (
+        <p className="px-4 py-2 mb-3 text-sm rounded-lg bg-rose-50 text-rose-600">{error}</p>
+      )}
+
+      {/* 手機卡片（靜態，不含拖曳） */}
+      <div className="min-[920px]:hidden space-y-2">
+        {subs.length === 0 && (
+          <p className="px-4 py-12 text-sm text-center text-gray-400 bg-white border border-gray-200 rounded-xl">
+            尚無次分類，請新增
+          </p>
         )}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
+        {subs.map((sub) => (
+          <div key={sub.id} className="p-4 bg-white border border-gray-200 rounded-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative w-20 h-16 overflow-hidden bg-gray-100 rounded-lg shrink-0">
+                <Image
+                  src={sub.thumbnail ?? "/images/region-default.svg"}
+                  alt={sub.name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-800">{sub.name}</p>
+                <p className="my-1 text-xs text-gray-400 break-all">{sub.slug}</p>
+                <p className="text-xs text-gray-400">{sub._count.tours} 個旅遊方案</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+              <Link
+                href={`/admin/regions/${regionId}/subs/${sub.id}`}
+                className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+              >
+                編輯
+              </Link>
+              <DeleteSubRegionButton
+                regionId={regionId}
+                subId={sub.id}
+                tourCount={sub._count.tours}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 桌機表格（含拖曳排序） */}
+      <DndContext
+        id="subs-sortable"
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="hidden min-[920px]:block overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-150">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 text-left">
+              <tr className="text-left border-b border-gray-100 bg-gray-50">
                 <th className="w-8 px-2 py-3" />
-                <th className="px-4 py-3 font-medium text-gray-600">縮圖</th>
-                <th className="px-4 py-3 font-medium text-gray-600">顯示名稱</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Slug</th>
-                <th className="px-4 py-3 font-medium text-gray-600">旅遊方案</th>
-                <th className="px-4 py-3 font-medium text-gray-600">操作</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">縮圖</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">顯示名稱</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">Slug</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">旅遊方案</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">操作</th>
               </tr>
             </thead>
             <SortableContext
@@ -167,7 +212,7 @@ export default function SortableSubRegionList({
               <tbody>
                 {subs.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-400">
+                    <td colSpan={6} className="px-4 py-12 text-sm text-center text-gray-400">
                       尚無次分類，請新增
                     </td>
                   </tr>
@@ -178,8 +223,9 @@ export default function SortableSubRegionList({
               </tbody>
             </SortableContext>
           </table>
+          </div>
         </div>
-      </div>
-    </DndContext>
+      </DndContext>
+    </div>
   );
 }

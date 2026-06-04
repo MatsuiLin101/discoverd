@@ -35,7 +35,15 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-export default function AdminSidebar({ role }: { role: UserRole }) {
+export default function AdminSidebar({
+  role,
+  isOpen = true,
+  onClose,
+}: {
+  role: UserRole;
+  isOpen?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -50,15 +58,38 @@ export default function AdminSidebar({ role }: { role: UserRole }) {
   }
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-gray-100 bg-white">
-      <div className="px-5 py-6">
-        <span
-          className="text-base font-bold leading-tight"
-          style={{ color: "#D12351" }}
+    <aside
+      className={[
+        "fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-gray-100 bg-white",
+        "transition-transform duration-200",
+        "md:sticky md:top-0 md:h-screen md:overflow-y-auto md:inset-auto md:z-auto md:w-48 md:translate-x-0",
+        isOpen ? "translate-x-0" : "-translate-x-full",
+      ].join(" ")}
+    >
+      <div className="flex items-center justify-between px-5 py-6">
+        <div>
+          <span
+            className="text-base font-bold leading-tight"
+            style={{ color: "#D12351" }}
+          >
+            找到了旅行社
+          </span>
+          <p className="mt-0.5 text-xs text-gray-400">後台管理</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 md:hidden"
+          aria-label="關閉選單"
         >
-          找到了旅行社
-        </span>
-        <p className="mt-0.5 text-xs text-gray-400">後台管理</p>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path
+              d="M1 1l12 12M13 1L1 13"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
       </div>
 
       <nav className="flex-1 space-y-5 px-3 pb-4">
@@ -76,6 +107,7 @@ export default function AdminSidebar({ role }: { role: UserRole }) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      onClick={onClose}
                       className={`flex items-center rounded-lg px-3 py-2 text-sm transition-colors ${
                         isActive(item.href)
                           ? "border-l-2 border-[#D12351] bg-rose-50 font-medium text-[#D12351]"

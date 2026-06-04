@@ -60,14 +60,14 @@ function SortableRow({ region }: { region: Region }) {
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab touch-none p-1 text-gray-300 hover:text-gray-500 active:cursor-grabbing"
+          className="p-1 text-gray-300 cursor-grab touch-none hover:text-gray-500 active:cursor-grabbing"
           aria-label="拖曳排序"
         >
           <GripIcon />
         </button>
       </td>
       <td className="px-4 py-3">
-        <div className="relative h-10 w-14 overflow-hidden rounded-md bg-gray-100">
+        <div className="relative w-16 h-12 overflow-hidden bg-gray-100 rounded-md">
           <Image
             src={region.thumbnail ?? "/images/region-default.svg"}
             alt={region.name}
@@ -78,19 +78,19 @@ function SortableRow({ region }: { region: Region }) {
         </div>
       </td>
       <td className="px-4 py-3 font-medium text-gray-800">{region.name}</td>
-      <td className="px-4 py-3 font-mono text-gray-500">{region.slug}</td>
-      <td className="px-4 py-3 text-gray-500">{region._count.subRegions} 個</td>
+      <td className="px-4 py-3 text-gray-500 break-all">{region.slug}</td>
+      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{region._count.subRegions} 個</td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/regions/${region.id}/subs`}
-            className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:border-[#D12351] hover:bg-rose-50 hover:text-[#D12351]"
+            className="whitespace-nowrap rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:border-[#D12351] hover:bg-rose-50 hover:text-[#D12351]"
           >
             次分類
           </Link>
           <Link
             href={`/admin/regions/${region.id}`}
-            className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+            className="whitespace-nowrap rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
           >
             編輯
           </Link>
@@ -137,26 +137,73 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
   }
 
   return (
-    <DndContext
-      id="regions-sortable"
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <div>
-        {error && (
-          <p className="mb-3 rounded-lg bg-rose-50 px-4 py-2 text-sm text-rose-600">{error}</p>
+    <div>
+      {error && (
+        <p className="px-4 py-2 mb-3 text-sm rounded-lg bg-rose-50 text-rose-600">{error}</p>
+      )}
+
+      {/* 手機卡片（靜態，不含拖曳） */}
+      <div className="min-[920px]:hidden space-y-2">
+        {regions.length === 0 && (
+          <p className="px-4 py-12 text-sm text-center text-gray-400 bg-white border border-gray-200 rounded-xl">
+            尚無資料，請新增主分類
+          </p>
         )}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
+        {regions.map((region) => (
+          <div key={region.id} className="p-4 bg-white border border-gray-200 rounded-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative w-20 h-16 overflow-hidden bg-gray-100 rounded-lg shrink-0">
+                <Image
+                  src={region.thumbnail ?? "/images/region-default.svg"}
+                  alt={region.name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-800">{region.name}</p>
+                <p className="my-1 text-xs text-gray-400 break-all">{region.slug}</p>
+                <p className="text-xs text-gray-400">{region._count.subRegions} 個次分類</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+              <Link
+                href={`/admin/regions/${region.id}/subs`}
+                className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:border-[#D12351] hover:bg-rose-50 hover:text-[#D12351]"
+              >
+                次分類
+              </Link>
+              <Link
+                href={`/admin/regions/${region.id}`}
+                className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+              >
+                編輯
+              </Link>
+              <DeleteRegionButton regionId={region.id} subCount={region._count.subRegions} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 桌機表格（含拖曳排序） */}
+      <DndContext
+        id="regions-sortable"
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="hidden min-[920px]:block overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-160">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 text-left">
+              <tr className="text-left border-b border-gray-100 bg-gray-50">
                 <th className="w-8 px-2 py-3" />
-                <th className="px-4 py-3 font-medium text-gray-600">縮圖</th>
-                <th className="px-4 py-3 font-medium text-gray-600">顯示名稱</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Slug</th>
-                <th className="px-4 py-3 font-medium text-gray-600">次分類</th>
-                <th className="px-4 py-3 font-medium text-gray-600">操作</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">縮圖</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">顯示名稱</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">Slug</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">次分類</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">操作</th>
               </tr>
             </thead>
             <SortableContext
@@ -166,7 +213,7 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
               <tbody>
                 {regions.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-400">
+                    <td colSpan={6} className="px-4 py-12 text-sm text-center text-gray-400">
                       尚無資料，請新增主分類
                     </td>
                   </tr>
@@ -177,8 +224,9 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
               </tbody>
             </SortableContext>
           </table>
+          </div>
         </div>
-      </div>
-    </DndContext>
+      </DndContext>
+    </div>
   );
 }

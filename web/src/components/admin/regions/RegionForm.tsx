@@ -122,7 +122,7 @@ export default function RegionForm({
 
       <div>
         <label className={labelClass}>縮圖</label>
-        <div className="flex items-start gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
             <Image
               src={displayThumbnail}

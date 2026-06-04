@@ -28,7 +28,7 @@ export default function DeleteUserButton({
 
   if (isSelf) {
     return (
-      <span className="cursor-not-allowed text-sm text-gray-300" title="不可刪除自己的帳號">
+      <span className="text-sm text-gray-300 cursor-not-allowed" title="不可刪除自己的帳號">
         刪除
       </span>
     );
@@ -38,7 +38,7 @@ export default function DeleteUserButton({
     <span>
       <button
         onClick={handleDelete}
-        className="cursor-pointer text-sm text-rose-500 hover:text-rose-700"
+        className="text-sm cursor-pointer text-rose-500 hover:text-rose-700 whitespace-nowrap"
       >
         刪除
       </button>

@@ -24,7 +24,7 @@ export default function DeleteTourButton({ tourId }: { tourId: string }) {
     <span>
       <button
         onClick={handleDelete}
-        className="cursor-pointer text-sm text-rose-500 hover:text-rose-700"
+        className="whitespace-nowrap cursor-pointer text-sm text-rose-500 hover:text-rose-700"
       >
         刪除
       </button>

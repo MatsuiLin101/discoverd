@@ -41,7 +41,7 @@ export default function DeleteRegionButton({ regionId, subCount }: Props) {
       <button
         onClick={handleDelete}
         disabled={isPending}
-        className="cursor-pointer rounded-md border border-transparent px-2.5 py-1 text-xs font-medium text-rose-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
+        className="whitespace-nowrap cursor-pointer rounded-md border border-transparent px-2.5 py-1 text-xs font-medium text-rose-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {isPending ? "刪除中…" : "刪除"}
       </button>

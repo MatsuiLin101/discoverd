@@ -34,7 +34,7 @@ export default function DeleteTagButton({
     <span>
       <button
         onClick={handleDelete}
-        className="cursor-pointer text-sm text-rose-500 hover:text-rose-700"
+        className="text-sm cursor-pointer text-rose-500 hover:text-rose-700 whitespace-nowrap"
       >
         刪除
       </button>
