@@ -23,8 +23,8 @@ const navGroups: NavGroup[] = [
     title: "前台管理",
     items: [
       { label: "地區管理", href: "/admin/regions" },
-      { label: "旅遊方案", href: "/admin/tours" },
       { label: "標籤管理", href: "/admin/tags" },
+      { label: "旅遊方案", href: "/admin/tours" },
       { label: "客戶諮詢", href: "/admin/inquiries" },
     ],
   },
@@ -78,7 +78,7 @@ export default function AdminSidebar({
         </div>
         <button
           onClick={onClose}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 md:hidden"
+          className="flex items-center justify-center text-gray-400 rounded-lg h-7 w-7 hover:bg-gray-100 hover:text-gray-600 md:hidden"
           aria-label="關閉選單"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -92,13 +92,13 @@ export default function AdminSidebar({
         </button>
       </div>
 
-      <nav className="flex-1 space-y-5 px-3 pb-4">
+      <nav className="flex-1 px-3 pb-4 space-y-5">
         {navGroups.map((group, i) => {
           if (group.adminOnly && role !== "ADMIN") return null;
           return (
             <div key={i}>
               {group.title && (
-                <p className="mb-1 px-2 text-xs font-medium uppercase tracking-wider text-gray-400">
+                <p className="px-2 mb-1 text-xs font-medium tracking-wider text-gray-400 uppercase">
                   {group.title}
                 </p>
               )}
@@ -124,7 +124,7 @@ export default function AdminSidebar({
         })}
       </nav>
 
-      <div className="border-t border-gray-100 px-3 py-4">
+      <div className="px-3 py-4 border-t border-gray-100">
         <button
           onClick={handleLogout}
           className="w-full cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#D12351] hover:bg-rose-50 hover:text-[#D12351]"
