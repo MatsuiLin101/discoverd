@@ -17,7 +17,7 @@ export default async function NewTourPage({
       include: { subRegions: { orderBy: { sortOrder: "asc" } } },
       orderBy: { sortOrder: "asc" },
     }),
-    db.tag.findMany({ orderBy: { name: "asc" } }),
+    db.tag.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
   ]);
 
   return (

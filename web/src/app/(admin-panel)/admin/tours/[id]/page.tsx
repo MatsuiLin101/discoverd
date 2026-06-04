@@ -27,7 +27,7 @@ export default async function EditTourPage({
       include: { subRegions: { orderBy: { sortOrder: "asc" } } },
       orderBy: { sortOrder: "asc" },
     }),
-    db.tag.findMany({ orderBy: { name: "asc" } }),
+    db.tag.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
   ]);
 
   if (!tour) notFound();

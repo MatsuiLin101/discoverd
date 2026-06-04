@@ -50,7 +50,7 @@ export default async function ToursPage({
       where,
       include: {
         subRegion: { include: { region: true } },
-        tags: true,
+        tags: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }] },
         _count: { select: { files: true } },
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
@@ -72,7 +72,7 @@ export default async function ToursPage({
     }),
     db.tag.findMany({
       select: { id: true, name: true },
-      orderBy: { name: "asc" },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),
   ]);
 
