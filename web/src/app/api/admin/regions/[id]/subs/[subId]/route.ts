@@ -7,7 +7,6 @@ import { uploadFile, deleteFile } from "@/lib/cloudinary";
 const schema = z.object({
   name: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/, "slug 只允許小寫英數字和連字號"),
-  sortOrder: z.coerce.number().int().default(0),
 });
 
 export async function PUT(
@@ -24,12 +23,11 @@ export async function PUT(
   const parsed = schema.safeParse({
     name: fd.get("name"),
     slug: fd.get("slug"),
-    sortOrder: fd.get("sortOrder"),
   });
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
-  const { name, slug, sortOrder } = parsed.data;
+  const { name, slug } = parsed.data;
 
   const existing = await db.subRegion.findUnique({ where: { id: subId } });
   if (!existing || existing.regionId !== regionId) {
@@ -57,7 +55,7 @@ export async function PUT(
 
   const sub = await db.subRegion.update({
     where: { id: subId },
-    data: { name, slug, sortOrder, thumbnail, thumbnailPublicId },
+    data: { name, slug, thumbnail, thumbnailPublicId },
   });
   return NextResponse.json({ data: sub });
 }

@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface Props {
   regionId: string;
+  name: string;
   subCount: number;
+  tourCount: number;
+  onDelete: (name: string) => void;
 }
 
-export default function DeleteRegionButton({ regionId, subCount }: Props) {
-  const router = useRouter();
+export default function DeleteRegionButton({ regionId, name, subCount, tourCount, onDelete }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -24,7 +25,7 @@ export default function DeleteRegionButton({ regionId, subCount }: Props) {
     try {
       const res = await fetch(`/api/admin/regions/${regionId}`, { method: "DELETE" });
       if (res.ok) {
-        router.refresh();
+        onDelete(name);
       } else {
         const data = await res.json();
         setError(data.error ?? "刪除失敗");
@@ -40,8 +41,9 @@ export default function DeleteRegionButton({ regionId, subCount }: Props) {
     <div>
       <button
         onClick={handleDelete}
-        disabled={isPending}
-        className="whitespace-nowrap cursor-pointer rounded-md border border-transparent px-2.5 py-1 text-xs font-medium text-rose-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
+        disabled={isPending || tourCount > 0}
+        title={tourCount > 0 ? "此主分類下還有旅遊方案，無法刪除" : undefined}
+        className="whitespace-nowrap cursor-pointer rounded-md border border-rose-200 px-2.5 py-1 text-xs font-medium text-rose-500 transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {isPending ? "刪除中…" : "刪除"}
       </button>

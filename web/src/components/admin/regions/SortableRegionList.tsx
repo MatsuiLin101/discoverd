@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -19,6 +19,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteRegionButton from "./DeleteRegionButton";
+import ImageLightbox from "./ImageLightbox";
+import FloatingToast from "./FloatingToast";
 
 interface Region {
   id: string;
@@ -26,6 +28,8 @@ interface Region {
   slug: string;
   thumbnail: string | null;
   _count: { subRegions: number };
+  tourCount: number;
+  subRegionNames: string[];
 }
 
 function GripIcon() {
@@ -41,7 +45,7 @@ function GripIcon() {
   );
 }
 
-function SortableRow({ region }: { region: Region }) {
+function SortableRow({ region, onImageClick, onDelete }: { region: Region; onImageClick: (src: string) => void; onDelete: (name: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: region.id });
 
@@ -67,7 +71,10 @@ function SortableRow({ region }: { region: Region }) {
         </button>
       </td>
       <td className="px-4 py-3">
-        <div className="relative w-16 h-12 overflow-hidden bg-gray-100 rounded-md">
+        <div
+          className={`relative w-16 h-12 overflow-hidden bg-gray-100 rounded-md${region.thumbnail ? " cursor-zoom-in" : ""}`}
+          onClick={region.thumbnail ? () => onImageClick(region.thumbnail!) : undefined}
+        >
           <Image
             src={region.thumbnail ?? "/images/region-default.svg"}
             alt={region.name}
@@ -80,23 +87,27 @@ function SortableRow({ region }: { region: Region }) {
       <td className="px-4 py-3 font-medium text-gray-800">{region.name}</td>
       <td className="px-4 py-3 text-gray-500 break-all">{region.slug}</td>
       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{region._count.subRegions} 個</td>
+      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{region.tourCount} 個</td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/regions/${region.id}/subs`}
-            className="whitespace-nowrap rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:border-[#D12351] hover:bg-rose-50 hover:text-[#D12351]"
+            className="whitespace-nowrap rounded-md border border-[#D12351]/40 bg-rose-50 px-2.5 py-1 text-xs font-medium text-[#D12351] transition-colors hover:border-[#D12351] hover:bg-rose-100"
           >
             次分類
           </Link>
           <Link
             href={`/admin/regions/${region.id}`}
-            className="whitespace-nowrap rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+            className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             編輯
           </Link>
           <DeleteRegionButton
             regionId={region.id}
+            name={region.name}
             subCount={region._count.subRegions}
+            tourCount={region.tourCount}
+            onDelete={onDelete}
           />
         </div>
       </td>
@@ -107,6 +118,29 @@ function SortableRow({ region }: { region: Region }) {
 export default function SortableRegionList({ regions: initial }: { regions: Region[] }) {
   const [regions, setRegions] = useState(initial);
   const [error, setError] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
+  useEffect(() => {
+    const msg = sessionStorage.getItem("adminSaveMsg");
+    if (msg) {
+      sessionStorage.removeItem("adminSaveMsg");
+      setSaveMsg(msg);
+      setTimeout(() => setSaveMsg(null), 3000);
+    }
+  }, []);
+
+  function handleRegionDeleted(id: string, name: string) {
+    const target = regions.find(r => r.id === id);
+    const names = target?.subRegionNames ?? [];
+    setRegions(prev => prev.filter(r => r.id !== id));
+    const msg = names.length > 0
+      ? `已刪除主分類「${name}」及 ${names.length} 個次分類：${names.join('、')}`
+      : `已刪除主分類「${name}」`;
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(null), 3000);
+  }
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -130,6 +164,8 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
         }),
       });
       if (!res.ok) throw new Error();
+      setSuccessMsg("排序已更新");
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch {
       setRegions(prev);
       setError("排序儲存失敗，已還原");
@@ -138,9 +174,6 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
 
   return (
     <div>
-      {error && (
-        <p className="px-4 py-2 mb-3 text-sm rounded-lg bg-rose-50 text-rose-600">{error}</p>
-      )}
 
       {/* 手機卡片（靜態，不含拖曳） */}
       <div className="min-[920px]:hidden space-y-2">
@@ -152,7 +185,10 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
         {regions.map((region) => (
           <div key={region.id} className="p-4 bg-white border border-gray-200 rounded-xl">
             <div className="flex items-center gap-3 mb-3">
-              <div className="relative w-20 h-16 overflow-hidden bg-gray-100 rounded-lg shrink-0">
+              <div
+                className={`relative w-20 h-16 overflow-hidden bg-gray-100 rounded-lg shrink-0${region.thumbnail ? " cursor-zoom-in" : ""}`}
+                onClick={region.thumbnail ? () => setLightbox(region.thumbnail!) : undefined}
+              >
                 <Image
                   src={region.thumbnail ?? "/images/region-default.svg"}
                   alt={region.name}
@@ -165,22 +201,29 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
                 <p className="font-semibold text-gray-800">{region.name}</p>
                 <p className="my-1 text-xs text-gray-400 break-all">{region.slug}</p>
                 <p className="text-xs text-gray-400">{region._count.subRegions} 個次分類</p>
+                <p className="text-xs text-gray-400">{region.tourCount} 個旅遊方案</p>
               </div>
             </div>
             <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
               <Link
                 href={`/admin/regions/${region.id}/subs`}
-                className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:border-[#D12351] hover:bg-rose-50 hover:text-[#D12351]"
+                className="rounded-md border border-[#D12351]/40 bg-rose-50 px-2.5 py-1 text-xs font-medium text-[#D12351] transition-colors hover:border-[#D12351] hover:bg-rose-100"
               >
                 次分類
               </Link>
               <Link
                 href={`/admin/regions/${region.id}`}
-                className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+                className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 編輯
               </Link>
-              <DeleteRegionButton regionId={region.id} subCount={region._count.subRegions} />
+              <DeleteRegionButton
+                regionId={region.id}
+                name={region.name}
+                subCount={region._count.subRegions}
+                tourCount={region.tourCount}
+                onDelete={(name) => handleRegionDeleted(region.id, name)}
+              />
             </div>
           </div>
         ))}
@@ -203,6 +246,7 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">顯示名稱</th>
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">Slug</th>
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">次分類</th>
+                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">旅遊方案</th>
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">操作</th>
               </tr>
             </thead>
@@ -213,13 +257,18 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
               <tbody>
                 {regions.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-sm text-center text-gray-400">
+                    <td colSpan={7} className="px-4 py-12 text-sm text-center text-gray-400">
                       尚無資料，請新增主分類
                     </td>
                   </tr>
                 )}
                 {regions.map((region) => (
-                  <SortableRow key={region.id} region={region} />
+                  <SortableRow
+                    key={region.id}
+                    region={region}
+                    onImageClick={setLightbox}
+                    onDelete={(name) => handleRegionDeleted(region.id, name)}
+                  />
                 ))}
               </tbody>
             </SortableContext>
@@ -227,6 +276,8 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
           </div>
         </div>
       </DndContext>
+      {lightbox && <ImageLightbox src={lightbox} alt="縮圖預覽" onClose={() => setLightbox(null)} />}
+      <FloatingToast errorMsg={error} saveMsg={saveMsg} successMsg={successMsg} />
     </div>
   );
 }

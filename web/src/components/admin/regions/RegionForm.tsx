@@ -3,9 +3,10 @@
 import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import ImageLightbox from "./ImageLightbox";
 
 const inputClass =
-  "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
+  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
 function autoSlug(name: string) {
@@ -37,6 +38,7 @@ export default function RegionForm({
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handleNameChange(e: ChangeEvent<HTMLInputElement>) {
@@ -76,6 +78,10 @@ export default function RegionForm({
       const res = await fetch(url, { method: isEdit ? "PUT" : "POST", body: fd });
       const data = await res.json();
       if (data.data) {
+        sessionStorage.setItem(
+          "adminSaveMsg",
+          isEdit ? `已更新主分類「${name}」` : `已新增主分類「${name}」`
+        );
         router.push("/admin/regions");
         router.refresh();
       } else {
@@ -91,6 +97,7 @@ export default function RegionForm({
   const displayThumbnail = preview ?? initialThumbnail ?? "/images/region-default.svg";
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
       <div>
         <label className={labelClass}>顯示名稱</label>
@@ -123,7 +130,10 @@ export default function RegionForm({
       <div>
         <label className={labelClass}>縮圖</label>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-          <div className="relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+          <div
+            className={`relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-50${preview !== null || initialThumbnail != null ? " cursor-zoom-in" : ""}`}
+            onClick={preview !== null || initialThumbnail != null ? () => setLightbox(displayThumbnail) : undefined}
+          >
             <Image
               src={displayThumbnail}
               alt="縮圖預覽"
@@ -138,7 +148,7 @@ export default function RegionForm({
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-gray-200"
+              className="block w-full text-sm text-gray-500 file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-gray-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-100"
             />
             <p className="mt-1.5 text-xs text-gray-400">
               未上傳時使用預設縮圖
@@ -161,11 +171,13 @@ export default function RegionForm({
         <button
           type="button"
           onClick={() => router.push("/admin/regions")}
-          className="cursor-pointer rounded-lg border border-gray-200 px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="cursor-pointer rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
           返回列表
         </button>
       </div>
     </form>
+    {lightbox && <ImageLightbox src={lightbox} alt="縮圖預覽" onClose={() => setLightbox(null)} />}
+    </>
   );
 }

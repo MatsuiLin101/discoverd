@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -19,6 +19,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteSubRegionButton from "./DeleteSubRegionButton";
+import ImageLightbox from "./ImageLightbox";
+import FloatingToast from "./FloatingToast";
 
 interface SubRegion {
   id: string;
@@ -41,7 +43,7 @@ function GripIcon() {
   );
 }
 
-function SortableRow({ sub, regionId }: { sub: SubRegion; regionId: string }) {
+function SortableRow({ sub, regionId, onImageClick, onDelete }: { sub: SubRegion; regionId: string; onImageClick: (src: string) => void; onDelete: (name: string) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: sub.id });
 
@@ -67,7 +69,10 @@ function SortableRow({ sub, regionId }: { sub: SubRegion; regionId: string }) {
         </button>
       </td>
       <td className="px-4 py-3">
-        <div className="relative w-16 h-12 overflow-hidden bg-gray-100 rounded-md">
+        <div
+          className={`relative w-16 h-12 overflow-hidden bg-gray-100 rounded-md${sub.thumbnail ? " cursor-zoom-in" : ""}`}
+          onClick={sub.thumbnail ? () => onImageClick(sub.thumbnail!) : undefined}
+        >
           <Image
             src={sub.thumbnail ?? "/images/region-default.svg"}
             alt={sub.name}
@@ -84,14 +89,16 @@ function SortableRow({ sub, regionId }: { sub: SubRegion; regionId: string }) {
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/regions/${regionId}/subs/${sub.id}`}
-            className="whitespace-nowrap rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+            className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             編輯
           </Link>
           <DeleteSubRegionButton
             regionId={regionId}
             subId={sub.id}
+            name={sub.name}
             tourCount={sub._count.tours}
+            onDelete={onDelete}
           />
         </div>
       </td>
@@ -108,6 +115,24 @@ export default function SortableSubRegionList({
 }) {
   const [subs, setSubs] = useState(initial);
   const [error, setError] = useState<string | null>(null);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
+  useEffect(() => {
+    const msg = sessionStorage.getItem("adminSaveMsg");
+    if (msg) {
+      sessionStorage.removeItem("adminSaveMsg");
+      setSaveMsg(msg);
+      setTimeout(() => setSaveMsg(null), 3000);
+    }
+  }, []);
+
+  function handleSubDeleted(id: string, name: string) {
+    setSubs(prev => prev.filter(s => s.id !== id));
+    setSuccessMsg(`已刪除次分類「${name}」`);
+    setTimeout(() => setSuccessMsg(null), 3000);
+  }
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -131,6 +156,8 @@ export default function SortableSubRegionList({
         }),
       });
       if (!res.ok) throw new Error();
+      setSuccessMsg("排序已更新");
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch {
       setSubs(prev);
       setError("排序儲存失敗，已還原");
@@ -139,9 +166,6 @@ export default function SortableSubRegionList({
 
   return (
     <div>
-      {error && (
-        <p className="px-4 py-2 mb-3 text-sm rounded-lg bg-rose-50 text-rose-600">{error}</p>
-      )}
 
       {/* 手機卡片（靜態，不含拖曳） */}
       <div className="min-[920px]:hidden space-y-2">
@@ -153,7 +177,10 @@ export default function SortableSubRegionList({
         {subs.map((sub) => (
           <div key={sub.id} className="p-4 bg-white border border-gray-200 rounded-xl">
             <div className="flex items-center gap-3 mb-3">
-              <div className="relative w-20 h-16 overflow-hidden bg-gray-100 rounded-lg shrink-0">
+              <div
+                className={`relative w-20 h-16 overflow-hidden bg-gray-100 rounded-lg shrink-0${sub.thumbnail ? " cursor-zoom-in" : ""}`}
+                onClick={sub.thumbnail ? () => setLightbox(sub.thumbnail!) : undefined}
+              >
                 <Image
                   src={sub.thumbnail ?? "/images/region-default.svg"}
                   alt={sub.name}
@@ -171,14 +198,16 @@ export default function SortableSubRegionList({
             <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
               <Link
                 href={`/admin/regions/${regionId}/subs/${sub.id}`}
-                className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+                className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 編輯
               </Link>
               <DeleteSubRegionButton
                 regionId={regionId}
                 subId={sub.id}
+                name={sub.name}
                 tourCount={sub._count.tours}
+                onDelete={(name) => handleSubDeleted(sub.id, name)}
               />
             </div>
           </div>
@@ -218,7 +247,13 @@ export default function SortableSubRegionList({
                   </tr>
                 )}
                 {subs.map((sub) => (
-                  <SortableRow key={sub.id} sub={sub} regionId={regionId} />
+                  <SortableRow
+                    key={sub.id}
+                    sub={sub}
+                    regionId={regionId}
+                    onImageClick={setLightbox}
+                    onDelete={(name) => handleSubDeleted(sub.id, name)}
+                  />
                 ))}
               </tbody>
             </SortableContext>
@@ -226,6 +261,8 @@ export default function SortableSubRegionList({
           </div>
         </div>
       </DndContext>
+      {lightbox && <ImageLightbox src={lightbox} alt="縮圖預覽" onClose={() => setLightbox(null)} />}
+      <FloatingToast errorMsg={error} saveMsg={saveMsg} successMsg={successMsg} />
     </div>
   );
 }

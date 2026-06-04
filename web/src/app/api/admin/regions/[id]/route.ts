@@ -7,7 +7,6 @@ import { uploadFile, deleteFile } from "@/lib/cloudinary";
 const schema = z.object({
   name: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/, "slug 只允許小寫英數字和連字號"),
-  sortOrder: z.coerce.number().int().default(0),
 });
 
 export async function PUT(
@@ -24,12 +23,11 @@ export async function PUT(
   const parsed = schema.safeParse({
     name: fd.get("name"),
     slug: fd.get("slug"),
-    sortOrder: fd.get("sortOrder"),
   });
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
-  const { name, slug, sortOrder } = parsed.data;
+  const { name, slug } = parsed.data;
 
   const existing = await db.region.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "找不到此地區" }, { status: 404 });
@@ -57,7 +55,7 @@ export async function PUT(
 
   const region = await db.region.update({
     where: { id },
-    data: { name, slug, sortOrder, thumbnail, thumbnailPublicId },
+    data: { name, slug, thumbnail, thumbnailPublicId },
   });
   return NextResponse.json({ data: region });
 }
@@ -75,9 +73,18 @@ export async function DELETE(
     const { id } = await params;
     const region = await db.region.findUnique({
       where: { id },
-      include: { subRegions: { select: { thumbnailPublicId: true } } },
+      include: {
+        subRegions: {
+          select: { thumbnailPublicId: true, _count: { select: { tours: true } } },
+        },
+      },
     });
     if (!region) return NextResponse.json({ error: "找不到此地區" }, { status: 404 });
+
+    const tourTotal = region.subRegions.reduce((sum, s) => sum + s._count.tours, 0);
+    if (tourTotal > 0) {
+      return NextResponse.json({ error: "此主分類下還有旅遊方案，無法刪除" }, { status: 409 });
+    }
 
     const deleteJobs: Promise<unknown>[] = [];
     if (region.thumbnailPublicId) {

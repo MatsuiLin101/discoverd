@@ -8,16 +8,22 @@ export default async function RegionsPage() {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const regions = await db.region.findMany({
+  const regionsRaw = await db.region.findMany({
     select: {
       id: true,
       name: true,
       slug: true,
       thumbnail: true,
       _count: { select: { subRegions: true } },
+      subRegions: { select: { name: true, _count: { select: { tours: true } } } },
     },
     orderBy: { sortOrder: "asc" },
   });
+  const regions = regionsRaw.map(({ subRegions, ...r }) => ({
+    ...r,
+    tourCount: subRegions.reduce((sum, s) => sum + s._count.tours, 0),
+    subRegionNames: subRegions.map(s => s.name),
+  }));
 
   return (
     <div>
