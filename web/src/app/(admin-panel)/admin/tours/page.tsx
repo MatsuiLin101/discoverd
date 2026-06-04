@@ -20,30 +20,37 @@ export default async function ToursPage({
     published?: string;
     page?: string;
     limit?: string;
+    sortMode?: string;
   }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const { q, regionId, subRegionId, tagIds, published, page: pageParam, limit: limitParam } =
+  const { q, regionId, subRegionId, tagIds, published, page: pageParam, limit: limitParam, sortMode } =
     await searchParams;
+
+  const isSortMode = sortMode === "1" && !!subRegionId;
 
   const tagIdList = tagIds ? tagIds.split(",").filter(Boolean) : [];
   const hasFilters = !!(q || regionId || subRegionId || tagIdList.length > 0 || published);
 
   const parsedLimit = parseInt(limitParam ?? "20", 10);
-  const pageSize = VALID_LIMITS.includes(parsedLimit) ? parsedLimit : 20;
-  const currentPage = Math.max(1, parseInt(pageParam ?? "1", 10));
+  const pageSize = isSortMode ? 0 : (VALID_LIMITS.includes(parsedLimit) ? parsedLimit : 20);
+  const currentPage = isSortMode ? 1 : Math.max(1, parseInt(pageParam ?? "1", 10));
   const skip = pageSize === 0 ? undefined : (currentPage - 1) * pageSize;
   const take = pageSize === 0 ? undefined : pageSize;
 
   const where: Prisma.TourWhereInput = {};
-  if (q) where.name = { contains: q, mode: "insensitive" };
-  if (subRegionId) where.subRegionId = subRegionId;
-  else if (regionId) where.subRegion = { regionId };
-  if (tagIdList.length > 0) where.tags = { some: { id: { in: tagIdList } } };
-  if (published === "true") where.published = true;
-  else if (published === "false") where.published = false;
+  if (isSortMode) {
+    where.subRegionId = subRegionId;
+  } else {
+    if (q) where.name = { contains: q, mode: "insensitive" };
+    if (subRegionId) where.subRegionId = subRegionId;
+    else if (regionId) where.subRegion = { regionId };
+    if (tagIdList.length > 0) where.tags = { some: { id: { in: tagIdList } } };
+    if (published === "true") where.published = true;
+    else if (published === "false") where.published = false;
+  }
 
   const [tours, filteredCount, allCount, regions, tags] = await Promise.all([
     db.tour.findMany({
@@ -53,7 +60,12 @@ export default async function ToursPage({
         tags: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }] },
         _count: { select: { files: true } },
       },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      orderBy: [
+        { subRegion: { region: { sortOrder: "asc" } } },
+        { subRegion: { sortOrder: "asc" } },
+        { sortOrder: "asc" },
+        { createdAt: "desc" },
+      ],
       ...(skip !== undefined && { skip }),
       ...(take !== undefined && { take }),
     }),
@@ -76,15 +88,23 @@ export default async function ToursPage({
     }),
   ]);
 
+  const sortModeSubRegion = isSortMode
+    ? regions
+        .flatMap((r) => r.subRegions.map((sr) => ({ id: sr.id, name: sr.name, regionName: r.name })))
+        .find((sr) => sr.id === subRegionId)
+    : null;
+
   const totalPages = pageSize === 0 ? 1 : Math.ceil(filteredCount / pageSize);
 
   const baseQs = new URLSearchParams();
-  if (q) baseQs.set("q", q);
-  if (regionId) baseQs.set("regionId", regionId);
-  if (subRegionId) baseQs.set("subRegionId", subRegionId);
-  if (tagIds) baseQs.set("tagIds", tagIds);
-  if (published) baseQs.set("published", published);
-  if (pageSize !== 20) baseQs.set("limit", String(pageSize));
+  if (!isSortMode) {
+    if (q) baseQs.set("q", q);
+    if (regionId) baseQs.set("regionId", regionId);
+    if (subRegionId) baseQs.set("subRegionId", subRegionId);
+    if (tagIds) baseQs.set("tagIds", tagIds);
+    if (published) baseQs.set("published", published);
+    if (pageSize !== 20) baseQs.set("limit", String(pageSize));
+  }
 
   function pageHref(p: number) {
     const ps = new URLSearchParams(baseQs.toString());
@@ -93,13 +113,15 @@ export default async function ToursPage({
     return `/admin/tours${qs ? `?${qs}` : ""}`;
   }
 
-  const prevHref = currentPage > 1 ? pageHref(currentPage - 1) : null;
-  const nextHref = currentPage < totalPages ? pageHref(currentPage + 1) : null;
+  const prevHref = !isSortMode && currentPage > 1 ? pageHref(currentPage - 1) : null;
+  const nextHref = !isSortMode && currentPage < totalPages ? pageHref(currentPage + 1) : null;
 
-  const listKey = `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagIds ?? ""}|${published ?? ""}|${currentPage}|${pageSize}`;
+  const listKey = isSortMode
+    ? `sortMode|${subRegionId ?? ""}`
+    : `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagIds ?? ""}|${published ?? ""}|${currentPage}|${pageSize}`;
 
   const returnUrlQs = new URLSearchParams(baseQs.toString());
-  if (currentPage > 1) returnUrlQs.set("page", String(currentPage));
+  if (!isSortMode && currentPage > 1) returnUrlQs.set("page", String(currentPage));
   const returnUrl = `/admin/tours${returnUrlQs.toString() ? `?${returnUrlQs.toString()}` : ""}`;
 
   return (
@@ -109,31 +131,50 @@ export default async function ToursPage({
           <h1 className="text-2xl font-bold text-gray-800">旅遊方案</h1>
           <p className="mt-1 text-sm text-gray-500">管理旅遊方案與行程</p>
         </div>
-        <Link
-          href={`/admin/tours/new?returnUrl=${encodeURIComponent(returnUrl)}`}
-          className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg hover:opacity-85 whitespace-nowrap"
-          style={{ backgroundColor: "#D12351" }}
-        >
-          新增旅遊方案
-        </Link>
+        {!isSortMode && (
+          <Link
+            href={`/admin/tours/new?returnUrl=${encodeURIComponent(returnUrl)}`}
+            className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg hover:opacity-85 whitespace-nowrap"
+            style={{ backgroundColor: "#D12351" }}
+          >
+            新增旅遊方案
+          </Link>
+        )}
       </div>
 
-      <Suspense>
-        <TourFilterBar regions={regions} tags={tags} />
-      </Suspense>
+      {isSortMode && sortModeSubRegion && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <span className="text-sm font-medium text-amber-800">
+            排序模式：{sortModeSubRegion.regionName} › {sortModeSubRegion.name}
+          </span>
+          <Link
+            href="/admin/tours"
+            className="px-3 py-1.5 text-xs font-medium text-amber-700 border border-amber-300 rounded-lg hover:bg-amber-100 transition-colors whitespace-nowrap"
+          >
+            離開排序模式
+          </Link>
+        </div>
+      )}
 
-      <p className="mb-2 text-xs text-gray-400">
-        {hasFilters
-          ? `篩選後 ${filteredCount} 筆（共 ${allCount} 筆）`
-          : `共 ${allCount} 筆`}
-      </p>
+      {!isSortMode && (
+        <Suspense>
+          <TourFilterBar regions={regions} tags={tags} />
+        </Suspense>
+      )}
+
+      {!isSortMode && (
+        <p className="mb-2 text-xs text-gray-400">
+          {hasFilters
+            ? `篩選後 ${filteredCount} 筆（共 ${allCount} 筆）`
+            : `共 ${allCount} 筆`}
+        </p>
+      )}
 
       <TourListClient
         key={listKey}
         tours={tours}
         tags={tags}
         regions={regions}
-        hasFilters={hasFilters}
         filteredCount={filteredCount}
         allCount={allCount}
         currentPage={currentPage}
@@ -142,6 +183,7 @@ export default async function ToursPage({
         prevHref={prevHref}
         nextHref={nextHref}
         returnUrl={returnUrl}
+        sortMode={isSortMode}
       />
     </div>
   );

@@ -66,6 +66,7 @@ function TourMobileCard({
   onImageClick,
   returnUrl,
   onDelete,
+  sortMode,
 }: {
   tour: TourRow;
   isSelected: boolean;
@@ -73,6 +74,7 @@ function TourMobileCard({
   onImageClick: (src: string) => void;
   returnUrl: string;
   onDelete: (name: string) => void;
+  sortMode: boolean;
 }) {
   return (
     <div
@@ -81,12 +83,14 @@ function TourMobileCard({
       }`}
     >
       <div className="flex items-start gap-3">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggle(tour.id)}
-          className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#D12351]"
-        />
+        {!sortMode && (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggle(tour.id)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#D12351]"
+          />
+        )}
         <div
           className={`relative h-10 overflow-hidden bg-gray-100 rounded w-14 shrink-0${tour.thumbnail ? " cursor-zoom-in" : ""}`}
           onClick={tour.thumbnail ? () => onImageClick(tour.thumbnail!) : undefined}
@@ -128,15 +132,17 @@ function TourMobileCard({
               ))}
             </div>
           )}
-          <div className="flex items-center gap-2 mt-2">
-            <Link
-              href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
-              className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
-            >
-              編輯
-            </Link>
-            <DeleteTourButton tourId={tour.id} name={tour.name} onDelete={onDelete} />
-          </div>
+          {!sortMode && (
+            <div className="flex items-center gap-2 mt-2">
+              <Link
+                href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
+                className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              >
+                編輯
+              </Link>
+              <DeleteTourButton tourId={tour.id} name={tour.name} onDelete={onDelete} />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -151,6 +157,7 @@ interface SortableTourRowProps {
   onImageClick: (src: string) => void;
   returnUrl: string;
   onDelete: (name: string) => void;
+  sortMode: boolean;
 }
 
 function SortableTourRow({
@@ -161,6 +168,7 @@ function SortableTourRow({
   onImageClick,
   returnUrl,
   onDelete,
+  sortMode,
 }: SortableTourRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tour.id,
@@ -176,14 +184,16 @@ function SortableTourRow({
         isDragging ? "bg-blue-50 opacity-80 shadow-sm" : "hover:bg-gray-50"
       }`}
     >
-      <td className="px-3 py-3">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onToggle(tour.id)}
-          className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
-        />
-      </td>
+      {!sortMode && (
+        <td className="px-3 py-3">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggle(tour.id)}
+            className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
+          />
+        </td>
+      )}
       <td className="px-2 py-3">
         {showDragHandle ? (
           <button
@@ -241,17 +251,19 @@ function SortableTourRow({
           </span>
         )}
       </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
-            className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
-          >
-            編輯
-          </Link>
-          <DeleteTourButton tourId={tour.id} name={tour.name} onDelete={onDelete} />
-        </div>
-      </td>
+      {!sortMode && (
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
+              className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              編輯
+            </Link>
+            <DeleteTourButton tourId={tour.id} name={tour.name} onDelete={onDelete} />
+          </div>
+        </td>
+      )}
     </tr>
   );
 }
@@ -260,7 +272,6 @@ interface TourListClientProps {
   tours: TourRow[];
   tags: TagOption[];
   regions: RegionOption[];
-  hasFilters: boolean;
   filteredCount: number;
   allCount: number;
   currentPage: number;
@@ -269,13 +280,13 @@ interface TourListClientProps {
   prevHref: string | null;
   nextHref: string | null;
   returnUrl: string;
+  sortMode: boolean;
 }
 
 export default function TourListClient({
   tours: initial,
   tags,
   regions,
-  hasFilters,
   filteredCount,
   allCount,
   currentPage,
@@ -284,6 +295,7 @@ export default function TourListClient({
   prevHref,
   nextHref,
   returnUrl,
+  sortMode,
 }: TourListClientProps) {
   const [tours, setTours] = useState(initial);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -337,13 +349,17 @@ export default function TourListClient({
   const [regionLoading, setRegionLoading] = useState(false);
   const [regionError, setRegionError] = useState<string | null>(null);
 
+  // Sort mode modal state
+  const [sortModeModalOpen, setSortModeModalOpen] = useState(false);
+  const [sortModalRegionId, setSortModalRegionId] = useState("");
+  const [sortModalSubRegionId, setSortModalSubRegionId] = useState("");
+
   const [dragError, setDragError] = useState<string | null>(null);
 
   const router = useRouter();
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // 有篩選時禁止拖曳，防止 sortOrder 與未顯示的 tour 產生衝突
-  const canDrag = !hasFilters && (pageSize === 0 || filteredCount <= pageSize);
+  const canDrag = sortMode;
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -543,11 +559,32 @@ export default function TourListClient({
   const subRegionsForModal =
     regions.find((r) => r.id === selectedRegionId)?.subRegions ?? [];
 
+  const subRegionsForSortModal =
+    regions.find((r) => r.id === sortModalRegionId)?.subRegions ?? [];
+
   const btnBase = "cursor-pointer h-[30px] px-3 text-xs font-medium rounded-md transition-colors border whitespace-nowrap disabled:cursor-not-allowed";
+
+  // Table column count varies by mode: sort mode hides checkbox + operations columns
+  const colCount = sortMode ? 8 : 10;
 
   return (
     <>
-      {selectedIds.size > 0 && (
+      {!sortMode && (
+        <div className="flex justify-end mb-3">
+          <button
+            onClick={() => {
+              setSortModalRegionId("");
+              setSortModalSubRegionId("");
+              setSortModeModalOpen(true);
+            }}
+            className={`${btnBase} border-gray-300 bg-white text-gray-600 hover:bg-gray-100`}
+          >
+            排序模式
+          </button>
+        </div>
+      )}
+
+      {!sortMode && selectedIds.size > 0 && (
         <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-[#D12351]/20 bg-rose-50 px-4 py-3">
           <span className="text-sm font-medium text-[#D12351]">
             已選取 {selectedIds.size} 個方案
@@ -592,23 +629,13 @@ export default function TourListClient({
           </button>
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="ml-auto cursor-pointer text-xs text-gray-400 hover:text-gray-600"
+            className="ml-auto text-xs text-gray-400 cursor-pointer hover:text-gray-600"
           >
             取消選取
           </button>
         </div>
       )}
 
-      {hasFilters && (
-        <p className="mb-2 text-xs text-amber-600">
-          有篩選條件時無法拖曳排序，請清除所有篩選後再調整
-        </p>
-      )}
-      {!hasFilters && !canDrag && (
-        <p className="mb-2 text-xs text-gray-400">
-          目前結果有多頁，請選擇「全部」顯示才可拖曳排序
-        </p>
-      )}
       {dragError && (
         <p className="px-4 py-2 mb-2 text-sm rounded-lg bg-rose-50 text-rose-600">{dragError}</p>
       )}
@@ -629,6 +656,7 @@ export default function TourListClient({
             onImageClick={setLightbox}
             returnUrl={returnUrl}
             onDelete={(name) => handleTourDeleted(tour.id, name)}
+            sortMode={sortMode}
           />
         ))}
       </div>
@@ -645,17 +673,19 @@ export default function TourListClient({
           <table className="w-full text-sm min-w-215">
             <thead>
               <tr className="text-left border-b border-gray-100 bg-gray-50">
-                <th className="px-3 py-3">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    ref={(el: HTMLInputElement | null) => {
-                      if (el) el.indeterminate = someSelected;
-                    }}
-                    onChange={(e) => toggleAll(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
-                  />
-                </th>
+                {!sortMode && (
+                  <th className="px-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      ref={(el: HTMLInputElement | null) => {
+                        if (el) el.indeterminate = someSelected;
+                      }}
+                      onChange={(e) => toggleAll(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
+                    />
+                  </th>
+                )}
                 <th className="w-8 px-2 py-3" />
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">縮圖</th>
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">名稱</th>
@@ -664,14 +694,16 @@ export default function TourListClient({
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">標籤</th>
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">檔案</th>
                 <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">狀態</th>
-                <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">操作</th>
+                {!sortMode && (
+                  <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">操作</th>
+                )}
               </tr>
             </thead>
             <SortableContext items={tours.map((t) => t.id)} strategy={verticalListSortingStrategy}>
               <tbody>
                 {tours.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="px-4 py-12 text-sm text-center text-gray-400">
+                    <td colSpan={colCount} className="px-4 py-12 text-sm text-center text-gray-400">
                       沒有符合條件的旅遊方案
                     </td>
                   </tr>
@@ -686,6 +718,7 @@ export default function TourListClient({
                     onImageClick={setLightbox}
                     returnUrl={returnUrl}
                     onDelete={(name) => handleTourDeleted(tour.id, name)}
+                    sortMode={sortMode}
                   />
                 ))}
               </tbody>
@@ -731,6 +764,74 @@ export default function TourListClient({
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M5.5 3.5L9 7l-3.5 3.5"/></svg>
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Sort mode entry modal */}
+      {sortModeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm p-6 mx-4 bg-white shadow-xl rounded-xl">
+            <h3 className="mb-1 text-base font-semibold text-gray-800">進入排序模式</h3>
+            <p className="mb-4 text-sm text-gray-500">
+              請選擇要排序的次分類。進入後新增、修改、刪除、篩選功能將暫時停用。
+            </p>
+
+            <div className="flex flex-col gap-1 mb-3">
+              <label className="text-xs font-medium text-gray-500">主分類</label>
+              <select
+                value={sortModalRegionId}
+                onChange={(e) => {
+                  setSortModalRegionId(e.target.value);
+                  setSortModalSubRegionId("");
+                }}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351]"
+              >
+                <option value="">請選擇主分類</option>
+                {regions.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1 mb-5">
+              <label className="text-xs font-medium text-gray-500">次分類</label>
+              <select
+                value={sortModalSubRegionId}
+                onChange={(e) => setSortModalSubRegionId(e.target.value)}
+                disabled={!sortModalRegionId}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351] disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                <option value="">請選擇次分類</option>
+                {subRegionsForSortModal.map((sr) => (
+                  <option key={sr.id} value={sr.id}>
+                    {sr.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setSortModeModalOpen(false)}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  router.push(`/admin/tours?subRegionId=${sortModalSubRegionId}&limit=0&sortMode=1`);
+                  setSortModeModalOpen(false);
+                }}
+                disabled={!sortModalSubRegionId}
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50"
+                style={{ backgroundColor: "#D12351" }}
+              >
+                進入排序模式
+              </button>
+            </div>
           </div>
         </div>
       )}
