@@ -20,7 +20,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import DeleteRegionButton from "./DeleteRegionButton";
 import ImageLightbox from "./ImageLightbox";
-import FloatingToast from "./FloatingToast";
+import FloatingToast from "@/components/admin/FloatingToast";
 
 interface Region {
   id: string;

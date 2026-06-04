@@ -63,9 +63,10 @@ model SubRegion {
 }
 
 model Tag {
-  id    String @id @default(cuid())
-  name  String @unique
-  tours Tour[] @relation("TourTags")
+  id        String @id @default(cuid())
+  name      String @unique
+  sortOrder Int    @default(0)
+  tours     Tour[] @relation("TourTags")
 }
 
 model Tour {

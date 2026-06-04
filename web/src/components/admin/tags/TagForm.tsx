@@ -4,7 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 const inputClass =
-  "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
+  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
 interface Tag {
@@ -17,14 +17,12 @@ export default function TagForm({ tag }: { tag?: Tag }) {
   const isEdit = !!tag;
   const [name, setName] = useState(tag?.name ?? "");
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [isPending, setIsPending] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setIsPending(true);
     setError(null);
-    setSuccess(false);
 
     try {
       const url = isEdit ? `/api/admin/tags/${tag.id}` : "/api/admin/tags";
@@ -35,12 +33,12 @@ export default function TagForm({ tag }: { tag?: Tag }) {
       });
       const data = await res.json();
       if (data.data) {
-        if (isEdit) {
-          setSuccess(true);
-          router.refresh();
-        } else {
-          router.push("/admin/tags");
-        }
+        sessionStorage.setItem(
+          "adminSaveMsg",
+          isEdit ? `已更新標籤「${name}」` : `已新增標籤「${name}」`
+        );
+        router.push("/admin/tags");
+        router.refresh();
       } else {
         setError(data.error ?? (isEdit ? "更新失敗" : "新增失敗"));
       }
@@ -66,7 +64,6 @@ export default function TagForm({ tag }: { tag?: Tag }) {
       </div>
 
       {error && <p className="text-sm text-rose-600">{error}</p>}
-      {success && <p className="text-sm text-emerald-600">已儲存</p>}
 
       <div className="flex gap-3">
         <button
@@ -80,7 +77,7 @@ export default function TagForm({ tag }: { tag?: Tag }) {
         <button
           type="button"
           onClick={() => router.push("/admin/tags")}
-          className="cursor-pointer rounded-lg border border-gray-200 px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="cursor-pointer rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
           {isEdit ? "返回列表" : "取消"}
         </button>
