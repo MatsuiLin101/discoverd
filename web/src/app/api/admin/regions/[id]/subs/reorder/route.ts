@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { writeLog } from "@/lib/log";
 
 const schema = z.object({
   items: z.array(z.object({ id: z.string(), sortOrder: z.number().int() })).min(1),
@@ -29,5 +30,7 @@ export async function PATCH(
     )
   );
 
+  const count = parsed.data.items.length;
+  void writeLog({ userId: session.userId, userEmail: session.email, action: "REORDER", resource: "SUB_REGION", resourceId: regionId, resourceName: "次分類排序", detail: { count } });
   return NextResponse.json({ ok: true });
 }

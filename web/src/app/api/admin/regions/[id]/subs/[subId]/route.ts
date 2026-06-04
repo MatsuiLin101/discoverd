@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { uploadFile, deleteFile } from "@/lib/cloudinary";
+import { writeLog } from "@/lib/log";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -39,11 +40,19 @@ export async function PUT(
   });
   if (slugConflict) return NextResponse.json({ error: "此 slug 在此主分類下已存在" }, { status: 409 });
 
-  let thumbnail = existing.thumbnail ?? undefined;
-  let thumbnailPublicId = existing.thumbnailPublicId ?? undefined;
+  let thumbnail: string | null = existing.thumbnail;
+  let thumbnailPublicId: string | null = existing.thumbnailPublicId;
 
   const file = fd.get("thumbnail") as File | null;
-  if (file && file.size > 0) {
+  const clearThumbnail = fd.get("clearThumbnail") === "true";
+
+  if (clearThumbnail && !(file && file.size > 0)) {
+    if (existing.thumbnailPublicId) {
+      await deleteFile(existing.thumbnailPublicId, "image").catch(() => {});
+    }
+    thumbnail = null;
+    thumbnailPublicId = null;
+  } else if (file && file.size > 0) {
     if (existing.thumbnailPublicId) {
       await deleteFile(existing.thumbnailPublicId, "image").catch(() => {});
     }
@@ -57,6 +66,12 @@ export async function PUT(
     where: { id: subId },
     data: { name, slug, thumbnail, thumbnailPublicId },
   });
+  const thumbnailChange = clearThumbnail && !(file && file.size > 0)
+    ? "removed"
+    : (file && file.size > 0)
+      ? (existing.thumbnailPublicId ? "replaced" : "added")
+      : "unchanged";
+  void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, thumbnailChange } });
   return NextResponse.json({ data: sub });
 }
 
@@ -88,5 +103,6 @@ export async function DELETE(
     await deleteFile(sub.thumbnailPublicId, "image").catch(() => {});
   }
   await db.subRegion.delete({ where: { id: subId } });
+  void writeLog({ userId: session.userId, userEmail: session.email, action: "DELETE", resource: "SUB_REGION", resourceId: subId, resourceName: sub.name, detail: { id: subId, name: sub.name, hadThumbnail: !!sub.thumbnailPublicId } });
   return NextResponse.json({ ok: true });
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { uploadFile } from "@/lib/cloudinary";
+import { writeLog } from "@/lib/log";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -48,5 +49,6 @@ export async function POST(req: NextRequest) {
   const region = await db.region.create({
     data: { name, slug, sortOrder, thumbnail, thumbnailPublicId },
   });
+  void writeLog({ userId: session.userId, userEmail: session.email, action: "CREATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnail: thumbnail ?? null } });
   return NextResponse.json({ data: region }, { status: 201 });
 }

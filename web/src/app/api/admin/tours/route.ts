@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { uploadFile } from "@/lib/cloudinary";
+import { writeLog } from "@/lib/log";
 
 const createSchema = z.object({
   name: z.string().min(1, "請輸入行程名稱"),
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    void writeLog({ userId: session.userId, userEmail: session.email, action: "CREATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnail: thumbnail ?? null } });
     return NextResponse.json({ data: { id: tour.id } }, { status: 201 });
   } catch (e) {
     console.error("[POST /api/admin/tours]", e);

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { uploadFile, deleteFile } from "@/lib/cloudinary";
+import { writeLog } from "@/lib/log";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -39,11 +40,19 @@ export async function PUT(
   if (nameConflict) return NextResponse.json({ error: "此名稱已存在" }, { status: 409 });
   if (slugConflict) return NextResponse.json({ error: "此 slug 已存在" }, { status: 409 });
 
-  let thumbnail = existing.thumbnail ?? undefined;
-  let thumbnailPublicId = existing.thumbnailPublicId ?? undefined;
+  let thumbnail: string | null = existing.thumbnail;
+  let thumbnailPublicId: string | null = existing.thumbnailPublicId;
 
   const file = fd.get("thumbnail") as File | null;
-  if (file && file.size > 0) {
+  const clearThumbnail = fd.get("clearThumbnail") === "true";
+
+  if (clearThumbnail && !(file && file.size > 0)) {
+    if (existing.thumbnailPublicId) {
+      await deleteFile(existing.thumbnailPublicId, "image").catch(() => {});
+    }
+    thumbnail = null;
+    thumbnailPublicId = null;
+  } else if (file && file.size > 0) {
     if (existing.thumbnailPublicId) {
       await deleteFile(existing.thumbnailPublicId, "image").catch(() => {});
     }
@@ -57,6 +66,12 @@ export async function PUT(
     where: { id },
     data: { name, slug, thumbnail, thumbnailPublicId },
   });
+  const thumbnailChange = clearThumbnail && !(file && file.size > 0)
+    ? "removed"
+    : (file && file.size > 0)
+      ? (existing.thumbnailPublicId ? "replaced" : "added")
+      : "unchanged";
+  void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnailChange } });
   return NextResponse.json({ data: region });
 }
 
@@ -75,7 +90,7 @@ export async function DELETE(
       where: { id },
       include: {
         subRegions: {
-          select: { thumbnailPublicId: true, _count: { select: { tours: true } } },
+          select: { id: true, name: true, thumbnailPublicId: true, _count: { select: { tours: true } } },
         },
       },
     });
@@ -98,6 +113,32 @@ export async function DELETE(
     await Promise.all(deleteJobs);
 
     await db.region.delete({ where: { id } });
+
+    void writeLog({
+      userId: session.userId,
+      userEmail: session.email,
+      action: "DELETE",
+      resource: "REGION",
+      resourceId: id,
+      resourceName: region.name,
+      detail: {
+        id,
+        name: region.name,
+        hadThumbnail: !!region.thumbnailPublicId,
+        cascadeDeletedSubRegions: region.subRegions.map((s) => ({ id: s.id, name: s.name, hadThumbnail: !!s.thumbnailPublicId })),
+      },
+    });
+    for (const sub of region.subRegions) {
+      void writeLog({
+        userId: session.userId,
+        userEmail: session.email,
+        action: "DELETE",
+        resource: "SUB_REGION",
+        resourceId: sub.id,
+        resourceName: sub.name,
+        detail: { id: sub.id, name: sub.name, cascadeFrom: region.name },
+      });
+    }
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[DELETE /api/admin/regions/[id]]", e);

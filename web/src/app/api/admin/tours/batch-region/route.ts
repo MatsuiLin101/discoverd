@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { writeLog } from "@/lib/log";
 
 const schema = z.object({
   tourIds: z.array(z.string()).min(1),
@@ -22,7 +23,10 @@ export async function PATCH(req: NextRequest) {
 
   const { tourIds, subRegionId } = parsed.data;
 
-  const subRegion = await db.subRegion.findUnique({ where: { id: subRegionId } });
+  const [subRegion, tours] = await Promise.all([
+    db.subRegion.findUnique({ where: { id: subRegionId } }),
+    db.tour.findMany({ where: { id: { in: tourIds } }, select: { id: true, name: true } }),
+  ]);
   if (!subRegion) {
     return NextResponse.json({ error: "找不到此次分類" }, { status: 404 });
   }
@@ -31,5 +35,6 @@ export async function PATCH(req: NextRequest) {
     tourIds.map((id) => db.tour.update({ where: { id }, data: { subRegionId } }))
   );
 
+  void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "TOUR", resourceId: "batch", resourceName: `批量移動行程至 ${subRegion.name}（${tourIds.length} 筆）`, detail: { count: tourIds.length, targetSubRegion: subRegion.name, items: tours.map((t) => ({ id: t.id, name: t.name })) } });
   return NextResponse.json({ ok: true, updated: tourIds.length });
 }

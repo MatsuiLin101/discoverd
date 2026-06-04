@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import * as z from "zod";
 import { db } from "@/lib/db";
 import { createSession } from "@/lib/auth";
+import { writeLog } from "@/lib/log";
 
 const schema = z.object({
   email: z.email(),
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     await createSession(user.id, user.role);
+    void writeLog({ userId: user.id, userEmail: user.email, action: "LOGIN", resource: "AUTH", resourceId: user.id, resourceName: user.email });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(

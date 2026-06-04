@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { uploadFile } from "@/lib/cloudinary";
+import { writeLog } from "@/lib/log";
 
 export async function POST(
   req: NextRequest,
@@ -41,6 +42,7 @@ export async function POST(
         },
       });
       created.push(tourFile);
+      void writeLog({ userId: session.userId, userEmail: session.email, action: "CREATE", resource: "TOUR_FILE", resourceId: tourFile.id, resourceName: file.name, detail: { tourId, tourName: tour.name, filename: file.name, mimeType: file.type } });
     }
 
     return NextResponse.json({ data: created }, { status: 201 });

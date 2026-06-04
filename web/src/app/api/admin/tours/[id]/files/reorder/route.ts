@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { writeLog } from "@/lib/log";
 
 const schema = z.object({
   items: z.array(z.object({ id: z.string(), sortOrder: z.number().int() })),
@@ -26,6 +27,7 @@ export async function PATCH(
         db.tourFile.update({ where: { id, tourId }, data: { sortOrder } })
       )
     );
+    void writeLog({ userId: session.userId, userEmail: session.email, action: "REORDER", resource: "TOUR_FILE", resourceId: tourId, resourceName: "行程附件排序", detail: { tourId, count: items.length } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[PATCH /api/admin/tours/[id]/files/reorder]", e);

@@ -15,13 +15,14 @@ enum Role {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
+  id        String        @id @default(cuid())
+  email     String        @unique
   password  String
-  role      Role      @default(STAFF)
+  role      Role          @default(STAFF)
   sessions  Session[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  logs      ActivityLog[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 // Single concurrent login: each login invalidates previous sessions via userId uniqueness
@@ -109,4 +110,35 @@ model Inquiry {
   lineId    String?
   content   String
   createdAt DateTime @default(now())
+}
+
+enum LogAction {
+  CREATE
+  UPDATE
+  DELETE
+  REORDER
+  LOGIN
+  LOGOUT
+}
+
+enum LogResource {
+  REGION
+  SUB_REGION
+  TAG
+  TOUR
+  TOUR_FILE
+  AUTH
+}
+
+model ActivityLog {
+  id           String      @id @default(cuid())
+  userId       String?
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userEmail    String
+  action       LogAction
+  resource     LogResource
+  resourceId   String
+  resourceName String
+  detail       Json?
+  createdAt    DateTime    @default(now())
 }

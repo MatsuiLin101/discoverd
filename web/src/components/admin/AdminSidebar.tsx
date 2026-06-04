@@ -31,7 +31,10 @@ const navGroups: NavGroup[] = [
   {
     title: "系統管理",
     adminOnly: true,
-    items: [{ label: "使用者管理", href: "/admin/users" }],
+    items: [
+      { label: "操作日誌", href: "/admin/logs" },
+      { label: "使用者管理", href: "/admin/users" },
+    ],
   },
 ];
 

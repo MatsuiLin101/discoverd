@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { uploadFile, deleteFile } from "@/lib/cloudinary";
+import { writeLog } from "@/lib/log";
 
 const updateSchema = z.object({
   name: z.string().min(1, "請輸入行程名稱"),
@@ -77,6 +78,12 @@ export async function PUT(
         tags: { set: tagIds.map((tagId) => ({ id: tagId })) },
       },
     });
+    const thumbnailChange = clearThumbnail && !(thumbFile && thumbFile.size > 0)
+      ? "removed"
+      : thumbFile && thumbFile.size > 0
+        ? existing.thumbnailPublicId ? "replaced" : "added"
+        : "unchanged";
+    void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnailChange } });
     return NextResponse.json({ data: tour });
   } catch (e) {
     console.error("[PUT /api/admin/tours/[id]]", e);
@@ -110,6 +117,7 @@ export async function DELETE(
     await Promise.all(deleteJobs);
 
     await db.tour.delete({ where: { id } });
+    void writeLog({ userId: session.userId, userEmail: session.email, action: "DELETE", resource: "TOUR", resourceId: id, resourceName: tour.name, detail: { id, name: tour.name, hadThumbnail: !!tour.thumbnailPublicId } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[DELETE /api/admin/tours/[id]]", e);
