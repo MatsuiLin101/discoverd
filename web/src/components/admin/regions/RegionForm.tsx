@@ -36,6 +36,7 @@ export default function RegionForm({
   const [slug, setSlug] = useState(initialSlug);
   const [slugManual, setSlugManual] = useState(isEdit);
   const [preview, setPreview] = useState<string | null>(null);
+  const [clearThumbnail, setClearThumbnail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
@@ -55,7 +56,14 @@ export default function RegionForm({
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setClearThumbnail(false);
     setPreview(URL.createObjectURL(file));
+  }
+
+  function handleClearThumbnail() {
+    setClearThumbnail(true);
+    setPreview(null);
+    if (fileRef.current) fileRef.current.value = "";
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -71,7 +79,11 @@ export default function RegionForm({
     fd.append("name", name);
     fd.append("slug", slug);
     const file = fileRef.current?.files?.[0];
-    if (file) fd.append("thumbnail", file);
+    if (file) {
+      fd.append("thumbnail", file);
+    } else if (clearThumbnail) {
+      fd.append("clearThumbnail", "true");
+    }
 
     try {
       const url = isEdit ? `/api/admin/regions/${regionId}` : "/api/admin/regions";
@@ -94,7 +106,9 @@ export default function RegionForm({
     }
   }
 
-  const displayThumbnail = preview ?? initialThumbnail ?? "/images/region-default.svg";
+  const showClearButton = isEdit && (!!initialThumbnail || !!preview) && !clearThumbnail;
+  const currentThumb = clearThumbnail ? null : (preview ?? initialThumbnail ?? null);
+  const displayThumbnail = currentThumb ?? "/images/region-default.svg";
 
   return (
     <>
@@ -131,8 +145,8 @@ export default function RegionForm({
         <label className={labelClass}>縮圖</label>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div
-            className={`relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-50${preview !== null || initialThumbnail != null ? " cursor-zoom-in" : ""}`}
-            onClick={preview !== null || initialThumbnail != null ? () => setLightbox(displayThumbnail) : undefined}
+            className={`relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-50${currentThumb ? " cursor-zoom-in" : ""}`}
+            onClick={currentThumb ? () => setLightbox(displayThumbnail) : undefined}
           >
             <Image
               src={displayThumbnail}
@@ -153,6 +167,18 @@ export default function RegionForm({
             <p className="mt-1.5 text-xs text-gray-400">
               未上傳時使用預設縮圖
             </p>
+            {showClearButton && (
+              <button
+                type="button"
+                onClick={handleClearThumbnail}
+                className="mt-1.5 cursor-pointer text-xs text-rose-500 hover:text-rose-700"
+              >
+                清除縮圖
+              </button>
+            )}
+            {clearThumbnail && (
+              <p className="mt-1.5 text-xs text-gray-400">縮圖將被清除，儲存後生效</p>
+            )}
           </div>
         </div>
       </div>
