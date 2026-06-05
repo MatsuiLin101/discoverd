@@ -19,6 +19,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!sub) return {};
   return {
     title: `${sub.name} ／ ${data.region.name} — 找到了旅遊 FOUND HOLIDAY`,
+    description: `${sub.name} 旅程精選，共 ${sub.tours.length} 條路線，找到了旅遊為您推薦。`,
+    openGraph: { url: `/regions/${slug}/${subSlug}` },
   };
 }
 

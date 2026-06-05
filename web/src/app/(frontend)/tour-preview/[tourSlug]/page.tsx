@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import TourPreviewFrame from "@/components/frontend/TourPreviewFrame";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function TourPreviewPage({
   params,

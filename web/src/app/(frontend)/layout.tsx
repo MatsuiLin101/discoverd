@@ -17,8 +17,14 @@ const notoSansTC = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "找到了旅遊 FOUND HOLIDAY — 為您而寫的旅程",
   description: "找到了旅遊，精選日本、歐洲、東南亞等優質行程，由專業旅遊顧問為您量身打造。",
+  openGraph: {
+    siteName: "找到了旅遊 FOUND HOLIDAY",
+    locale: "zh_TW",
+    type: "website",
+  },
 };
 
 export default function FrontendLayout({

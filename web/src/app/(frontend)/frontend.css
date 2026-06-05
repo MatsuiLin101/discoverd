@@ -470,7 +470,8 @@
 .fh-modal-side .m-price .unit { font-size: 20px; }
 .fh-modal-side .m-note { font-size: 12px; line-height: 1.7; color: var(--ink-3); margin: 14px 0 0; }
 .fh-modal-side .m-actions { display: flex; flex-direction: column; gap: 12px; }
-.fh-modal-side .m-actions button {
+.fh-modal-side .m-actions button,
+.fh-modal-side .m-actions a {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   padding: 15px 20px; border-radius: 999px; border: 0;
   font-family: var(--fh-sans); font-size: 15px; font-weight: 500; letter-spacing: 0.04em;
@@ -782,4 +783,15 @@
   .fh-sr-txt { grid-area: txt; }
   .fh-sr-price { grid-area: price; justify-content: flex-start; align-self: start; }
   .fh-sr-price .num { font-size: 18px; }
+}
+
+/* =====================================================
+   TOUR DETAIL PAGE — standalone /tours/[slug]
+   ===================================================== */
+.fh-tour-detail {
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: clamp(24px, 4vw, 56px) var(--gutter) clamp(48px, 8vw, 96px);
+}
+.fh-tour-detail .fh-modal {
+  height: min(860px, 82vh);
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { SubRegionWithTours, TourItem } from "@/lib/frontend-data";
+import TourInquiryModal from "./TourInquiryModal";
 
 interface Props {
   parent: { name: string };
@@ -11,32 +12,16 @@ interface Props {
   initialSlug: string;
 }
 
-interface FormErrors {
-  name?: string;
-  phone?: string;
-  email?: string;
-  message?: string;
-}
-
 export default function TourSection({ parent, regions, initialSlug }: Props) {
   const [activeSlug, setActiveSlug] = useState(initialSlug);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTour, setModalTour] = useState<TourItem | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [formSubmitted, setFormSubmitted] = useState(false);
   const [mobileCollapsed, setMobileCollapsed] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-
-  const nameRef = useRef<HTMLInputElement>(null);
-  const phoneRef = useRef<HTMLInputElement>(null);
-  const emailRef = useRef<HTMLInputElement>(null);
-  const lineRef = useRef<HTMLInputElement>(null);
-  const messageRef = useRef<HTMLTextAreaElement>(null);
 
   const activeRegion = regions.find((r) => r.slug === activeSlug) ?? regions[0];
 
@@ -93,71 +78,8 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
     setModalOpen(false);
     setModalTour(null);
     setFormOpen(false);
-    setFormSubmitted(false);
   }
 
-  function openForm() {
-    setFormSubmitted(false);
-    setErrors({});
-    setSubmitError(null);
-    if (nameRef.current) nameRef.current.value = "";
-    if (phoneRef.current) phoneRef.current.value = "";
-    if (emailRef.current) emailRef.current.value = "";
-    if (lineRef.current) lineRef.current.value = "";
-    if (messageRef.current) messageRef.current.value = "";
-    setFormOpen(true);
-    setTimeout(() => nameRef.current?.focus(), 60);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const newErrors: FormErrors = {};
-    const name = nameRef.current?.value.trim() ?? "";
-    const phone = phoneRef.current?.value.trim() ?? "";
-    const email = emailRef.current?.value.trim() ?? "";
-    const message = messageRef.current?.value.trim() ?? "";
-
-    if (!name) newErrors.name = "請填寫聯絡人姓名";
-    const digits = phone.replace(/\D/g, "");
-    if (!phone || digits.length < 8) newErrors.phone = "請填寫正確的行動電話號碼";
-    if (!message) newErrors.message = "請填寫諮詢內容";
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "電子郵件格式有誤";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      const firstKey = Object.keys(newErrors)[0] as keyof FormErrors;
-      if (firstKey === "name") nameRef.current?.focus();
-      else if (firstKey === "phone") phoneRef.current?.focus();
-      else if (firstKey === "email") emailRef.current?.focus();
-      else if (firstKey === "message") messageRef.current?.focus();
-      return;
-    }
-
-    setSubmitError(null);
-    try {
-      const res = await fetch("/api/inquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tourId: modalTour?.id ?? null,
-          name: nameRef.current!.value.trim(),
-          phone: phoneRef.current!.value.trim(),
-          email: emailRef.current?.value.trim() || null,
-          lineId: lineRef.current?.value.trim() || null,
-          content: messageRef.current!.value.trim(),
-        }),
-      });
-      if (res.status === 201) {
-        setFormSubmitted(true);
-      } else {
-        setSubmitError("提交失敗，請稍後再試");
-      }
-    } catch {
-      setSubmitError("提交失敗，請稍後再試");
-    }
-  }
 
   const galleryImgs: string[] = modalTour
     ? modalTour.images.length > 0
@@ -205,10 +127,11 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
           <div className="fh-empty">這個分類的行程正在籌備中，敬請期待。</div>
         ) : (
           activeRegion.tours.map((tour, i) => (
-            <article
+            <a
               key={i}
+              href={`/tours/${tour.slug}`}
               className="fh-trow"
-              onClick={() => openModal(tour)}
+              onClick={(e) => { e.preventDefault(); openModal(tour); }}
             >
               <div className="t-img">
                 <Image
@@ -240,7 +163,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                   <span className="t-cta">查看行程 →</span>
                 </div>
               </div>
-            </article>
+            </a>
           ))
         )}
       </div>
@@ -318,7 +241,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                   className="m-form"
                   onClick={(e) => {
                     e.stopPropagation();
-                    openForm();
+                    setFormOpen(true);
                   }}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -332,139 +255,12 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
         </div>
       </div>
 
-      {/* Inquiry form modal */}
-      <div
-        className={`fh-form-overlay${formOpen ? " open" : ""}`}
-        aria-hidden={!formOpen}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) setFormOpen(false);
-        }}
-      >
-        <div className="fh-form-modal" role="dialog" aria-modal="true">
-          <button className="fh-form-x" onClick={() => setFormOpen(false)} aria-label="關閉">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-
-          <div className="fh-form-head">
-            <div className="fh-form-eyebrow">線上諮詢</div>
-            <h3 className="fh-form-title">填寫諮詢單</h3>
-            <p className="fh-form-trip">
-              關於 <b>{modalTour?.name ?? "—"}</b>
-            </p>
-          </div>
-
-          {formSubmitted ? (
-            <div className="fh-form-success show">
-              <span className="tick">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </span>
-              <h3>已收到您的諮詢單</h3>
-              <p>
-                謝謝您的填寫！我們的旅遊專員將於{" "}
-                <b>一個工作天內</b> 透過電話或 LINE 與您聯繫，為您安排專屬行程。
-              </p>
-              <button
-                type="button"
-                className="done-btn"
-                onClick={() => setFormOpen(false)}
-              >
-                完成
-              </button>
-            </div>
-          ) : (
-            <form
-              className="fh-form-body"
-              noValidate
-              onSubmit={handleSubmit}
-            >
-              <div className={`fh-f-field${errors.name ? " invalid" : ""}`}>
-                <span className="fh-f-label">
-                  聯絡人 <em>*</em>
-                </span>
-                <input
-                  ref={nameRef}
-                  type="text"
-                  placeholder="您的姓名"
-                  autoComplete="name"
-                  onChange={() => setErrors((e) => ({ ...e, name: undefined }))}
-                />
-                <span className="fh-f-error">{errors.name}</span>
-              </div>
-
-              <div className={`fh-f-field${errors.phone ? " invalid" : ""}`}>
-                <span className="fh-f-label">
-                  行動電話 <em>*</em>
-                </span>
-                <input
-                  ref={phoneRef}
-                  type="tel"
-                  placeholder="09xx-xxx-xxx"
-                  autoComplete="tel"
-                  onChange={() => setErrors((e) => ({ ...e, phone: undefined }))}
-                />
-                <span className="fh-f-error">{errors.phone}</span>
-              </div>
-
-              <div className={`fh-f-field${errors.email ? " invalid" : ""}`}>
-                <span className="fh-f-label">
-                  電子郵件 <span className="opt">（選填）</span>
-                </span>
-                <input
-                  ref={emailRef}
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  onChange={() => setErrors((e) => ({ ...e, email: undefined }))}
-                />
-                <span className="fh-f-error">{errors.email}</span>
-              </div>
-
-              <div className="fh-f-field">
-                <span className="fh-f-label">
-                  LINE ID <span className="opt">（選填）</span>
-                </span>
-                <input ref={lineRef} type="text" placeholder="您的 LINE ID" />
-                <span className="fh-f-error" />
-              </div>
-
-              <div className={`fh-f-field${errors.message ? " invalid" : ""}`}>
-                <span className="fh-f-label">
-                  諮詢內容 <em>*</em>
-                </span>
-                <textarea
-                  ref={messageRef}
-                  placeholder="想詢問的出發日期、人數、預算或其他需求⋯"
-                  onChange={() => setErrors((e) => ({ ...e, message: undefined }))}
-                />
-                <span className="fh-f-error">{errors.message}</span>
-              </div>
-
-              <div className="fh-form-foot">
-                {submitError && (
-                  <p className="text-sm text-rose-600">{submitError}</p>
-                )}
-                <button
-                  type="button"
-                  className="fh-form-cancel"
-                  onClick={() => setFormOpen(false)}
-                >
-                  取消
-                </button>
-                <button type="submit" className="fh-form-submit">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                  </svg>
-                  送出諮詢
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
+      <TourInquiryModal
+        tourId={modalTour?.id ?? null}
+        tourName={modalTour?.name ?? ""}
+        isOpen={formOpen}
+        onClose={() => setFormOpen(false)}
+      />
     </>
   );
 }
