@@ -46,12 +46,12 @@ export default function TourPreviewFrame({ tour }: { tour: Tour }) {
               {tour.regionName} ・ {tour.subRegionName}
             </div>
             <h3 className="m-name">{tour.name}</h3>
-            {tour.description && <p className="m-lede">{tour.description}</p>}
             <div className="m-tags">
               {tour.tags.map((tag) => (
                 <span key={tag}>{tag === "hot" ? "熱門" : tag}</span>
               ))}
             </div>
+            {tour.description && <p className="m-lede">{tour.description}</p>}
           </div>
 
           <div className="m-bottom">

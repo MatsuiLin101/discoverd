@@ -288,14 +288,14 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                 {parent.name} ・ {activeRegion.name}
               </div>
               <h3 className="m-name">{modalTour?.name}</h3>
-              {modalTour?.description && (
-                <p className="m-lede">{modalTour.description}</p>
-              )}
               <div className="m-tags">
                 {modalTour?.tags.map((tag) => (
                   <span key={tag}>{tag === "hot" ? "熱門" : tag}</span>
                 ))}
               </div>
+              {modalTour?.description && (
+                <p className="m-lede">{modalTour.description}</p>
+              )}
             </div>
 
             <div className="m-bottom">

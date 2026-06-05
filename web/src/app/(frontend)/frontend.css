@@ -462,6 +462,7 @@
   font-family: var(--fh-sans); font-size: 10.5px; letter-spacing: 0.1em;
   padding: 6px 13px; border-radius: 999px; background: transparent; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap;
 }
+.fh-modal-side .m-lede { font-size: 14px; line-height: 1.75; color: var(--ink-2); margin: 16px 0 0; }
 .fh-modal-side .m-bottom { display: flex; flex-direction: column; gap: 24px; }
 .fh-modal-side .m-price { display: flex; align-items: flex-end; gap: 5px; font-weight: 500; color: var(--accent); line-height: 1; margin-top: 10px; }
 .fh-modal-side .m-price .cur { font-size: 16px; }
@@ -718,6 +719,7 @@
   .fh-modal-side.collapsed .m-eyebrow,
   .fh-modal-side.collapsed .m-en,
   .fh-modal-side.collapsed .m-tags,
+  .fh-modal-side.collapsed .m-lede,
   .fh-modal-side.collapsed .m-note,
   .fh-modal-side.collapsed .m-actions { display: none; }
   .fh-modal-side.collapsed .m-name { margin-bottom: 0; font-size: 17px; padding-right: 36px; }
