@@ -27,11 +27,10 @@ export interface Region {
   subRegions: SubRegion[];
 }
 
-export const HERO_SLIDES = [
-  { img: "https://images.unsplash.com/photo-1542640244-7e672d6cef4e?w=1800&q=80", alt: "北海道 美瑛" },
-  { img: "https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=1800&q=80", alt: "冰島 極光" },
-  { img: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=1800&q=80", alt: "義大利 托斯卡尼" },
-  { img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1800&q=80", alt: "京都 嵐山" },
+export const HERO_FALLBACK_SLIDES = [
+  { img: "/images/hero/hero-1.jpg", alt: "旅遊首圖 1" },
+  { img: "/images/hero/hero-2.jpg", alt: "旅遊首圖 2" },
+  { img: "/images/hero/hero-3.jpg", alt: "旅遊首圖 3" },
 ];
 
 export const REGIONS: Region[] = [

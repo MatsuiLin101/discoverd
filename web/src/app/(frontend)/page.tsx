@@ -3,15 +3,24 @@ import SiteHeader from "@/components/frontend/SiteHeader";
 import SiteFooter from "@/components/frontend/SiteFooter";
 import HeroCarousel from "@/components/frontend/HeroCarousel";
 import CategoryList from "@/components/frontend/CategoryList";
-import { HERO_SLIDES } from "@/lib/frontend-data";
+import { HERO_FALLBACK_SLIDES } from "@/lib/frontend-data";
 import { getRegionList } from "@/lib/frontend-queries";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "找到了旅遊 FOUND HOLIDAY — 為您而寫的旅程",
 };
 
 export default async function HomePage() {
-  const regions = await getRegionList();
+  const [regions, dbBanners] = await Promise.all([
+    getRegionList(),
+    db.heroBanner.findMany({ orderBy: { sortOrder: "asc" } }),
+  ]);
+
+  const heroSlides =
+    dbBanners.length > 0
+      ? dbBanners.map((b) => ({ img: b.image, alt: b.title }))
+      : HERO_FALLBACK_SLIDES;
 
   const HOME_CATEGORIES = regions.map((r) => ({
     href: `/regions/${r.slug}`,
@@ -26,7 +35,7 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      <HeroCarousel slides={HERO_SLIDES} />
+      <HeroCarousel slides={heroSlides} />
 
       <nav className="fh-page-bar">
         <div className="fh-page-bar-inner">

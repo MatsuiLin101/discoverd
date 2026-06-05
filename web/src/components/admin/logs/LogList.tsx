@@ -51,6 +51,7 @@ const RESOURCE_LABELS: Record<LogResource, string> = {
   TOUR: "行程",
   TOUR_FILE: "行程附件",
   AUTH: "系統登入",
+  HERO_BANNER: "輪播圖",
 };
 
 function formatDate(iso: string) {

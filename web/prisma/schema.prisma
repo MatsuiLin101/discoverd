@@ -130,6 +130,17 @@ enum LogResource {
   TOUR
   TOUR_FILE
   AUTH
+  HERO_BANNER
+}
+
+model HeroBanner {
+  id            String   @id @default(cuid())
+  title         String
+  image         String
+  imagePublicId String
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model ActivityLog {
