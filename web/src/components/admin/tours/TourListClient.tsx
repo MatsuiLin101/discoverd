@@ -20,11 +20,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DeleteTourButton from "./DeleteTourButton";
+import TourPreviewModal from "./TourPreviewModal";
 import FloatingToast from "@/components/admin/FloatingToast";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 
 type TourRow = {
   id: string;
+  slug: string;
   name: string;
   thumbnail: string | null;
   price: number;
@@ -66,6 +68,7 @@ function TourMobileCard({
   onImageClick,
   returnUrl,
   onDelete,
+  onPreview,
   sortMode,
 }: {
   tour: TourRow;
@@ -74,6 +77,7 @@ function TourMobileCard({
   onImageClick: (src: string) => void;
   returnUrl: string;
   onDelete: (name: string) => void;
+  onPreview: (tour: TourRow) => void;
   sortMode: boolean;
 }) {
   return (
@@ -105,7 +109,9 @@ function TourMobileCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-medium leading-snug text-gray-800">{tour.name}</p>
+            <p className="text-sm font-medium leading-snug text-gray-800">
+            {tour.name}
+          </p>
             {tour.published ? (
               <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
                 已發布
@@ -134,6 +140,17 @@ function TourMobileCard({
           )}
           {!sortMode && (
             <div className="flex items-center gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => onPreview(tour)}
+                className="cursor-pointer rounded-md border border-gray-300 bg-white p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                title="預覽"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
               <Link
                 href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
                 className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
@@ -157,6 +174,7 @@ interface SortableTourRowProps {
   onImageClick: (src: string) => void;
   returnUrl: string;
   onDelete: (name: string) => void;
+  onPreview: (tour: TourRow) => void;
   sortMode: boolean;
 }
 
@@ -168,6 +186,7 @@ function SortableTourRow({
   onImageClick,
   returnUrl,
   onDelete,
+  onPreview,
   sortMode,
 }: SortableTourRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -254,6 +273,17 @@ function SortableTourRow({
       {!sortMode && (
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onPreview(tour)}
+              className="cursor-pointer rounded-md border border-gray-300 bg-white py-1 px-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              title="預覽"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
             <Link
               href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
               className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
@@ -299,6 +329,7 @@ export default function TourListClient({
 }: TourListClientProps) {
   const [tours, setTours] = useState(initial);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [previewTour, setPreviewTour] = useState<TourRow | null>(null);
 
   // Toast state
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -656,6 +687,7 @@ export default function TourListClient({
             onImageClick={setLightbox}
             returnUrl={returnUrl}
             onDelete={(name) => handleTourDeleted(tour.id, name)}
+            onPreview={setPreviewTour}
             sortMode={sortMode}
           />
         ))}
@@ -718,6 +750,7 @@ export default function TourListClient({
                     onImageClick={setLightbox}
                     returnUrl={returnUrl}
                     onDelete={(name) => handleTourDeleted(tour.id, name)}
+                    onPreview={setPreviewTour}
                     sortMode={sortMode}
                   />
                 ))}
@@ -1019,6 +1052,10 @@ export default function TourListClient({
 
       {lightbox && (
         <ImageLightbox src={lightbox} alt="縮圖預覽" onClose={() => setLightbox(null)} />
+      )}
+
+      {previewTour && (
+        <TourPreviewModal tour={previewTour} onClose={() => setPreviewTour(null)} />
       )}
 
       <FloatingToast errorMsg={toastError} saveMsg={saveMsg} successMsg={successMsg} />
