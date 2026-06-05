@@ -15,7 +15,7 @@ export default async function EditUserPage({
   const { id } = await params;
   const user = await db.user.findUnique({
     where: { id },
-    select: { id: true, email: true, role: true },
+    select: { id: true, username: true, displayName: true, email: true, role: true },
   });
   if (!user) notFound();
 
@@ -23,7 +23,7 @@ export default async function EditUserPage({
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">編輯使用者</h1>
-        <p className="mt-1 text-sm text-gray-500">{user.email}</p>
+        <p className="mt-1 text-sm text-gray-500">{user.displayName ?? user.username}</p>
       </div>
 
       <div className="space-y-10">
@@ -31,6 +31,8 @@ export default async function EditUserPage({
           <h2 className="mb-4 text-base font-semibold text-gray-700">基本資料</h2>
           <UserEditForm
             userId={user.id}
+            initialUsername={user.username}
+            initialDisplayName={user.displayName}
             initialEmail={user.email}
             initialRole={user.role as "ADMIN" | "STAFF"}
           />

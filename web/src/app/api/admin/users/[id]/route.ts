@@ -4,8 +4,10 @@ import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 const updateSchema = z.object({
-  email: z.email(),
-  role: z.enum(["ADMIN", "STAFF"]),
+  username:    z.string().min(1, { error: "帳號不可為空" }),
+  displayName: z.string().optional(),
+  email:       z.string().email().optional(),
+  role:        z.enum(["ADMIN", "STAFF"]),
 });
 
 export async function PUT(
@@ -25,7 +27,7 @@ export async function PUT(
       return NextResponse.json({ error: "請填寫正確的欄位資料" }, { status: 400 });
     }
 
-    const { email, role } = result.data;
+    const { username, displayName, email, role } = result.data;
 
     const target = await db.user.findUnique({ where: { id } });
     if (!target) {
@@ -43,18 +45,18 @@ export async function PUT(
       }
     }
 
-    // Check email uniqueness if changed
-    if (email !== target.email) {
-      const existing = await db.user.findUnique({ where: { email } });
+    // Check username uniqueness if changed
+    if (username !== target.username) {
+      const existing = await db.user.findUnique({ where: { username } });
       if (existing) {
-        return NextResponse.json({ error: "此 Email 已被使用" }, { status: 409 });
+        return NextResponse.json({ error: "此帳號已被使用" }, { status: 409 });
       }
     }
 
     const updated = await db.user.update({
       where: { id },
-      data: { email, role },
-      select: { id: true, email: true, role: true },
+      data: { username, displayName: displayName ?? null, email: email ?? null, role },
+      select: { id: true, username: true, displayName: true, email: true, role: true },
     });
 
     return NextResponse.json({ data: updated });

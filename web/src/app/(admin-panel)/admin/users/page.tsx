@@ -14,7 +14,7 @@ export default async function UsersPage() {
   if (!session || session.role !== "ADMIN") redirect("/admin");
 
   const users = await db.user.findMany({
-    select: { id: true, email: true, role: true, createdAt: true },
+    select: { id: true, username: true, displayName: true, role: true, createdAt: true },
     orderBy: { createdAt: "asc" },
   });
 
@@ -40,7 +40,8 @@ export default async function UsersPage() {
           <div key={user.id} className="px-4 py-3 space-y-2 bg-white border border-gray-200 rounded-xl">
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-medium text-gray-800 break-all">
-                {user.email}
+                {user.displayName ?? user.username}
+                {user.displayName && <span className="ml-1 text-xs text-gray-400">@{user.username}</span>}
                 {user.id === session.userId && (
                   <span className="ml-1.5 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
                     我
@@ -73,7 +74,7 @@ export default async function UsersPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left border-b border-gray-100 bg-gray-50">
-              <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">Email</th>
+              <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">帳號</th>
               <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">角色</th>
               <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">建立時間</th>
               <th className="px-4 py-3 font-medium text-gray-600 whitespace-nowrap">操作</th>
@@ -83,7 +84,8 @@ export default async function UsersPage() {
             {users.map((user) => (
               <tr key={user.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 text-gray-800">
-                  {user.email}
+                  {user.displayName ?? user.username}
+                  {user.displayName && <span className="ml-1 text-xs text-gray-400">@{user.username}</span>}
                   {user.id === session.userId && (
                     <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
                       我

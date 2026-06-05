@@ -20,7 +20,7 @@ export async function DELETE(
     await deleteFile(file.publicId, resourceType).catch(() => {});
     await db.tourFile.delete({ where: { id: fileId } });
 
-    void writeLog({ userId: session.userId, userEmail: session.email, action: "DELETE", resource: "TOUR_FILE", resourceId: fileId, resourceName: file.filename ?? fileId, detail: { tourId, filename: file.filename } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR_FILE", resourceId: fileId, resourceName: file.filename ?? fileId, detail: { tourId, filename: file.filename } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[DELETE /api/admin/tours/[id]/files/[fileId]]", e);

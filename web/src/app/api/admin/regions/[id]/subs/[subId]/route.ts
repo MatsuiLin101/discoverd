@@ -71,7 +71,7 @@ export async function PUT(
     : (file && file.size > 0)
       ? (existing.thumbnailPublicId ? "replaced" : "added")
       : "unchanged";
-  void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, thumbnailChange } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, thumbnailChange } });
   return NextResponse.json({ data: sub });
 }
 
@@ -103,6 +103,6 @@ export async function DELETE(
     await deleteFile(sub.thumbnailPublicId, "image").catch(() => {});
   }
   await db.subRegion.delete({ where: { id: subId } });
-  void writeLog({ userId: session.userId, userEmail: session.email, action: "DELETE", resource: "SUB_REGION", resourceId: subId, resourceName: sub.name, detail: { id: subId, name: sub.name, hadThumbnail: !!sub.thumbnailPublicId } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "SUB_REGION", resourceId: subId, resourceName: sub.name, detail: { id: subId, name: sub.name, hadThumbnail: !!sub.thumbnailPublicId } });
   return NextResponse.json({ ok: true });
 }

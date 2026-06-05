@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    void writeLog({ userId: session.userId, userEmail: session.email, action: "CREATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnail: thumbnail ?? null } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnail: thumbnail ?? null } });
     return NextResponse.json({ data: { id: tour.id } }, { status: 201 });
   } catch (e) {
     console.error("[POST /api/admin/tours]", e);

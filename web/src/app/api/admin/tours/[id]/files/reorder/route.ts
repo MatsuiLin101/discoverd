@@ -27,7 +27,7 @@ export async function PATCH(
         db.tourFile.update({ where: { id, tourId }, data: { sortOrder } })
       )
     );
-    void writeLog({ userId: session.userId, userEmail: session.email, action: "REORDER", resource: "TOUR_FILE", resourceId: tourId, resourceName: "行程附件排序", detail: { tourId, count: items.length } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "REORDER", resource: "TOUR_FILE", resourceId: tourId, resourceName: "行程附件排序", detail: { tourId, count: items.length } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[PATCH /api/admin/tours/[id]/files/reorder]", e);

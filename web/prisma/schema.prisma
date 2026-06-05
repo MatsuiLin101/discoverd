@@ -15,14 +15,16 @@ enum Role {
 }
 
 model User {
-  id        String        @id @default(cuid())
-  email     String        @unique
-  password  String
-  role      Role          @default(STAFF)
-  sessions  Session[]
-  logs      ActivityLog[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id          String        @id @default(cuid())
+  username    String        @unique
+  displayName String?
+  email       String?
+  password    String
+  role        Role          @default(STAFF)
+  sessions    Session[]
+  logs        ActivityLog[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 // Single concurrent login: each login invalidates previous sessions via userId uniqueness
@@ -134,7 +136,7 @@ model ActivityLog {
   id           String      @id @default(cuid())
   userId       String?
   user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userEmail    String
+  userAccount  String
   action       LogAction
   resource     LogResource
   resourceId   String

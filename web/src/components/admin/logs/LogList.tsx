@@ -6,7 +6,7 @@ import type { LogAction, LogResource } from "@/generated/prisma/client";
 type LogEntry = {
   id: string;
   userId: string | null;
-  userEmail: string;
+  userAccount: string;
   action: LogAction;
   resource: LogResource;
   resourceId: string;
@@ -24,7 +24,7 @@ type ApiResponse = {
   };
 };
 
-type User = { id: string; email: string };
+type User = { id: string; username: string };
 
 const ACTION_LABELS: Record<LogAction, string> = {
   CREATE: "新增",
@@ -181,7 +181,7 @@ export default function LogList({ users }: { users: User[] }) {
             >
               <option value="">全部</option>
               {users.map((u) => (
-                <option key={u.id} value={u.id}>{u.email}</option>
+                <option key={u.id} value={u.id}>{u.username}</option>
               ))}
             </select>
           </div>
@@ -254,7 +254,7 @@ export default function LogList({ users }: { users: User[] }) {
                     {formatDate(log.createdAt)}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-700 whitespace-nowrap">
-                    {log.userEmail}
+                    {log.userAccount}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${ACTION_COLORS[log.action]}`}>

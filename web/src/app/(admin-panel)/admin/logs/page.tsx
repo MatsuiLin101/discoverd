@@ -8,8 +8,8 @@ export default async function LogsPage() {
   if (!session || session.role !== "ADMIN") redirect("/admin");
 
   const users = await db.user.findMany({
-    select: { id: true, email: true },
-    orderBy: { email: "asc" },
+    select: { id: true, username: true },
+    orderBy: { username: "asc" },
   });
 
   return (

@@ -51,10 +51,10 @@ export async function getSession() {
     const payload = await verifyToken(token);
     const session = await db.session.findUnique({
       where: { token },
-      include: { user: { select: { email: true } } },
+      include: { user: { select: { username: true, displayName: true } } },
     });
     if (!session || session.expiresAt < new Date()) return null;
-    return { userId: payload.userId, role: payload.role, email: session.user.email };
+    return { userId: payload.userId, role: payload.role, username: session.user.username, displayName: session.user.displayName };
   } catch {
     return null;
   }

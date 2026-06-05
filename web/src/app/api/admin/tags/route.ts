@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       select: { id: true, name: true },
     });
 
-    void writeLog({ userId: session.userId, userEmail: session.email, action: "CREATE", resource: "TAG", resourceId: tag.id, resourceName: tag.name, detail: { id: tag.id, name: tag.name } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TAG", resourceId: tag.id, resourceName: tag.name, detail: { id: tag.id, name: tag.name } });
     return NextResponse.json({ data: tag }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "伺服器錯誤，請稍後再試" }, { status: 500 });

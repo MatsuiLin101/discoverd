@@ -41,6 +41,6 @@ export async function PATCH(req: NextRequest) {
     )
   );
 
-  void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "TOUR", resourceId: "batch", resourceName: `批量${action === "add" ? "新增" : "移除"}標籤（${tourIds.length} 筆行程）`, detail: { count: tourIds.length, tagAction: action, tags: tags.map((t) => t.name), items: tours.map((t) => ({ id: t.id, name: t.name })) } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "TOUR", resourceId: "batch", resourceName: `批量${action === "add" ? "新增" : "移除"}標籤（${tourIds.length} 筆行程）`, detail: { count: tourIds.length, tagAction: action, tags: tags.map((t) => t.name), items: tours.map((t) => ({ id: t.id, name: t.name })) } });
   return NextResponse.json({ ok: true, updated: tourIds.length });
 }

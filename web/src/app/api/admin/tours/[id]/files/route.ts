@@ -42,7 +42,7 @@ export async function POST(
         },
       });
       created.push(tourFile);
-      void writeLog({ userId: session.userId, userEmail: session.email, action: "CREATE", resource: "TOUR_FILE", resourceId: tourFile.id, resourceName: file.name, detail: { tourId, tourName: tour.name, filename: file.name, mimeType: file.type } });
+      void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR_FILE", resourceId: tourFile.id, resourceName: file.name, detail: { tourId, tourName: tour.name, filename: file.name, mimeType: file.type } });
     }
 
     return NextResponse.json({ data: created }, { status: 201 });

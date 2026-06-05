@@ -31,6 +31,6 @@ export async function PATCH(
   );
 
   const count = parsed.data.items.length;
-  void writeLog({ userId: session.userId, userEmail: session.email, action: "REORDER", resource: "SUB_REGION", resourceId: regionId, resourceName: "次分類排序", detail: { count } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "REORDER", resource: "SUB_REGION", resourceId: regionId, resourceName: "次分類排序", detail: { count } });
   return NextResponse.json({ ok: true });
 }

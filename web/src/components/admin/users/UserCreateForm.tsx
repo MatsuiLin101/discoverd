@@ -9,6 +9,8 @@ const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
 export default function UserCreateForm() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"ADMIN" | "STAFF">("STAFF");
@@ -24,7 +26,13 @@ export default function UserCreateForm() {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({
+          username,
+          displayName: displayName || undefined,
+          email: email || undefined,
+          password,
+          role,
+        }),
       });
       const data = await res.json();
       if (data.data) {
@@ -42,10 +50,30 @@ export default function UserCreateForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
       <div>
-        <label className={labelClass}>電子郵件<span className="ml-0.5 text-rose-500">*</span></label>
+        <label className={labelClass}>帳號<span className="ml-0.5 text-rose-500">*</span></label>
+        <input
+          type="text"
+          required
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>顯示名稱</label>
+        <input
+          type="text"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>電子郵件</label>
         <input
           type="email"
-          required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={inputClass}

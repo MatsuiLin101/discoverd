@@ -71,7 +71,7 @@ export async function PUT(
     : (file && file.size > 0)
       ? (existing.thumbnailPublicId ? "replaced" : "added")
       : "unchanged";
-  void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnailChange } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnailChange } });
   return NextResponse.json({ data: region });
 }
 
@@ -116,7 +116,7 @@ export async function DELETE(
 
     void writeLog({
       userId: session.userId,
-      userEmail: session.email,
+      userAccount: session.username,
       action: "DELETE",
       resource: "REGION",
       resourceId: id,
@@ -131,7 +131,7 @@ export async function DELETE(
     for (const sub of region.subRegions) {
       void writeLog({
         userId: session.userId,
-        userEmail: session.email,
+        userAccount: session.username,
         action: "DELETE",
         resource: "SUB_REGION",
         resourceId: sub.id,

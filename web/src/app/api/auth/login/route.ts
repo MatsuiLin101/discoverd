@@ -6,7 +6,7 @@ import { createSession } from "@/lib/auth";
 import { writeLog } from "@/lib/log";
 
 const schema = z.object({
-  email: z.email(),
+  username: z.string().min(1),
   password: z.string().min(1),
 });
 
@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = result.data;
-    const user = await db.user.findUnique({ where: { email } });
+    const { username, password } = result.data;
+    const user = await db.user.findUnique({ where: { username } });
 
     // timing-safe: always run bcrypt even when user is not found
     const hash = user?.password ?? "$2b$12$invalidhashfortimingsafety00000";
@@ -38,17 +38,18 @@ export async function POST(request: NextRequest) {
         expiresAt: { gt: new Date() },
         userId: { not: user.id },
       },
-      include: { user: { select: { email: true } } },
+      include: { user: { select: { username: true, displayName: true } } },
     });
     if (occupied) {
+      const occupiedName = occupied.user.displayName ?? occupied.user.username;
       return NextResponse.json(
-        { error: `後台目前由 ${occupied.user.email} 登入中，請稍後再試` },
+        { error: `後台目前由 ${occupiedName} 登入中，請稍後再試` },
         { status: 409 }
       );
     }
 
     await createSession(user.id, user.role);
-    void writeLog({ userId: user.id, userEmail: user.email, action: "LOGIN", resource: "AUTH", resourceId: user.id, resourceName: user.email });
+    void writeLog({ userId: user.id, userAccount: user.username, action: "LOGIN", resource: "AUTH", resourceId: user.id, resourceName: user.username });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(

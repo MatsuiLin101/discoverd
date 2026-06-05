@@ -29,6 +29,6 @@ export async function PATCH(req: NextRequest) {
     tourIds.map((id) => db.tour.update({ where: { id }, data: { published } }))
   );
 
-  void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "TOUR", resourceId: "batch", resourceName: `批量${published ? "發布" : "取消發布"}行程（${tourIds.length} 筆）`, detail: { count: tourIds.length, published, items: tours.map((t) => ({ id: t.id, name: t.name })) } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "TOUR", resourceId: "batch", resourceName: `批量${published ? "發布" : "取消發布"}行程（${tourIds.length} 筆）`, detail: { count: tourIds.length, published, items: tours.map((t) => ({ id: t.id, name: t.name })) } });
   return NextResponse.json({ ok: true, updated: tourIds.length });
 }

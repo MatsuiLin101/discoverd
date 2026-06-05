@@ -6,9 +6,9 @@ import { writeLog } from "@/lib/log";
 export async function POST() {
   const session = await getSession();
   if (session) {
-    const user = await db.user.findUnique({ where: { id: session.userId }, select: { email: true } });
+    const user = await db.user.findUnique({ where: { id: session.userId }, select: { username: true } });
     if (user) {
-      void writeLog({ userId: session.userId, userEmail: user.email, action: "LOGOUT", resource: "AUTH", resourceId: session.userId, resourceName: user.email });
+      void writeLog({ userId: session.userId, userAccount: user.username, action: "LOGOUT", resource: "AUTH", resourceId: session.userId, resourceName: user.username });
     }
   }
   await deleteSession();

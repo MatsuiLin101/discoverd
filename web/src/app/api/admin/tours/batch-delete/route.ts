@@ -42,6 +42,6 @@ export async function DELETE(req: NextRequest) {
 
   await db.$transaction(tourIds.map((id) => db.tour.delete({ where: { id } })));
 
-  void writeLog({ userId: session.userId, userEmail: session.email, action: "DELETE", resource: "TOUR", resourceId: "batch", resourceName: `批量刪除行程（${tourIds.length} 筆）`, detail: { count: tourIds.length, items: tours.map((t) => ({ id: t.id, name: t.name })) } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR", resourceId: "batch", resourceName: `批量刪除行程（${tourIds.length} 筆）`, detail: { count: tourIds.length, items: tours.map((t) => ({ id: t.id, name: t.name })) } });
   return NextResponse.json({ ok: true, deleted: tourIds.length });
 }

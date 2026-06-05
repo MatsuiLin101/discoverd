@@ -46,7 +46,7 @@ export async function PUT(
       select: { id: true, name: true },
     });
 
-    void writeLog({ userId: session.userId, userEmail: session.email, action: "UPDATE", resource: "TAG", resourceId: tag.id, resourceName: tag.name, detail: { id: tag.id, name: tag.name } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "TAG", resourceId: tag.id, resourceName: tag.name, detail: { id: tag.id, name: tag.name } });
     return NextResponse.json({ data: tag });
   } catch {
     return NextResponse.json({ error: "伺服器錯誤，請稍後再試" }, { status: 500 });
@@ -71,7 +71,7 @@ export async function DELETE(
     }
 
     await db.tag.delete({ where: { id } });
-    void writeLog({ userId: session.userId, userEmail: session.email, action: "DELETE", resource: "TAG", resourceId: id, resourceName: target.name, detail: { id, name: target.name } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TAG", resourceId: id, resourceName: target.name, detail: { id, name: target.name } });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "伺服器錯誤，請稍後再試" }, { status: 500 });

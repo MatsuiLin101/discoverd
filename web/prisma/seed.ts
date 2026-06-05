@@ -8,27 +8,27 @@ expand(config({ path: ".env.local" }));
 const db = new PrismaClient();
 
 async function main() {
-  const email = process.env.SEED_ADMIN_EMAIL;
+  const username = process.env.SEED_ADMIN_USERNAME;
   const password = process.env.SEED_ADMIN_PASSWORD;
 
-  if (!email || !password) {
+  if (!username || !password) {
     console.error(
-      "Error: SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD must be set in .env.local"
+      "Error: SEED_ADMIN_USERNAME and SEED_ADMIN_PASSWORD must be set in .env.local"
     );
     process.exit(1);
   }
 
-  const existing = await db.user.findUnique({ where: { email } });
+  const existing = await db.user.findUnique({ where: { username } });
   if (existing) {
-    console.log(`Admin user already exists: ${email}`);
+    console.log(`Admin user already exists: ${username}`);
     return;
   }
 
   const hash = await bcrypt.hash(password, 12);
   const user = await db.user.create({
-    data: { email, password: hash, role: "ADMIN" },
+    data: { username, password: hash, role: "ADMIN" },
   });
-  console.log(`Created admin user: ${user.email}`);
+  console.log(`Created admin user: ${user.username}`);
 }
 
 main()

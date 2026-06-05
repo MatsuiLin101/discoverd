@@ -16,14 +16,14 @@ export default async function AdminDashboardPage() {
 
   const user = await db.user.findUnique({
     where: { id: session.userId },
-    select: { email: true },
+    select: { username: true, displayName: true },
   });
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-xl font-bold text-gray-800 sm:text-2xl">
-          歡迎回來，<span className="break-all">{user?.email}</span>
+          歡迎回來，<span className="break-all">{user?.displayName ?? user?.username}</span>
         </h1>
         <p className="mt-1 text-sm text-gray-500">選擇一個功能開始管理</p>
       </div>

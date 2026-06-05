@@ -3,7 +3,7 @@ import type { LogAction, LogResource, Prisma } from "@/generated/prisma/client";
 
 export async function writeLog(params: {
   userId: string | null;
-  userEmail: string;
+  userAccount: string;
   action: LogAction;
   resource: LogResource;
   resourceId: string;

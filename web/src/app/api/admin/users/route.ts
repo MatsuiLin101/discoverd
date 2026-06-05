@@ -5,9 +5,11 @@ import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 const createSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8, { error: "密碼至少 8 個字元" }),
-  role: z.enum(["ADMIN", "STAFF"]),
+  username:    z.string().min(1, { error: "帳號不可為空" }),
+  displayName: z.string().optional(),
+  email:       z.string().email().optional(),
+  password:    z.string().min(8, { error: "密碼至少 8 個字元" }),
+  role:        z.enum(["ADMIN", "STAFF"]),
 });
 
 export async function POST(request: NextRequest) {
@@ -23,17 +25,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "請填寫正確的欄位資料" }, { status: 400 });
     }
 
-    const { email, password, role } = result.data;
+    const { username, displayName, email, password, role } = result.data;
 
-    const existing = await db.user.findUnique({ where: { email } });
+    const existing = await db.user.findUnique({ where: { username } });
     if (existing) {
-      return NextResponse.json({ error: "此 Email 已被使用" }, { status: 409 });
+      return NextResponse.json({ error: "此帳號已被使用" }, { status: 409 });
     }
 
     const hash = await bcrypt.hash(password, 12);
     const user = await db.user.create({
-      data: { email, password: hash, role },
-      select: { id: true, email: true, role: true },
+      data: { username, displayName: displayName ?? null, email: email ?? null, password: hash, role },
+      select: { id: true, username: true, displayName: true, email: true, role: true },
     });
 
     return NextResponse.json({ data: user }, { status: 201 });
