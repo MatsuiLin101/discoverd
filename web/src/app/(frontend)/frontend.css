@@ -288,6 +288,9 @@
   letter-spacing: 0.12em;
   line-height: 1.1;
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .fh-cat-row .cat-en {
   font-family: var(--fh-sans);
@@ -344,6 +347,7 @@
   color: var(--ink-2); transition: all .22s; white-space: nowrap;
   display: inline-flex; align-items: baseline; gap: 9px;
   cursor: pointer;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis;
 }
 .fh-subtabs button:hover { border-color: var(--accent); color: var(--ink); }
 .fh-subtabs button.active { background: var(--ink); border-color: var(--ink); color: #fff; }
