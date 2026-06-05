@@ -57,7 +57,7 @@ export default function LoginForm() {
               htmlFor="email"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              電子郵件
+              電子郵件<span className="ml-0.5 text-rose-500">*</span>
             </label>
             <input
               id="email"
@@ -78,7 +78,7 @@ export default function LoginForm() {
               htmlFor="password"
               className="mb-1.5 block text-sm font-medium text-gray-700"
             >
-              密碼
+              密碼<span className="ml-0.5 text-rose-500">*</span>
             </label>
             <input
               id="password"

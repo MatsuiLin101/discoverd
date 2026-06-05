@@ -47,7 +47,7 @@ export default function ResetPasswordForm({ userId }: { userId: string }) {
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
       <div>
-        <label className={labelClass}>新密碼（至少 8 個字元）</label>
+        <label className={labelClass}>新密碼（至少 8 個字元）<span className="ml-0.5 text-rose-500">*</span></label>
         <input
           type="password"
           required
@@ -59,7 +59,7 @@ export default function ResetPasswordForm({ userId }: { userId: string }) {
       </div>
 
       <div>
-        <label className={labelClass}>確認新密碼</label>
+        <label className={labelClass}>確認新密碼<span className="ml-0.5 text-rose-500">*</span></label>
         <input
           type="password"
           required

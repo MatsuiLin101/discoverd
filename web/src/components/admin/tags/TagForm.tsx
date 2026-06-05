@@ -52,7 +52,7 @@ export default function TagForm({ tag }: { tag?: Tag }) {
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
       <div>
-        <label className={labelClass}>標籤名稱</label>
+        <label className={labelClass}>標籤名稱<span className="ml-0.5 text-rose-500">*</span></label>
         <input
           type="text"
           required

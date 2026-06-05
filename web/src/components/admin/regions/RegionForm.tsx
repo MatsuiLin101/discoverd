@@ -114,7 +114,7 @@ export default function RegionForm({
     <>
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
       <div>
-        <label className={labelClass}>顯示名稱</label>
+        <label className={labelClass}>顯示名稱<span className="ml-0.5 text-rose-500">*</span></label>
         <input
           type="text"
           required
@@ -126,7 +126,7 @@ export default function RegionForm({
       </div>
 
       <div>
-        <label className={labelClass}>Slug（網址代碼）</label>
+        <label className={labelClass}>Slug（網址代碼）<span className="ml-0.5 text-rose-500">*</span></label>
         <input
           type="text"
           required

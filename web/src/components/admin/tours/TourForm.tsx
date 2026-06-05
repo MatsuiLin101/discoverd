@@ -178,7 +178,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
         {/* 行程名稱 */}
         <div>
-          <label className={labelClass}>行程名稱</label>
+          <label className={labelClass}>行程名稱<span className="ml-0.5 text-rose-500">*</span></label>
           <input
             type="text"
             required
@@ -191,7 +191,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
 
         {/* 價格 */}
         <div>
-          <label className={labelClass}>價格（NT$）</label>
+          <label className={labelClass}>價格（NT$）<span className="ml-0.5 text-rose-500">*</span></label>
           <input
             type="number"
             required
@@ -235,7 +235,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             </select>
           </div>
           <div>
-            <label className={labelClass}>次分類</label>
+            <label className={labelClass}>次分類<span className="ml-0.5 text-rose-500">*</span></label>
             <select
               value={subRegionId}
               onChange={(e) => setSubRegionId(e.target.value)}

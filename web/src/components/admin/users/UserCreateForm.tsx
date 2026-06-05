@@ -42,7 +42,7 @@ export default function UserCreateForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
       <div>
-        <label className={labelClass}>電子郵件</label>
+        <label className={labelClass}>電子郵件<span className="ml-0.5 text-rose-500">*</span></label>
         <input
           type="email"
           required
@@ -53,7 +53,7 @@ export default function UserCreateForm() {
       </div>
 
       <div>
-        <label className={labelClass}>密碼（至少 8 個字元）</label>
+        <label className={labelClass}>密碼（至少 8 個字元）<span className="ml-0.5 text-rose-500">*</span></label>
         <input
           type="password"
           required
