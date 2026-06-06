@@ -459,6 +459,9 @@ export interface RegionDetail {
   slug: string;
   name: string;
   thumbnail: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogImage: string | null;
   subRegions: SubRegionListItem[];
 }
 
@@ -481,6 +484,9 @@ export interface RegionTours {
 export interface SubRegionWithTours {
   slug: string;
   name: string;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogImage: string | null;
   tours: TourItem[];
 }
 

@@ -18,6 +18,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       name: true,
       description: true,
       thumbnail: true,
+      seoTitle: true,
+      seoDescription: true,
+      ogImage: true,
       files: {
         where: { mimeType: { startsWith: "image/" } },
         orderBy: { sortOrder: "asc" },
@@ -27,13 +30,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   });
   if (!tour) return {};
-  const image = tour.thumbnail ?? tour.files[0]?.url;
+  const ogImageUrl = tour.ogImage ?? tour.thumbnail ?? tour.files[0]?.url;
   return {
-    title: `${tour.name} ／ 找到了旅遊 FOUND HOLIDAY`,
-    description: tour.description?.slice(0, 150) ?? undefined,
+    title: tour.seoTitle ?? `${tour.name} ／ 找到了旅遊 FOUND HOLIDAY`,
+    description: tour.seoDescription ?? tour.description?.slice(0, 150) ?? undefined,
     openGraph: {
       url: `/tours/${tourSlug}`,
-      images: image ? [image] : [],
+      images: ogImageUrl ? [ogImageUrl] : [],
     },
   };
 }

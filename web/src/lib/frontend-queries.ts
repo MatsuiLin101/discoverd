@@ -35,6 +35,9 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
       slug: true,
       name: true,
       thumbnail: true,
+      seoTitle: true,
+      seoDescription: true,
+      ogImage: true,
       subRegions: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -51,6 +54,9 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
     slug: region.slug,
     name: region.name,
     thumbnail: region.thumbnail,
+    seoTitle: region.seoTitle,
+    seoDescription: region.seoDescription,
+    ogImage: region.ogImage,
     subRegions: region.subRegions.map((sr) => ({
       slug: sr.slug,
       name: sr.name,
@@ -74,6 +80,9 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
         select: {
           slug: true,
           name: true,
+          seoTitle: true,
+          seoDescription: true,
+          ogImage: true,
           tours: {
             where: { published: true },
             orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -102,6 +111,9 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
     subRegions: region.subRegions.map((sr) => ({
       slug: sr.slug,
       name: sr.name,
+      seoTitle: sr.seoTitle,
+      seoDescription: sr.seoDescription,
+      ogImage: sr.ogImage,
       tours: sr.tours.map((t) => ({
         id: t.id,
         slug: t.slug,

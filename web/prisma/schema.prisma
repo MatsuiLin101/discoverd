@@ -43,6 +43,10 @@ model Region {
   slug              String      @unique
   thumbnail         String?
   thumbnailPublicId String?
+  seoTitle          String?
+  seoDescription    String?
+  ogImage           String?
+  ogImagePublicId   String?
   sortOrder         Int         @default(0)
   subRegions        SubRegion[]
   createdAt         DateTime    @default(now())
@@ -57,6 +61,10 @@ model SubRegion {
   slug              String
   thumbnail         String?
   thumbnailPublicId String?
+  seoTitle          String?
+  seoDescription    String?
+  ogImage           String?
+  ogImagePublicId   String?
   sortOrder         Int      @default(0)
   tours             Tour[]
   createdAt         DateTime @default(now())
@@ -82,6 +90,10 @@ model Tour {
   thumbnailPublicId String?
   price             Int
   description       String?
+  seoTitle          String?
+  seoDescription    String?
+  ogImage           String?
+  ogImagePublicId   String?
   tags              Tag[]      @relation("TourTags")
   files             TourFile[]
   published         Boolean    @default(false)

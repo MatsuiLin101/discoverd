@@ -18,7 +18,10 @@ export default async function EditTourPage({
   const [tour, regions, tags] = await Promise.all([
     db.tour.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true, name: true, price: true, description: true, thumbnail: true,
+        published: true, subRegionId: true, slug: true,
+        seoTitle: true, seoDescription: true, ogImage: true,
         tags: { select: { id: true } },
         files: { orderBy: { sortOrder: "asc" } },
       },

@@ -21,6 +21,9 @@ interface Props {
   initialName?: string;
   initialSlug?: string;
   initialThumbnail?: string | null;
+  initialSeoTitle?: string | null;
+  initialSeoDescription?: string | null;
+  initialOgImage?: string | null;
 }
 
 export default function RegionForm({
@@ -28,6 +31,9 @@ export default function RegionForm({
   initialName = "",
   initialSlug = "",
   initialThumbnail,
+  initialSeoTitle,
+  initialSeoDescription,
+  initialOgImage,
 }: Props) {
   const router = useRouter();
   const isEdit = !!regionId;
@@ -37,10 +43,15 @@ export default function RegionForm({
   const [slugManual, setSlugManual] = useState(isEdit);
   const [preview, setPreview] = useState<string | null>(null);
   const [clearThumbnail, setClearThumbnail] = useState(false);
+  const [seoTitle, setSeoTitle] = useState(initialSeoTitle ?? "");
+  const [seoDescription, setSeoDescription] = useState(initialSeoDescription ?? "");
+  const [ogPreview, setOgPreview] = useState<string | null>(null);
+  const [clearOgImage, setClearOgImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const ogFileRef = useRef<HTMLInputElement>(null);
 
   function handleNameChange(e: ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
@@ -66,6 +77,19 @@ export default function RegionForm({
     if (fileRef.current) fileRef.current.value = "";
   }
 
+  function handleOgFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setClearOgImage(false);
+    setOgPreview(URL.createObjectURL(file));
+  }
+
+  function handleClearOgImage() {
+    setClearOgImage(true);
+    setOgPreview(null);
+    if (ogFileRef.current) ogFileRef.current.value = "";
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!/^[a-z0-9-]+$/.test(slug)) {
@@ -83,6 +107,14 @@ export default function RegionForm({
       fd.append("thumbnail", file);
     } else if (clearThumbnail) {
       fd.append("clearThumbnail", "true");
+    }
+    fd.append("seoTitle", seoTitle);
+    fd.append("seoDescription", seoDescription);
+    const ogFile = ogFileRef.current?.files?.[0];
+    if (ogFile) {
+      fd.append("ogImage", ogFile);
+    } else if (clearOgImage) {
+      fd.append("clearOgImage", "true");
     }
 
     try {
@@ -183,6 +215,72 @@ export default function RegionForm({
         </div>
       </div>
 
+      {/* SEO 設定 */}
+      <details className="group rounded-lg border border-gray-200 bg-gray-50">
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium text-gray-700 hover:text-gray-900">
+          SEO 設定 <span className="text-xs font-normal text-gray-400">（選填）</span>
+        </summary>
+        <div className="space-y-4 border-t border-gray-200 px-4 py-4">
+          <div>
+            <label className={labelClass}>SEO 標題</label>
+            <input
+              type="text"
+              value={seoTitle}
+              onChange={(e) => setSeoTitle(e.target.value)}
+              maxLength={100}
+              className={inputClass}
+              placeholder="留空則自動使用：{名稱} ／ 找到了旅遊 FOUND HOLIDAY"
+            />
+            <p className="mt-1 text-xs text-gray-400">{seoTitle.length}/100</p>
+          </div>
+          <div>
+            <label className={labelClass}>SEO 描述</label>
+            <textarea
+              rows={3}
+              value={seoDescription}
+              onChange={(e) => setSeoDescription(e.target.value)}
+              maxLength={160}
+              className={inputClass}
+              placeholder="留空則自動產生描述文字"
+            />
+            <p className="mt-1 text-xs text-gray-400">{seoDescription.length}/160</p>
+          </div>
+          <div>
+            <label className={labelClass}>OG 圖片（社群分享縮圖）</label>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div
+                className={`relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-100${(ogPreview ?? initialOgImage) && !clearOgImage ? " cursor-zoom-in" : ""}`}
+                onClick={(ogPreview ?? initialOgImage) && !clearOgImage ? () => setLightbox(ogPreview ?? initialOgImage!) : undefined}
+              >
+                <Image
+                  src={clearOgImage ? "/images/region-default.svg" : (ogPreview ?? initialOgImage ?? "/images/region-default.svg")}
+                  alt="OG 圖片預覽"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+              <div className="flex-1">
+                <input
+                  ref={ogFileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleOgFileChange}
+                  className="block w-full text-sm text-gray-500 file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-gray-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-100"
+                />
+                <p className="mt-1.5 text-xs text-gray-400">留空則使用縮圖；建議尺寸 1200×630</p>
+                {isEdit && (!!initialOgImage || !!ogPreview) && !clearOgImage && (
+                  <button type="button" onClick={handleClearOgImage} className="mt-1.5 cursor-pointer text-xs text-rose-500 hover:text-rose-700">
+                    清除 OG 圖片
+                  </button>
+                )}
+                {clearOgImage && <p className="mt-1.5 text-xs text-gray-400">OG 圖片將被清除，儲存後生效</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </details>
+
       {error && <p className="text-sm text-rose-600">{error}</p>}
 
       <div className="flex gap-3">
@@ -203,7 +301,7 @@ export default function RegionForm({
         </button>
       </div>
     </form>
-    {lightbox && <ImageLightbox src={lightbox} alt="縮圖預覽" onClose={() => setLightbox(null)} />}
+    {lightbox && <ImageLightbox src={lightbox} alt="預覽" onClose={() => setLightbox(null)} />}
     </>
   );
 }

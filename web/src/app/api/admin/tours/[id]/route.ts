@@ -13,6 +13,8 @@ const updateSchema = z.object({
     .union([z.string().max(500), z.literal("").transform(() => null)])
     .optional()
     .nullable(),
+  seoTitle: z.string().max(100).optional(),
+  seoDescription: z.string().max(160).optional(),
 });
 
 export async function PUT(
@@ -25,16 +27,20 @@ export async function PUT(
 
     const { id } = await params;
     const fd = await req.formData();
+    const rawSeoTitle = fd.get("seoTitle");
+    const rawSeoDescription = fd.get("seoDescription");
     const parsed = updateSchema.safeParse({
       name: fd.get("name"),
       price: fd.get("price"),
       subRegionId: fd.get("subRegionId"),
       description: fd.get("description"),
+      seoTitle: typeof rawSeoTitle === "string" && rawSeoTitle ? rawSeoTitle : undefined,
+      seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? rawSeoDescription : undefined,
     });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
-    const { name, price, subRegionId, description } = parsed.data;
+    const { name, price, subRegionId, description, seoTitle, seoDescription } = parsed.data;
     const tagIds = fd.getAll("tagIds") as string[];
     const published = fd.get("published") === "true";
 
@@ -65,6 +71,27 @@ export async function PUT(
       thumbnailPublicId = result.publicId;
     }
 
+    let ogImage: string | null = existing.ogImage;
+    let ogImagePublicId: string | null = existing.ogImagePublicId;
+    const ogFile = fd.get("ogImage") as File | null;
+    const clearOgImage = fd.get("clearOgImage") === "true";
+
+    if (clearOgImage && !(ogFile && ogFile.size > 0)) {
+      if (existing.ogImagePublicId) {
+        await deleteFile(existing.ogImagePublicId, "image").catch(() => {});
+      }
+      ogImage = null;
+      ogImagePublicId = null;
+    } else if (ogFile && ogFile.size > 0) {
+      if (existing.ogImagePublicId) {
+        await deleteFile(existing.ogImagePublicId, "image").catch(() => {});
+      }
+      const buffer = Buffer.from(await ogFile.arrayBuffer());
+      const result = await uploadFile(buffer, { folder: "seo-og/tours", mimeType: ogFile.type });
+      ogImage = result.url;
+      ogImagePublicId = result.publicId;
+    }
+
     const tour = await db.tour.update({
       where: { id },
       data: {
@@ -75,6 +102,10 @@ export async function PUT(
         published,
         thumbnail,
         thumbnailPublicId,
+        seoTitle: seoTitle ?? null,
+        seoDescription: seoDescription ?? null,
+        ogImage,
+        ogImagePublicId,
         tags: { set: tagIds.map((tagId) => ({ id: tagId })) },
       },
     });
@@ -83,7 +114,12 @@ export async function PUT(
       : thumbFile && thumbFile.size > 0
         ? existing.thumbnailPublicId ? "replaced" : "added"
         : "unchanged";
-    void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnailChange } });
+    const ogImageChange = clearOgImage && !(ogFile && ogFile.size > 0)
+      ? "removed"
+      : ogFile && ogFile.size > 0
+        ? existing.ogImagePublicId ? "replaced" : "added"
+        : "unchanged";
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnailChange, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageChange } });
     return NextResponse.json({ data: tour });
   } catch (e) {
     console.error("[PUT /api/admin/tours/[id]]", e);
@@ -109,6 +145,9 @@ export async function DELETE(
     const deleteJobs: Promise<unknown>[] = [];
     if (tour.thumbnailPublicId) {
       deleteJobs.push(deleteFile(tour.thumbnailPublicId, "image").catch(() => {}));
+    }
+    if (tour.ogImagePublicId) {
+      deleteJobs.push(deleteFile(tour.ogImagePublicId, "image").catch(() => {}));
     }
     for (const file of tour.files) {
       const resourceType = file.mimeType === "application/pdf" ? "raw" : "image";

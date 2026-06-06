@@ -18,9 +18,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const sub = data.subRegions.find((sr) => sr.slug === subSlug);
   if (!sub) return {};
   return {
-    title: `${sub.name} ／ ${data.region.name} — 找到了旅遊 FOUND HOLIDAY`,
-    description: `${sub.name} 旅程精選，共 ${sub.tours.length} 條路線，找到了旅遊為您推薦。`,
-    openGraph: { url: `/regions/${slug}/${subSlug}` },
+    title: sub.seoTitle ?? `${sub.name} ／ ${data.region.name} — 找到了旅遊 FOUND HOLIDAY`,
+    description: sub.seoDescription ?? `${sub.name} 旅程精選，共 ${sub.tours.length} 條路線，找到了旅遊為您推薦。`,
+    openGraph: {
+      url: `/regions/${slug}/${subSlug}`,
+      images: sub.ogImage ? [sub.ogImage] : [],
+    },
   };
 }
 

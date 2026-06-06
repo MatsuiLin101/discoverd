@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, FormEvent } from "react";
+import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TourFileList from "./TourFileList";
@@ -31,6 +31,9 @@ interface Tour {
   published: boolean;
   subRegionId: string;
   tags: { id: string }[];
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  ogImage?: string | null;
 }
 
 interface TourFileItem {
@@ -80,10 +83,15 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
   const [clearThumbnail, setClearThumbnail] = useState(false);
+  const [seoTitle, setSeoTitle] = useState(tour?.seoTitle ?? "");
+  const [seoDescription, setSeoDescription] = useState(tour?.seoDescription ?? "");
+  const [ogPreview, setOgPreview] = useState<string | null>(null);
+  const [clearOgImage, setClearOgImage] = useState(false);
   const [contentFiles, setContentFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const ogFileRef = useRef<HTMLInputElement>(null);
 
   const filteredSubRegions =
     regions.find((r) => r.id === selectedRegionId)?.subRegions ?? [];
@@ -104,6 +112,19 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     setClearThumbnail(true);
     setThumbFile(null);
     setThumbPreview(null);
+  }
+
+  function handleOgFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setClearOgImage(false);
+    setOgPreview(URL.createObjectURL(file));
+  }
+
+  function handleClearOgImage() {
+    setClearOgImage(true);
+    setOgPreview(null);
+    if (ogFileRef.current) ogFileRef.current.value = "";
   }
 
   function toggleTag(id: string) {
@@ -143,6 +164,14 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       fd.append("thumbnail", thumbFile);
     } else if (clearThumbnail) {
       fd.append("clearThumbnail", "true");
+    }
+    fd.append("seoTitle", seoTitle);
+    fd.append("seoDescription", seoDescription);
+    const ogFile = ogFileRef.current?.files?.[0];
+    if (ogFile) {
+      fd.append("ogImage", ogFile);
+    } else if (clearOgImage) {
+      fd.append("clearOgImage", "true");
     }
     if (!isEdit) {
       contentFiles.forEach((f) => fd.append("contentFiles", f));
@@ -386,6 +415,72 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             {published ? "前台可見" : "前台隱藏"}
           </span>
         </div>
+
+        {/* SEO 設定 */}
+        <details className="group rounded-lg border border-gray-200 bg-gray-50">
+          <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium text-gray-700 hover:text-gray-900">
+            SEO 設定 <span className="text-xs font-normal text-gray-400">（選填）</span>
+          </summary>
+          <div className="space-y-4 border-t border-gray-200 px-4 py-4">
+            <div>
+              <label className={labelClass}>SEO 標題</label>
+              <input
+                type="text"
+                value={seoTitle}
+                onChange={(e) => setSeoTitle(e.target.value)}
+                maxLength={100}
+                className={inputClass}
+                placeholder="留空則自動使用：{行程名稱} ／ 找到了旅遊 FOUND HOLIDAY"
+              />
+              <p className="mt-1 text-xs text-gray-400">{seoTitle.length}/100</p>
+            </div>
+            <div>
+              <label className={labelClass}>SEO 描述</label>
+              <textarea
+                rows={3}
+                value={seoDescription}
+                onChange={(e) => setSeoDescription(e.target.value)}
+                maxLength={160}
+                className={inputClass}
+                placeholder="留空則自動使用行程簡介前 150 字"
+              />
+              <p className="mt-1 text-xs text-gray-400">{seoDescription.length}/160</p>
+            </div>
+            <div>
+              <label className={labelClass}>OG 圖片（社群分享縮圖）</label>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                <div
+                  className={`relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-100${(ogPreview ?? tour?.ogImage) && !clearOgImage ? " cursor-zoom-in" : ""}`}
+                  onClick={(ogPreview ?? tour?.ogImage) && !clearOgImage ? () => setLightbox(ogPreview ?? tour?.ogImage!) : undefined}
+                >
+                  <Image
+                    src={clearOgImage ? "/images/tour-placeholder.svg" : (ogPreview ?? tour?.ogImage ?? "/images/tour-placeholder.svg")}
+                    alt="OG 圖片預覽"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+                <div className="flex-1">
+                  <input
+                    ref={ogFileRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleOgFileChange}
+                    className={fileInputClass}
+                  />
+                  <p className="mt-1.5 text-xs text-gray-400">留空則使用縮圖；建議尺寸 1200×630</p>
+                  {isEdit && (!!tour?.ogImage || !!ogPreview) && !clearOgImage && (
+                    <button type="button" onClick={handleClearOgImage} className="mt-1.5 cursor-pointer text-xs text-rose-500 hover:text-rose-700">
+                      清除 OG 圖片
+                    </button>
+                  )}
+                  {clearOgImage && <p className="mt-1.5 text-xs text-gray-400">OG 圖片將被清除，儲存後生效</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
 
         {error && <p className="text-sm text-rose-600">{error}</p>}
 

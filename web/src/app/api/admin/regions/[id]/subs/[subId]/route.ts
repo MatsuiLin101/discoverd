@@ -8,6 +8,8 @@ import { writeLog } from "@/lib/log";
 const schema = z.object({
   name: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/, "slug 只允許小寫英數字和連字號"),
+  seoTitle: z.string().max(100).optional(),
+  seoDescription: z.string().max(160).optional(),
 });
 
 export async function PUT(
@@ -21,14 +23,18 @@ export async function PUT(
 
   const { id: regionId, subId } = await params;
   const fd = await req.formData();
+  const rawSeoTitle = fd.get("seoTitle");
+  const rawSeoDescription = fd.get("seoDescription");
   const parsed = schema.safeParse({
     name: fd.get("name"),
     slug: fd.get("slug"),
+    seoTitle: typeof rawSeoTitle === "string" && rawSeoTitle ? rawSeoTitle : undefined,
+    seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? rawSeoDescription : undefined,
   });
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
-  const { name, slug } = parsed.data;
+  const { name, slug, seoTitle, seoDescription } = parsed.data;
 
   const existing = await db.subRegion.findUnique({ where: { id: subId } });
   if (!existing || existing.regionId !== regionId) {
@@ -62,16 +68,42 @@ export async function PUT(
     thumbnailPublicId = result.publicId;
   }
 
+  let ogImage: string | null = existing.ogImage;
+  let ogImagePublicId: string | null = existing.ogImagePublicId;
+  const ogFile = fd.get("ogImage") as File | null;
+  const clearOgImage = fd.get("clearOgImage") === "true";
+
+  if (clearOgImage && !(ogFile && ogFile.size > 0)) {
+    if (existing.ogImagePublicId) {
+      await deleteFile(existing.ogImagePublicId, "image").catch(() => {});
+    }
+    ogImage = null;
+    ogImagePublicId = null;
+  } else if (ogFile && ogFile.size > 0) {
+    if (existing.ogImagePublicId) {
+      await deleteFile(existing.ogImagePublicId, "image").catch(() => {});
+    }
+    const buffer = Buffer.from(await ogFile.arrayBuffer());
+    const result = await uploadFile(buffer, { folder: "seo-og/subregions", mimeType: ogFile.type });
+    ogImage = result.url;
+    ogImagePublicId = result.publicId;
+  }
+
   const sub = await db.subRegion.update({
     where: { id: subId },
-    data: { name, slug, thumbnail, thumbnailPublicId },
+    data: { name, slug, thumbnail, thumbnailPublicId, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImage, ogImagePublicId },
   });
   const thumbnailChange = clearThumbnail && !(file && file.size > 0)
     ? "removed"
     : (file && file.size > 0)
       ? (existing.thumbnailPublicId ? "replaced" : "added")
       : "unchanged";
-  void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, thumbnailChange } });
+  const ogImageChange = clearOgImage && !(ogFile && ogFile.size > 0)
+    ? "removed"
+    : (ogFile && ogFile.size > 0)
+      ? (existing.ogImagePublicId ? "replaced" : "added")
+      : "unchanged";
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, thumbnailChange, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageChange } });
   return NextResponse.json({ data: sub });
 }
 
@@ -101,6 +133,9 @@ export async function DELETE(
 
   if (sub.thumbnailPublicId) {
     await deleteFile(sub.thumbnailPublicId, "image").catch(() => {});
+  }
+  if (sub.ogImagePublicId) {
+    await deleteFile(sub.ogImagePublicId, "image").catch(() => {});
   }
   await db.subRegion.delete({ where: { id: subId } });
   void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "SUB_REGION", resourceId: subId, resourceName: sub.name, detail: { id: subId, name: sub.name, hadThumbnail: !!sub.thumbnailPublicId } });

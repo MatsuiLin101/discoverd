@@ -8,6 +8,8 @@ import { writeLog } from "@/lib/log";
 const schema = z.object({
   name: z.string().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/, "slug 只允許小寫英數字和連字號"),
+  seoTitle: z.string().max(100).optional(),
+  seoDescription: z.string().max(160).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -17,14 +19,18 @@ export async function POST(req: NextRequest) {
   }
 
   const fd = await req.formData();
+  const rawSeoTitle = fd.get("seoTitle");
+  const rawSeoDescription = fd.get("seoDescription");
   const parsed = schema.safeParse({
     name: fd.get("name"),
     slug: fd.get("slug"),
+    seoTitle: typeof rawSeoTitle === "string" && rawSeoTitle ? rawSeoTitle : undefined,
+    seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? rawSeoDescription : undefined,
   });
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
-  const { name, slug } = parsed.data;
+  const { name, slug, seoTitle, seoDescription } = parsed.data;
 
   const [nameConflict, slugConflict] = await Promise.all([
     db.region.findUnique({ where: { name } }),
@@ -46,9 +52,19 @@ export async function POST(req: NextRequest) {
     thumbnailPublicId = result.publicId;
   }
 
+  let ogImage: string | undefined;
+  let ogImagePublicId: string | undefined;
+  const ogFile = fd.get("ogImage") as File | null;
+  if (ogFile && ogFile.size > 0) {
+    const buffer = Buffer.from(await ogFile.arrayBuffer());
+    const result = await uploadFile(buffer, { folder: "seo-og/regions", mimeType: ogFile.type });
+    ogImage = result.url;
+    ogImagePublicId = result.publicId;
+  }
+
   const region = await db.region.create({
-    data: { name, slug, sortOrder, thumbnail, thumbnailPublicId },
+    data: { name, slug, sortOrder, thumbnail, thumbnailPublicId, seoTitle, seoDescription, ogImage, ogImagePublicId },
   });
-  void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnail: thumbnail ?? null } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnail: thumbnail ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImage: ogImage ?? null } });
   return NextResponse.json({ data: region }, { status: 201 });
 }

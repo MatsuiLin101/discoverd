@@ -14,6 +14,8 @@ const createSchema = z.object({
     .union([z.string().max(500), z.literal("").transform(() => null)])
     .optional()
     .nullable(),
+  seoTitle: z.string().max(100).optional(),
+  seoDescription: z.string().max(160).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -22,16 +24,20 @@ export async function POST(req: NextRequest) {
     if (!session) return NextResponse.json({ error: "請先登入" }, { status: 403 });
 
     const fd = await req.formData();
+    const rawSeoTitle = fd.get("seoTitle");
+    const rawSeoDescription = fd.get("seoDescription");
     const parsed = createSchema.safeParse({
       name: fd.get("name"),
       price: fd.get("price"),
       subRegionId: fd.get("subRegionId"),
       description: fd.get("description"),
+      seoTitle: typeof rawSeoTitle === "string" && rawSeoTitle ? rawSeoTitle : undefined,
+      seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? rawSeoDescription : undefined,
     });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
-    const { name, price, subRegionId, description } = parsed.data;
+    const { name, price, subRegionId, description, seoTitle, seoDescription } = parsed.data;
     const tagIds = fd.getAll("tagIds") as string[];
     const published = fd.get("published") === "true";
 
@@ -55,6 +61,16 @@ export async function POST(req: NextRequest) {
       thumbnailPublicId = result.publicId;
     }
 
+    let ogImage: string | undefined;
+    let ogImagePublicId: string | undefined;
+    const ogFile = fd.get("ogImage") as File | null;
+    if (ogFile && ogFile.size > 0) {
+      const buffer = Buffer.from(await ogFile.arrayBuffer());
+      const result = await uploadFile(buffer, { folder: "seo-og/tours", mimeType: ogFile.type });
+      ogImage = result.url;
+      ogImagePublicId = result.publicId;
+    }
+
     const tour = await db.tour.create({
       data: {
         name,
@@ -65,6 +81,10 @@ export async function POST(req: NextRequest) {
         published,
         thumbnail,
         thumbnailPublicId,
+        seoTitle,
+        seoDescription,
+        ogImage,
+        ogImagePublicId,
         tags: tagIds.length > 0 ? { connect: tagIds.map((id) => ({ id })) } : undefined,
       },
     });
@@ -87,7 +107,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnail: thumbnail ?? null } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnail: thumbnail ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImage: ogImage ?? null } });
     return NextResponse.json({ data: { id: tour.id } }, { status: 201 });
   } catch (e) {
     console.error("[POST /api/admin/tours]", e);

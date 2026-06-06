@@ -16,7 +16,7 @@ export default async function EditSubRegionPage({
     db.region.findUnique({ where: { id }, select: { id: true, name: true } }),
     db.subRegion.findUnique({
       where: { id: subId },
-      select: { id: true, name: true, slug: true, thumbnail: true, regionId: true },
+      select: { id: true, name: true, slug: true, thumbnail: true, regionId: true, seoTitle: true, seoDescription: true, ogImage: true },
     }),
   ]);
   if (!region || !sub || sub.regionId !== id) notFound();
@@ -36,6 +36,9 @@ export default async function EditSubRegionPage({
         initialName={sub.name}
         initialSlug={sub.slug}
         initialThumbnail={sub.thumbnail}
+        initialSeoTitle={sub.seoTitle}
+        initialSeoDescription={sub.seoDescription}
+        initialOgImage={sub.ogImage}
       />
     </div>
   );

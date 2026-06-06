@@ -14,12 +14,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const region = await getRegionDetail(slug);
   if (!region) return {};
+  const ogImageUrl = region.ogImage ?? region.thumbnail;
   return {
-    title: `${region.name} ／ 找到了旅遊 FOUND HOLIDAY`,
-    description: `探索 ${region.name} 系列旅程，找到最適合你的路線。`,
+    title: region.seoTitle ?? `${region.name} ／ 找到了旅遊 FOUND HOLIDAY`,
+    description: region.seoDescription ?? `探索 ${region.name} 系列旅程，找到最適合你的路線。`,
     openGraph: {
       url: `/regions/${slug}`,
-      images: region.thumbnail ? [region.thumbnail] : [],
+      images: ogImageUrl ? [ogImageUrl] : [],
     },
   };
 }

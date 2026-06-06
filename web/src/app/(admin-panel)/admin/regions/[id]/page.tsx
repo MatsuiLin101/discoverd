@@ -14,7 +14,7 @@ export default async function EditRegionPage({
   const { id } = await params;
   const region = await db.region.findUnique({
     where: { id },
-    select: { id: true, name: true, slug: true, thumbnail: true },
+    select: { id: true, name: true, slug: true, thumbnail: true, seoTitle: true, seoDescription: true, ogImage: true },
   });
   if (!region) notFound();
 
@@ -29,6 +29,9 @@ export default async function EditRegionPage({
         initialName={region.name}
         initialSlug={region.slug}
         initialThumbnail={region.thumbnail}
+        initialSeoTitle={region.seoTitle}
+        initialSeoDescription={region.seoDescription}
+        initialOgImage={region.ogImage}
       />
     </div>
   );
