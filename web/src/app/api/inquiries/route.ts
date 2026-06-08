@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { db } from "@/lib/db";
 import { sendInquiryNotification } from "@/lib/mailer";
 
 const InquirySchema = z.object({
@@ -34,7 +35,11 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const { name, phone, email, lineId, content, tourName } = parsed.data;
+    const { tourId, name, phone, email, lineId, content, tourName } = parsed.data;
+
+    const tour = tourId
+      ? await db.tour.findUnique({ where: { id: tourId }, select: { slug: true } })
+      : null;
 
     await sendInquiryNotification({
       name,
@@ -42,7 +47,8 @@ export async function POST(req: NextRequest) {
       email,
       lineId,
       content,
-      tourName: tourName ?? undefined,
+      tourName: tourName ?? null,
+      tourSlug: tour?.slug ?? null,
     });
 
     return NextResponse.json({ ok: true }, { status: 201 });

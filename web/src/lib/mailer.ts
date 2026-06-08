@@ -10,25 +10,52 @@ function createTransport() {
   });
 }
 
+function formatTaipeiTime(date: Date): string {
+  return date.toLocaleString("zh-TW", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
 export async function sendInquiryNotification(inquiry: {
   name: string;
   phone: string;
   email?: string | null;
   lineId?: string | null;
   content: string;
-  tourName?: string;
+  tourName?: string | null;
+  tourSlug?: string | null;
 }) {
   const subject = inquiry.tourName
     ? `新諮詢：${inquiry.tourName}`
     : "新諮詢來自官網";
 
+  const tourUrl =
+    inquiry.tourSlug && process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/tours/${inquiry.tourSlug}`
+      : null;
+
   const lines = [
+    `送出時間：${formatTaipeiTime(new Date())}`,
+    tourUrl
+      ? `詢問行程：${inquiry.tourName ?? ""} ( ${tourUrl} )`
+      : inquiry.tourName
+        ? `詢問行程：${inquiry.tourName}`
+        : "詢問行程：未指定",
+    "",
     `姓名：${inquiry.name}`,
     `手機：${inquiry.phone}`,
-    inquiry.email ? `Email：${inquiry.email}` : null,
-    inquiry.lineId ? `LINE ID：${inquiry.lineId}` : null,
-    `\n諮詢內容：\n${inquiry.content}`,
-  ].filter(Boolean);
+    `Email：${inquiry.email ?? "（未填寫）"}`,
+    `LINE ID：${inquiry.lineId ?? "（未填寫）"}`,
+    "",
+    `諮詢內容：\n${inquiry.content}`,
+  ];
 
   const text = lines.join("\n");
 
