@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,6 +12,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,7 +24,11 @@ export default function RootLayout({
       lang="zh-TW"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>{gtmId && <GTMScript gtmId={gtmId} />}</head>
+      <body className="min-h-full flex flex-col">
+        {gtmId && <GTMNoScript gtmId={gtmId} />}
+        {children}
+      </body>
     </html>
   );
 }
