@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/lib/db";
+import { sendInquiryNotification } from "@/lib/mailer";
 
 const InquirySchema = z.object({
   tourId: z.string().optional().nullable(),
@@ -21,6 +21,7 @@ const InquirySchema = z.object({
     .optional()
     .nullable(),
   content: z.string().min(1, "請填寫詢問內容").max(2000),
+  tourName: z.string().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -33,17 +34,15 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    const { tourId, name, phone, email, lineId, content } = parsed.data;
+    const { name, phone, email, lineId, content, tourName } = parsed.data;
 
-    await db.inquiry.create({
-      data: {
-        tourId: tourId ?? null,
-        name,
-        phone,
-        email: email ?? null,
-        lineId: lineId ?? null,
-        content,
-      },
+    await sendInquiryNotification({
+      name,
+      phone,
+      email,
+      lineId,
+      content,
+      tourName: tourName ?? undefined,
     });
 
     return NextResponse.json({ ok: true }, { status: 201 });

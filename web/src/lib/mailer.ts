@@ -1,4 +1,14 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
+
+function createTransport() {
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+}
 
 export async function sendInquiryNotification(inquiry: {
   name: string;
@@ -22,15 +32,15 @@ export async function sendInquiryNotification(inquiry: {
 
   const text = lines.join("\n");
 
-  if (!process.env.RESEND_API_KEY) {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
     console.log("[email mock]", { subject, text });
     return;
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  return resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
-    to: process.env.ADMIN_NOTIFY_EMAIL!,
+  const transporter = createTransport();
+  return transporter.sendMail({
+    from: process.env.GMAIL_USER,
+    to: process.env.GMAIL_USER,
     subject,
     text,
   });

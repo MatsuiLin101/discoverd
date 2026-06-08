@@ -81,6 +81,7 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tourId: tourId ?? null,
+          tourName: tourName || null,
           name: nameRef.current!.value.trim(),
           phone: phoneRef.current!.value.trim(),
           email: emailRef.current?.value.trim() || null,
