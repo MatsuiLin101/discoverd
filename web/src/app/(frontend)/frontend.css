@@ -517,7 +517,8 @@
   display: inline-flex; align-items: center; justify-content: center;
   transition: background .2s, color .2s, transform .2s;
 }
-.fh-form-x:hover { background: var(--ink); color: #fff; transform: rotate(90deg); }
+.fh-form-x:hover:not(:disabled) { background: var(--ink); color: #fff; transform: rotate(90deg); }
+.fh-form-x:disabled { opacity: 0.35; cursor: not-allowed; }
 .fh-form-x svg { width: 18px; height: 18px; }
 .fh-form-head { padding: 44px 44px 22px; border-bottom: 1px solid var(--line); }
 .fh-form-eyebrow { font-family: var(--fh-sans); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 13px; }
@@ -559,7 +560,8 @@
   font-family: var(--fh-sans); font-size: 15px; font-weight: 500; letter-spacing: 0.04em;
   padding: 15px 24px; transition: background .2s, transform .2s;
 }
-.fh-form-submit:hover { background: var(--accent-2); transform: translateY(-2px); }
+.fh-form-submit:hover:not(:disabled) { background: var(--accent-2); transform: translateY(-2px); }
+.fh-form-submit:disabled { background: var(--line-2); color: var(--ink-3); cursor: not-allowed; opacity: 0.6; }
 .fh-form-submit svg { width: 17px; height: 17px; }
 .fh-form-cancel {
   border: 1px solid var(--line-2); background: var(--panel); cursor: pointer;
@@ -567,7 +569,8 @@
   font-family: var(--fh-sans); font-size: 14px; padding: 15px 22px;
   transition: border-color .2s, color .2s;
 }
-.fh-form-cancel:hover { border-color: var(--ink); color: var(--ink); }
+.fh-form-cancel:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+.fh-form-cancel:disabled { opacity: 0.35; cursor: not-allowed; }
 .fh-form-success { display: none; padding: 56px 44px 52px; text-align: center; }
 .fh-form-success.show { display: block; animation: fh-fadein .3s ease; }
 .fh-form-success .tick {

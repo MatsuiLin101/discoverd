@@ -53,15 +53,11 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
     }
   }, [searchParams, regions, pathname, router]);
 
-  // Escape key to close modals
+  // Escape key to close tour detail modal (form ESC is handled inside TourInquiryModal)
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        if (formOpen) {
-          setFormOpen(false);
-        } else if (modalOpen) {
-          closeModal();
-        }
+      if (e.key === "Escape" && modalOpen && !formOpen) {
+        closeModal();
       }
     }
     document.addEventListener("keydown", handleKeyDown);

@@ -18,6 +18,7 @@ interface Props {
 
 export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: Props) {
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -30,6 +31,7 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
   useEffect(() => {
     if (!isOpen) return;
     setFormSubmitted(false);
+    setIsSubmitting(false);
     setErrors({});
     setSubmitError(null);
     if (nameRef.current) nameRef.current.value = "";
@@ -42,11 +44,11 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && isOpen) onClose();
+      if (e.key === "Escape" && isOpen && !isSubmitting) onClose();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
+  }, [isOpen, isSubmitting, onClose]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,6 +77,7 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
     }
 
     setSubmitError(null);
+    setIsSubmitting(true);
     try {
       const res = await fetch("/api/inquiries", {
         method: "POST",
@@ -96,6 +99,8 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
       }
     } catch {
       setSubmitError("提交失敗，請稍後再試");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -104,11 +109,11 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
       className={`fh-form-overlay${isOpen ? " open" : ""}`}
       aria-hidden={!isOpen}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
     >
       <div className="fh-form-modal" role="dialog" aria-modal="true">
-        <button className="fh-form-x" onClick={onClose} aria-label="關閉">
+        <button className="fh-form-x" onClick={onClose} aria-label="關閉" disabled={isSubmitting}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>
@@ -206,14 +211,14 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
               {submitError && (
                 <p className="text-sm text-rose-600">{submitError}</p>
               )}
-              <button type="button" className="fh-form-cancel" onClick={onClose}>
+              <button type="button" className="fh-form-cancel" onClick={onClose} disabled={isSubmitting}>
                 取消
               </button>
-              <button type="submit" className="fh-form-submit">
+              <button type="submit" className="fh-form-submit" disabled={isSubmitting}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                 </svg>
-                送出諮詢
+                {isSubmitting ? "送出中⋯" : "送出諮詢"}
               </button>
             </div>
           </form>
