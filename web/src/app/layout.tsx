@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID || undefined;
 
 export default function RootLayout({
   children,
