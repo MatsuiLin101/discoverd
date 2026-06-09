@@ -22,6 +22,8 @@
 # Custom
 # Claude Code personal settings (do not commit)
 .claude/settings.local.json
+# Codex local machine config (contains absolute paths)
+.codex/config.toml
 .playwright-mcp/
 memory/
 designs/
