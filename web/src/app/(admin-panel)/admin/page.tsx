@@ -7,7 +7,6 @@ const quickLinks = [
   { label: "地區管理", href: "/admin/regions", desc: "管理地區與子地區" },
   { label: "標籤管理", href: "/admin/tags", desc: "管理旅遊方案標籤" },
   { label: "旅遊方案", href: "/admin/tours", desc: "管理旅遊方案與行程" },
-  { label: "客戶諮詢", href: "/admin/inquiries", desc: "查看客戶諮詢記錄" },
 ];
 
 export default async function AdminDashboardPage() {

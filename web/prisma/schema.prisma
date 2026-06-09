@@ -115,16 +115,6 @@ model TourFile {
   createdAt DateTime @default(now())
 }
 
-model Inquiry {
-  id        String   @id @default(cuid())
-  tourId    String?
-  name      String
-  phone     String
-  email     String?
-  lineId    String?
-  content   String
-  createdAt DateTime @default(now())
-}
 
 enum LogAction {
   CREATE
