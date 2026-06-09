@@ -6,6 +6,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { SubRegionWithTours, TourItem } from "@/lib/frontend-data";
 import TourInquiryModal from "./TourInquiryModal";
 import TourShareButton from "./TourShareButton";
+import { useSocialLinks } from "@/hooks/useSocialLinks";
 
 interface Props {
   parent: { name: string };
@@ -19,6 +20,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
   const [modalTour, setModalTour] = useState<TourItem | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [mobileCollapsed, setMobileCollapsed] = useState(false);
+  const { lineUrl } = useSocialLinks();
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -231,12 +233,21 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                 <p className="m-note">※ 優惠方案及出發日期請洽服務專員</p>
               </div>
               <div className="m-actions">
-                <button className="m-line" type="button">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3.5c-5 0-9 3.2-9 7.2 0 3.6 3.2 6.6 7.5 7.16.29.06.69.19.79.44.09.22.06.57.03.8l-.13.77c-.04.22-.18.9.79.49 1-.41 5.36-3.16 7.31-5.41 1.34-1.48 1.71-2.99 1.71-4.25 0-4-4-7.2-9-7.2z" />
-                  </svg>
-                  加 LINE 諮詢
-                </button>
+                {lineUrl ? (
+                  <a className="m-line" href={lineUrl} target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 3.5c-5 0-9 3.2-9 7.2 0 3.6 3.2 6.6 7.5 7.16.29.06.69.19.79.44.09.22.06.57.03.8l-.13.77c-.04.22-.18.9.79.49 1-.41 5.36-3.16 7.31-5.41 1.34-1.48 1.71-2.99 1.71-4.25 0-4-4-7.2-9-7.2z" />
+                    </svg>
+                    加 LINE 諮詢
+                  </a>
+                ) : (
+                  <button className="m-line" type="button" disabled>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 3.5c-5 0-9 3.2-9 7.2 0 3.6 3.2 6.6 7.5 7.16.29.06.69.19.79.44.09.22.06.57.03.8l-.13.77c-.04.22-.18.9.79.49 1-.41 5.36-3.16 7.31-5.41 1.34-1.48 1.71-2.99 1.71-4.25 0-4-4-7.2-9-7.2z" />
+                    </svg>
+                    加 LINE 諮詢
+                  </button>
+                )}
                 <button
                   className="m-form"
                   type="button"

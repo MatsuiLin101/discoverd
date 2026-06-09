@@ -133,6 +133,7 @@ enum LogResource {
   TOUR_FILE
   AUTH
   HERO_BANNER
+  SITE_SETTING
 }
 
 model HeroBanner {
@@ -143,6 +144,14 @@ model HeroBanner {
   sortOrder     Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model SiteSetting {
+  id           String   @id @default("singleton")
+  facebookUrl  String?
+  instagramUrl String?
+  lineUrl      String?
+  updatedAt    DateTime @updatedAt
 }
 
 model ActivityLog {
