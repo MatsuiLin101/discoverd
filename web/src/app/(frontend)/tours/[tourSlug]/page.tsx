@@ -4,6 +4,7 @@ import Link from "next/link";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import SiteFooter from "@/components/frontend/SiteFooter";
 import TourDetailActions from "@/components/frontend/TourDetailActions";
+import TourShareButton from "@/components/frontend/TourShareButton";
 import { db } from "@/lib/db";
 
 interface Props {
@@ -117,7 +118,10 @@ export default async function TourPage({ params }: Props) {
               <div className="m-eyebrow">
                 {tour.subRegion.region.name} ・ {tour.subRegion.name}
               </div>
-              <h1 className="m-name">{tour.name}</h1>
+              <div className="m-name-row">
+                <h1 className="m-name">{tour.name}</h1>
+                <TourShareButton slug={tourSlug} />
+              </div>
               <div className="m-tags">
                 {tour.tags.map((t) => (
                   <span key={t.name}>{t.name === "hot" ? "熱門" : t.name}</span>

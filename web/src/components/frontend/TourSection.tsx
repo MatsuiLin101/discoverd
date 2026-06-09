@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { SubRegionWithTours, TourItem } from "@/lib/frontend-data";
 import TourInquiryModal from "./TourInquiryModal";
+import TourShareButton from "./TourShareButton";
 
 interface Props {
   parent: { name: string };
@@ -206,7 +207,10 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
               <div className="m-eyebrow">
                 {parent.name} ・ {activeRegion.name}
               </div>
-              <h3 className="m-name">{modalTour?.name}</h3>
+              <div className="m-name-row">
+                <h3 className="m-name">{modalTour?.name}</h3>
+                {modalTour && <TourShareButton key={modalTour.slug} slug={modalTour.slug} />}
+              </div>
               <div className="m-tags">
                 {modalTour?.tags.map((tag) => (
                   <span key={tag}>{tag === "hot" ? "熱門" : tag}</span>
@@ -227,7 +231,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                 <p className="m-note">※ 優惠方案及出發日期請洽服務專員</p>
               </div>
               <div className="m-actions">
-                <button className="m-line">
+                <button className="m-line" type="button">
                   <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 3.5c-5 0-9 3.2-9 7.2 0 3.6 3.2 6.6 7.5 7.16.29.06.69.19.79.44.09.22.06.57.03.8l-.13.77c-.04.22-.18.9.79.49 1-.41 5.36-3.16 7.31-5.41 1.34-1.48 1.71-2.99 1.71-4.25 0-4-4-7.2-9-7.2z" />
                   </svg>
@@ -235,6 +239,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                 </button>
                 <button
                   className="m-form"
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setFormOpen(true);
