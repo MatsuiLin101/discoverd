@@ -731,7 +731,7 @@
   .fh-m-toggle svg { width: 16px; height: 16px; transition: transform .25s; }
   .fh-modal-side.collapsed .fh-m-toggle svg { transform: rotate(180deg); }
   .fh-modal-side .m-eyebrow { font-size: 10px; letter-spacing: 0.18em; margin-bottom: 7px; padding-right: 36px; }
-  .fh-modal-side .m-name-row { padding-right: 36px; align-items: center; }
+  .fh-modal-side .m-name-row { padding-right: 36px; align-items: center; margin-bottom: 8px; }
   .fh-modal-side .m-share { margin-top: 0; }
   .fh-modal-side .m-name { font-size: 19px; line-height: 1.3; margin-bottom: 4px; }
   .fh-modal-side .m-en { font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 9px; }
@@ -751,6 +751,7 @@
   .fh-modal-side.collapsed .m-lede,
   .fh-modal-side.collapsed .m-note,
   .fh-modal-side.collapsed .m-actions { display: none; }
+  .fh-modal-side.collapsed .m-name-row { margin-bottom: 0; }
   .fh-modal-side.collapsed .m-name { margin-bottom: 0; font-size: 17px; padding-right: 36px; }
   .fh-modal-side.collapsed .m-price { margin-top: 5px; }
   .fh-modal-side.collapsed .m-price .cur { font-size: 12px; }
