@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
+import TourShareButton from "./TourShareButton";
 
 interface Tour {
+  slug: string;
   name: string;
   price: number;
   description: string | null;
@@ -47,7 +49,10 @@ export default function TourPreviewFrame({ tour }: { tour: Tour }) {
             <div className="m-eyebrow">
               {tour.regionName} ・ {tour.subRegionName}
             </div>
-            <h3 className="m-name">{tour.name}</h3>
+            <div className="m-name-row">
+              <h3 className="m-name">{tour.name}</h3>
+              <TourShareButton slug={tour.slug} />
+            </div>
             <div className="m-tags">
               {tour.tags.map((tag) => (
                 <span key={tag}>{tag === "hot" ? "熱門" : tag}</span>

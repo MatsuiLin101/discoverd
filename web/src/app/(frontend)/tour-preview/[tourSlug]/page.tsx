@@ -51,6 +51,7 @@ export default async function TourPreviewPage({
   return (
     <TourPreviewFrame
       tour={{
+        slug: tourSlug,
         name: tour.name,
         price: tour.price,
         description: tour.description,
