@@ -41,12 +41,10 @@ model Region {
   id                String      @id @default(cuid())
   name              String      @unique
   slug              String      @unique
-  thumbnail         String?
-  thumbnailPublicId String?
+  thumbnailKey      String?
   seoTitle          String?
   seoDescription    String?
-  ogImage           String?
-  ogImagePublicId   String?
+  ogImageKey        String?
   sortOrder         Int         @default(0)
   subRegions        SubRegion[]
   createdAt         DateTime    @default(now())
@@ -59,12 +57,10 @@ model SubRegion {
   region            Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
   name              String
   slug              String
-  thumbnail         String?
-  thumbnailPublicId String?
+  thumbnailKey      String?
   seoTitle          String?
   seoDescription    String?
-  ogImage           String?
-  ogImagePublicId   String?
+  ogImageKey        String?
   sortOrder         Int      @default(0)
   tours             Tour[]
   createdAt         DateTime @default(now())
@@ -86,14 +82,12 @@ model Tour {
   subRegion         SubRegion  @relation(fields: [subRegionId], references: [id], onDelete: Restrict)
   name              String
   slug              String     @unique
-  thumbnail         String?
-  thumbnailPublicId String?
+  thumbnailKey      String?
   price             Int
   description       String?
   seoTitle          String?
   seoDescription    String?
-  ogImage           String?
-  ogImagePublicId   String?
+  ogImageKey        String?
   tags              Tag[]      @relation("TourTags")
   files             TourFile[]
   published         Boolean    @default(false)
@@ -102,13 +96,12 @@ model Tour {
   updatedAt         DateTime   @updatedAt
 }
 
-// Plan A: uploaded PDF or image files stored on Cloudinary
+// Plan A: uploaded PDF or image files stored via the storage abstraction (R2 / local)
 model TourFile {
   id        String   @id @default(cuid())
   tourId    String
   tour      Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
-  url       String
-  publicId  String
+  key       String
   mimeType  String
   filename  String?
   sortOrder Int      @default(0)
@@ -139,8 +132,7 @@ enum LogResource {
 model HeroBanner {
   id            String   @id @default(cuid())
   title         String
-  image         String
-  imagePublicId String
+  imageKey      String
   sortOrder     Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

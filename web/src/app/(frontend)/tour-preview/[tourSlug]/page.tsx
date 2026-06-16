@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import TourPreviewFrame from "@/components/frontend/TourPreviewFrame";
+
+const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -20,7 +23,7 @@ export default async function TourPreviewPage({
       name: true,
       price: true,
       description: true,
-      thumbnail: true,
+      thumbnailKey: true,
       tags: {
         select: { name: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -28,7 +31,7 @@ export default async function TourPreviewPage({
       files: {
         where: { mimeType: { startsWith: "image/" } },
         orderBy: { sortOrder: "asc" },
-        select: { url: true },
+        select: { key: true },
       },
       subRegion: {
         select: {
@@ -43,9 +46,9 @@ export default async function TourPreviewPage({
 
   const images =
     tour.files.length > 0
-      ? tour.files.map((f) => f.url)
-      : tour.thumbnail
-        ? [tour.thumbnail]
+      ? tour.files.map((f) => storage.publicUrl(f.key))
+      : tour.thumbnailKey
+        ? [storage.publicUrl(tour.thumbnailKey)]
         : [];
 
   return (
@@ -55,7 +58,7 @@ export default async function TourPreviewPage({
         name: tour.name,
         price: tour.price,
         description: tour.description,
-        thumbnail: tour.thumbnail,
+        thumbnail: urlOf(tour.thumbnailKey),
         tags: tour.tags.map((t) => t.name),
         images,
         regionName: tour.subRegion.region.name,

@@ -6,10 +6,13 @@ import SiteFooter from "@/components/frontend/SiteFooter";
 import TourDetailActions from "@/components/frontend/TourDetailActions";
 import TourShareButton from "@/components/frontend/TourShareButton";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 
 interface Props {
   params: Promise<{ tourSlug: string }>;
 }
+
+const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tourSlug } = await params;
@@ -18,20 +21,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     select: {
       name: true,
       description: true,
-      thumbnail: true,
+      thumbnailKey: true,
       seoTitle: true,
       seoDescription: true,
-      ogImage: true,
+      ogImageKey: true,
       files: {
         where: { mimeType: { startsWith: "image/" } },
         orderBy: { sortOrder: "asc" },
-        select: { url: true },
+        select: { key: true },
         take: 1,
       },
     },
   });
   if (!tour) return {};
-  const ogImageUrl = tour.ogImage ?? tour.thumbnail ?? tour.files[0]?.url;
+  const ogImageUrl = urlOf(tour.ogImageKey) ?? urlOf(tour.thumbnailKey) ?? (tour.files[0] ? storage.publicUrl(tour.files[0].key) : undefined);
   return {
     title: tour.seoTitle ?? `${tour.name} ／ 找到了旅遊 FOUND HOLIDAY`,
     description: tour.seoDescription ?? tour.description?.slice(0, 150) ?? undefined,
@@ -52,7 +55,7 @@ export default async function TourPage({ params }: Props) {
       name: true,
       price: true,
       description: true,
-      thumbnail: true,
+      thumbnailKey: true,
       tags: {
         select: { name: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -60,7 +63,7 @@ export default async function TourPage({ params }: Props) {
       files: {
         where: { mimeType: { startsWith: "image/" } },
         orderBy: { sortOrder: "asc" },
-        select: { url: true },
+        select: { key: true },
       },
       subRegion: {
         select: {
@@ -76,9 +79,9 @@ export default async function TourPage({ params }: Props) {
 
   const images =
     tour.files.length > 0
-      ? tour.files.map((f) => f.url)
-      : tour.thumbnail
-        ? [tour.thumbnail]
+      ? tour.files.map((f) => storage.publicUrl(f.key))
+      : tour.thumbnailKey
+        ? [storage.publicUrl(tour.thumbnailKey)]
         : [];
 
   const regionSlug = tour.subRegion.region.slug;

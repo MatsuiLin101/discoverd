@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
         id: true,
         slug: true,
         name: true,
-        thumbnail: true,
+        thumbnailKey: true,
         price: true,
         tags: { select: { name: true } },
         subRegion: {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
       id: t.id,
       slug: t.slug,
       name: t.name,
-      thumbnail: t.thumbnail,
+      thumbnail: t.thumbnailKey ? storage.publicUrl(t.thumbnailKey) : null,
       price: t.price,
       tags: t.tags.map((tag) => tag.name),
       regionName: t.subRegion.region.name,

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { uploadFile } from "@/lib/cloudinary";
 import { writeLog } from "@/lib/log";
 
 const schema = z.object({
@@ -42,29 +41,12 @@ export async function POST(req: NextRequest) {
   const max = await db.region.aggregate({ _max: { sortOrder: true } });
   const sortOrder = (max._max.sortOrder ?? -1) + 1;
 
-  let thumbnail: string | undefined;
-  let thumbnailPublicId: string | undefined;
-  const file = fd.get("thumbnail") as File | null;
-  if (file && file.size > 0) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await uploadFile(buffer, { folder: "regions", mimeType: file.type });
-    thumbnail = result.url;
-    thumbnailPublicId = result.publicId;
-  }
-
-  let ogImage: string | undefined;
-  let ogImagePublicId: string | undefined;
-  const ogFile = fd.get("ogImage") as File | null;
-  if (ogFile && ogFile.size > 0) {
-    const buffer = Buffer.from(await ogFile.arrayBuffer());
-    const result = await uploadFile(buffer, { folder: "seo-og/regions", mimeType: ogFile.type });
-    ogImage = result.url;
-    ogImagePublicId = result.publicId;
-  }
+  const thumbnailKey = (fd.get("thumbnailKey") as string) || null;
+  const ogImageKey = (fd.get("ogImageKey") as string) || null;
 
   const region = await db.region.create({
-    data: { name, slug, sortOrder, thumbnail, thumbnailPublicId, seoTitle, seoDescription, ogImage, ogImagePublicId },
+    data: { name, slug, sortOrder, thumbnailKey, seoTitle, seoDescription, ogImageKey },
   });
-  void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnail: thumbnail ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImage: ogImage ?? null } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnailKey: thumbnailKey ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey: ogImageKey ?? null } });
   return NextResponse.json({ data: region }, { status: 201 });
 }

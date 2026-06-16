@@ -2,16 +2,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import SortableHeroBannerList from "@/components/admin/hero-banners/SortableHeroBannerList";
 
 export default async function HeroBannersPage() {
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const banners = await db.heroBanner.findMany({
-    select: { id: true, title: true, image: true, createdAt: true },
+  const bannersRaw = await db.heroBanner.findMany({
+    select: { id: true, title: true, imageKey: true, createdAt: true },
     orderBy: { sortOrder: "asc" },
   });
+  const banners = bannersRaw.map(({ imageKey, ...b }) => ({
+    ...b,
+    image: storage.publicUrl(imageKey),
+  }));
 
   return (
     <div>

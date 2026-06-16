@@ -6,6 +6,7 @@ import CategoryList from "@/components/frontend/CategoryList";
 import { HERO_FALLBACK_SLIDES } from "@/lib/frontend-data";
 import { getRegionList } from "@/lib/frontend-queries";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 
 export const metadata: Metadata = {
   title: "找到了旅遊 FOUND HOLIDAY — 為您而寫的旅程",
@@ -21,7 +22,7 @@ export default async function HomePage() {
 
   const heroSlides =
     dbBanners.length > 0
-      ? dbBanners.map((b) => ({ img: b.image, alt: b.title }))
+      ? dbBanners.map((b) => ({ img: storage.publicUrl(b.imageKey), alt: b.title }))
       : HERO_FALLBACK_SLIDES;
 
   const HOME_CATEGORIES = regions.map((r) => ({

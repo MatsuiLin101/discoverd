@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { uploadFile, deleteFile } from "@/lib/cloudinary";
+import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 
 const schema = z.object({
@@ -46,62 +46,43 @@ export async function PUT(
   if (nameConflict) return NextResponse.json({ error: "此名稱已存在" }, { status: 409 });
   if (slugConflict) return NextResponse.json({ error: "此 slug 已存在" }, { status: 409 });
 
-  let thumbnail: string | null = existing.thumbnail;
-  let thumbnailPublicId: string | null = existing.thumbnailPublicId;
-
-  const file = fd.get("thumbnail") as File | null;
+  let thumbnailKey: string | null = existing.thumbnailKey;
+  const newThumbnailKey = (fd.get("thumbnailKey") as string) || null;
   const clearThumbnail = fd.get("clearThumbnail") === "true";
 
-  if (clearThumbnail && !(file && file.size > 0)) {
-    if (existing.thumbnailPublicId) {
-      await deleteFile(existing.thumbnailPublicId, "image").catch(() => {});
-    }
-    thumbnail = null;
-    thumbnailPublicId = null;
-  } else if (file && file.size > 0) {
-    if (existing.thumbnailPublicId) {
-      await deleteFile(existing.thumbnailPublicId, "image").catch(() => {});
-    }
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await uploadFile(buffer, { folder: "regions", mimeType: file.type });
-    thumbnail = result.url;
-    thumbnailPublicId = result.publicId;
+  if (clearThumbnail && !newThumbnailKey) {
+    if (existing.thumbnailKey) await storage.delete(existing.thumbnailKey).catch(() => {});
+    thumbnailKey = null;
+  } else if (newThumbnailKey) {
+    if (existing.thumbnailKey) await storage.delete(existing.thumbnailKey).catch(() => {});
+    thumbnailKey = newThumbnailKey;
   }
 
-  let ogImage: string | null = existing.ogImage;
-  let ogImagePublicId: string | null = existing.ogImagePublicId;
-  const ogFile = fd.get("ogImage") as File | null;
+  let ogImageKey: string | null = existing.ogImageKey;
+  const newOgImageKey = (fd.get("ogImageKey") as string) || null;
   const clearOgImage = fd.get("clearOgImage") === "true";
 
-  if (clearOgImage && !(ogFile && ogFile.size > 0)) {
-    if (existing.ogImagePublicId) {
-      await deleteFile(existing.ogImagePublicId, "image").catch(() => {});
-    }
-    ogImage = null;
-    ogImagePublicId = null;
-  } else if (ogFile && ogFile.size > 0) {
-    if (existing.ogImagePublicId) {
-      await deleteFile(existing.ogImagePublicId, "image").catch(() => {});
-    }
-    const buffer = Buffer.from(await ogFile.arrayBuffer());
-    const result = await uploadFile(buffer, { folder: "seo-og/regions", mimeType: ogFile.type });
-    ogImage = result.url;
-    ogImagePublicId = result.publicId;
+  if (clearOgImage && !newOgImageKey) {
+    if (existing.ogImageKey) await storage.delete(existing.ogImageKey).catch(() => {});
+    ogImageKey = null;
+  } else if (newOgImageKey) {
+    if (existing.ogImageKey) await storage.delete(existing.ogImageKey).catch(() => {});
+    ogImageKey = newOgImageKey;
   }
 
   const region = await db.region.update({
     where: { id },
-    data: { name, slug, thumbnail, thumbnailPublicId, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImage, ogImagePublicId },
+    data: { name, slug, thumbnailKey, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey },
   });
-  const thumbnailChange = clearThumbnail && !(file && file.size > 0)
+  const thumbnailChange = clearThumbnail && !newThumbnailKey
     ? "removed"
-    : (file && file.size > 0)
-      ? (existing.thumbnailPublicId ? "replaced" : "added")
+    : newThumbnailKey
+      ? (existing.thumbnailKey ? "replaced" : "added")
       : "unchanged";
-  const ogImageChange = clearOgImage && !(ogFile && ogFile.size > 0)
+  const ogImageChange = clearOgImage && !newOgImageKey
     ? "removed"
-    : (ogFile && ogFile.size > 0)
-      ? (existing.ogImagePublicId ? "replaced" : "added")
+    : newOgImageKey
+      ? (existing.ogImageKey ? "replaced" : "added")
       : "unchanged";
   void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnailChange, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageChange } });
   return NextResponse.json({ data: region });
@@ -122,7 +103,7 @@ export async function DELETE(
       where: { id },
       include: {
         subRegions: {
-          select: { id: true, name: true, thumbnailPublicId: true, ogImagePublicId: true, _count: { select: { tours: true } } },
+          select: { id: true, name: true, thumbnailKey: true, ogImageKey: true, _count: { select: { tours: true } } },
         },
       },
     });
@@ -134,19 +115,11 @@ export async function DELETE(
     }
 
     const deleteJobs: Promise<unknown>[] = [];
-    if (region.thumbnailPublicId) {
-      deleteJobs.push(deleteFile(region.thumbnailPublicId, "image").catch(() => {}));
-    }
-    if (region.ogImagePublicId) {
-      deleteJobs.push(deleteFile(region.ogImagePublicId, "image").catch(() => {}));
-    }
+    if (region.thumbnailKey) deleteJobs.push(storage.delete(region.thumbnailKey).catch(() => {}));
+    if (region.ogImageKey) deleteJobs.push(storage.delete(region.ogImageKey).catch(() => {}));
     for (const sub of region.subRegions) {
-      if (sub.thumbnailPublicId) {
-        deleteJobs.push(deleteFile(sub.thumbnailPublicId, "image").catch(() => {}));
-      }
-      if (sub.ogImagePublicId) {
-        deleteJobs.push(deleteFile(sub.ogImagePublicId, "image").catch(() => {}));
-      }
+      if (sub.thumbnailKey) deleteJobs.push(storage.delete(sub.thumbnailKey).catch(() => {}));
+      if (sub.ogImageKey) deleteJobs.push(storage.delete(sub.ogImageKey).catch(() => {}));
     }
     await Promise.all(deleteJobs);
 
@@ -162,8 +135,8 @@ export async function DELETE(
       detail: {
         id,
         name: region.name,
-        hadThumbnail: !!region.thumbnailPublicId,
-        cascadeDeletedSubRegions: region.subRegions.map((s) => ({ id: s.id, name: s.name, hadThumbnail: !!s.thumbnailPublicId })),
+        hadThumbnail: !!region.thumbnailKey,
+        cascadeDeletedSubRegions: region.subRegions.map((s) => ({ id: s.id, name: s.name, hadThumbnail: !!s.thumbnailKey })),
       },
     });
     for (const sub of region.subRegions) {

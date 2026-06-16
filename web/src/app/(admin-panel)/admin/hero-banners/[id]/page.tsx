@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import HeroBannerForm from "@/components/admin/hero-banners/HeroBannerForm";
 
 export default async function EditHeroBannerPage({
@@ -24,7 +25,7 @@ export default async function EditHeroBannerPage({
       <HeroBannerForm
         bannerId={banner.id}
         initialTitle={banner.title}
-        initialImage={banner.image}
+        initialImage={storage.publicUrl(banner.imageKey)}
       />
     </div>
   );

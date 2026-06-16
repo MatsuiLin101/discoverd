@@ -1,8 +1,15 @@
 import { config } from "dotenv";
 import { expand } from "dotenv-expand";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { uploadFile } from "../src/lib/cloudinary";
+import { storage, buildKey } from "../src/lib/storage";
 import { randomBytes } from "crypto";
+
+/** Upload a seed image buffer through the storage abstraction and return its key. */
+async function uploadSeed(buffer: Buffer, folder: string): Promise<string> {
+  const key = buildKey(folder, "seed.jpg", "image/jpeg");
+  await storage.put(key, buffer, "image/jpeg");
+  return key;
+}
 
 expand(config({ path: ".env.local" }));
 
@@ -142,17 +149,13 @@ async function main() {
     console.log(`\nCreating region: ${regionData.name}`);
 
     const regionThumb = await fetchImage(800, 534, ri * 10);
-    const { url: regionUrl, publicId: regionPublicId } = await uploadFile(
-      regionThumb,
-      { folder: "regions", mimeType: "image/jpeg" }
-    );
+    const regionKey = await uploadSeed(regionThumb, "regions");
 
     const region = await db.region.create({
       data: {
         name: regionData.name,
         slug: regionData.slug,
-        thumbnail: regionUrl,
-        thumbnailPublicId: regionPublicId,
+        thumbnailKey: regionKey,
         sortOrder: ri,
       },
     });
@@ -162,18 +165,14 @@ async function main() {
       console.log(`  Creating subregion: ${subData.name}`);
 
       const subThumb = await fetchImage(800, 534, ri * 10 + si + 1);
-      const { url: subUrl, publicId: subPublicId } = await uploadFile(
-        subThumb,
-        { folder: "regions", mimeType: "image/jpeg" }
-      );
+      const subKey = await uploadSeed(subThumb, "regions");
 
       const subRegion = await db.subRegion.create({
         data: {
           regionId: region.id,
           name: subData.name,
           slug: subData.slug,
-          thumbnail: subUrl,
-          thumbnailPublicId: subPublicId,
+          thumbnailKey: subKey,
           sortOrder: si,
         },
       });
@@ -189,10 +188,7 @@ async function main() {
         ];
 
         const tourThumb = await fetchImage(800, 534, tourIndex + 100);
-        const { url: tourUrl, publicId: tourPublicId } = await uploadFile(
-          tourThumb,
-          { folder: "tours", mimeType: "image/jpeg" }
-        );
+        const tourKey = await uploadSeed(tourThumb, "tours");
 
         const slug = randomBytes(4).toString("hex");
 
@@ -201,8 +197,7 @@ async function main() {
             subRegionId: subRegion.id,
             name: tourData.name,
             slug,
-            thumbnail: tourUrl,
-            thumbnailPublicId: tourPublicId,
+            thumbnailKey: tourKey,
             price: tourData.price,
             description: `${tourData.name}－精心規劃的旅遊行程，帶您探索當地最美的風景與文化。`,
             published: true,
@@ -211,16 +206,12 @@ async function main() {
         });
 
         const fileBuffer = await fetchImage(794, 2244, tourIndex + 200);
-        const { url: fileUrl, publicId: filePublicId } = await uploadFile(
-          fileBuffer,
-          { folder: "tour-files", mimeType: "image/jpeg" }
-        );
+        const fileKey = await uploadSeed(fileBuffer, "tour-files");
 
         await db.tourFile.create({
           data: {
             tourId: tour.id,
-            url: fileUrl,
-            publicId: filePublicId,
+            key: fileKey,
             mimeType: "image/jpeg",
             filename: "itinerary.jpg",
             sortOrder: 0,

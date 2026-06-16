@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { uploadFile } from "@/lib/cloudinary";
 import { writeLog } from "@/lib/log";
 
 const schema = z.object({
@@ -22,19 +21,16 @@ export async function POST(req: NextRequest) {
   }
   const { title } = parsed.data;
 
-  const file = fd.get("image") as File | null;
-  if (!file || file.size === 0) {
+  const imageKey = (fd.get("imageKey") as string) || null;
+  if (!imageKey) {
     return NextResponse.json({ error: "請上傳圖片" }, { status: 400 });
   }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const result = await uploadFile(buffer, { folder: "hero-banners", mimeType: file.type });
 
   const max = await db.heroBanner.aggregate({ _max: { sortOrder: true } });
   const sortOrder = (max._max.sortOrder ?? -1) + 1;
 
   const banner = await db.heroBanner.create({
-    data: { title, image: result.url, imagePublicId: result.publicId, sortOrder },
+    data: { title, imageKey, sortOrder },
   });
   void writeLog({
     userId: session.userId,
@@ -43,7 +39,7 @@ export async function POST(req: NextRequest) {
     resource: "HERO_BANNER",
     resourceId: banner.id,
     resourceName: banner.title,
-    detail: { id: banner.id, title: banner.title, image: banner.image },
+    detail: { id: banner.id, title: banner.title, imageKey: banner.imageKey },
   });
   return NextResponse.json({ data: banner }, { status: 201 });
 }

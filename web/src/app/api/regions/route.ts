@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 
 export async function GET() {
   try {
@@ -8,7 +9,7 @@ export async function GET() {
       select: {
         slug: true,
         name: true,
-        thumbnail: true,
+        thumbnailKey: true,
         subRegions: {
           select: {
             _count: { select: { tours: { where: { published: true } } } },
@@ -20,7 +21,7 @@ export async function GET() {
     const result = rows.map((r) => ({
       slug: r.slug,
       name: r.name,
-      thumbnail: r.thumbnail,
+      thumbnail: r.thumbnailKey ? storage.publicUrl(r.thumbnailKey) : null,
       tourCount: r.subRegions.reduce((sum, sr) => sum + sr._count.tours, 0),
     }));
 

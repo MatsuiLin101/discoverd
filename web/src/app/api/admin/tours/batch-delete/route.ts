@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { deleteFile } from "@/lib/cloudinary";
+import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 
 const schema = z.object({
@@ -25,17 +25,15 @@ export async function DELETE(req: NextRequest) {
 
   const tours = await db.tour.findMany({
     where: { id: { in: tourIds } },
-    include: { files: { select: { publicId: true, mimeType: true } } },
+    include: { files: { select: { key: true } } },
   });
 
   const deleteJobs: Promise<unknown>[] = [];
   for (const tour of tours) {
-    if (tour.thumbnailPublicId) {
-      deleteJobs.push(deleteFile(tour.thumbnailPublicId, "image").catch(() => {}));
-    }
+    if (tour.thumbnailKey) deleteJobs.push(storage.delete(tour.thumbnailKey).catch(() => {}));
+    if (tour.ogImageKey) deleteJobs.push(storage.delete(tour.ogImageKey).catch(() => {}));
     for (const file of tour.files) {
-      const resourceType = file.mimeType === "application/pdf" ? "raw" : "image";
-      deleteJobs.push(deleteFile(file.publicId, resourceType).catch(() => {}));
+      deleteJobs.push(storage.delete(file.key).catch(() => {}));
     }
   }
   await Promise.all(deleteJobs);

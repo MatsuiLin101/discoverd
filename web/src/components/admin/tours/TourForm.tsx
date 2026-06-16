@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TourFileList from "./TourFileList";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
+import { uploadFile } from "@/lib/upload-client";
 
 interface SubRegion {
   id: string;
@@ -160,24 +161,29 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     fd.append("subRegionId", subRegionId);
     fd.append("published", published ? "true" : "false");
     selectedTagIds.forEach((id) => fd.append("tagIds", id));
-    if (thumbFile) {
-      fd.append("thumbnail", thumbFile);
-    } else if (clearThumbnail) {
-      fd.append("clearThumbnail", "true");
-    }
     fd.append("seoTitle", seoTitle);
     fd.append("seoDescription", seoDescription);
     const ogFile = ogFileRef.current?.files?.[0];
-    if (ogFile) {
-      fd.append("ogImage", ogFile);
-    } else if (clearOgImage) {
-      fd.append("clearOgImage", "true");
-    }
-    if (!isEdit) {
-      contentFiles.forEach((f) => fd.append("contentFiles", f));
-    }
 
     try {
+      // Upload binaries first; the API only ever receives storage keys.
+      if (thumbFile) {
+        const up = await uploadFile(thumbFile, "tours");
+        fd.append("thumbnailKey", up.key);
+      } else if (clearThumbnail) {
+        fd.append("clearThumbnail", "true");
+      }
+      if (ogFile) {
+        const up = await uploadFile(ogFile, "seo-og/tours");
+        fd.append("ogImageKey", up.key);
+      } else if (clearOgImage) {
+        fd.append("clearOgImage", "true");
+      }
+      if (!isEdit && contentFiles.length > 0) {
+        const uploaded = await Promise.all(contentFiles.map((f) => uploadFile(f, "tour-files")));
+        fd.append("contentFiles", JSON.stringify(uploaded));
+      }
+
       const url = isEdit ? `/api/admin/tours/${tour.id}` : "/api/admin/tours";
       const res = await fetch(url, { method: isEdit ? "PUT" : "POST", body: fd });
       const data = await res.json();
@@ -191,8 +197,8 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       } else {
         setError(data.error ?? (isEdit ? "儲存失敗" : "新增失敗"));
       }
-    } catch {
-      setError("網路錯誤，請稍後再試");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "網路錯誤，請稍後再試");
     } finally {
       setIsPending(false);
     }

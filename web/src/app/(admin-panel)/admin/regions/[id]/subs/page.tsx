@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import SortableSubRegionList from "@/components/admin/regions/SortableSubRegionList";
 
 export default async function SubRegionsPage({
@@ -23,7 +24,7 @@ export default async function SubRegionsPage({
           id: true,
           name: true,
           slug: true,
-          thumbnail: true,
+          thumbnailKey: true,
           _count: { select: { tours: true } },
         },
         orderBy: { sortOrder: "asc" },
@@ -31,6 +32,11 @@ export default async function SubRegionsPage({
     },
   });
   if (!region) notFound();
+
+  const subs = region.subRegions.map(({ thumbnailKey, ...s }) => ({
+    ...s,
+    thumbnail: thumbnailKey ? storage.publicUrl(thumbnailKey) : null,
+  }));
 
   return (
     <div>
@@ -54,7 +60,7 @@ export default async function SubRegionsPage({
           新增次分類
         </Link>
       </div>
-      <SortableSubRegionList regionId={id} subs={region.subRegions} />
+      <SortableSubRegionList regionId={id} subs={subs} />
     </div>
   );
 }

@@ -6,8 +6,7 @@ export interface SessionPayload {
 }
 
 export interface TourFileData {
-  url: string;
-  publicId: string;
+  key: string;
   mimeType: string;
   sortOrder: number;
 }

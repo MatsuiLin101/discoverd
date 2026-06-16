@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { uploadFile, deleteFile } from "@/lib/cloudinary";
+import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 
 const schema = z.object({
@@ -29,23 +29,19 @@ export async function PUT(
   const existing = await db.heroBanner.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "找不到此輪播圖" }, { status: 404 });
 
-  let image = existing.image;
-  let imagePublicId = existing.imagePublicId;
+  let imageKey = existing.imageKey;
   let imageChange = "unchanged";
 
-  const file = fd.get("image") as File | null;
-  if (file && file.size > 0) {
-    await deleteFile(existing.imagePublicId, "image").catch(() => {});
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await uploadFile(buffer, { folder: "hero-banners", mimeType: file.type });
-    image = result.url;
-    imagePublicId = result.publicId;
+  const newImageKey = (fd.get("imageKey") as string) || null;
+  if (newImageKey) {
+    await storage.delete(existing.imageKey).catch(() => {});
+    imageKey = newImageKey;
     imageChange = "replaced";
   }
 
   const banner = await db.heroBanner.update({
     where: { id },
-    data: { title, image, imagePublicId },
+    data: { title, imageKey },
   });
   void writeLog({
     userId: session.userId,
@@ -73,7 +69,7 @@ export async function DELETE(
     const banner = await db.heroBanner.findUnique({ where: { id } });
     if (!banner) return NextResponse.json({ error: "找不到此輪播圖" }, { status: 404 });
 
-    await deleteFile(banner.imagePublicId, "image").catch(() => {});
+    await storage.delete(banner.imageKey).catch(() => {});
     await db.heroBanner.delete({ where: { id } });
 
     void writeLog({

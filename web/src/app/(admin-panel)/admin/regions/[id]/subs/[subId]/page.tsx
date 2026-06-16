@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import SubRegionForm from "@/components/admin/regions/SubRegionForm";
+
+const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
 
 export default async function EditSubRegionPage({
   params,
@@ -16,7 +19,7 @@ export default async function EditSubRegionPage({
     db.region.findUnique({ where: { id }, select: { id: true, name: true } }),
     db.subRegion.findUnique({
       where: { id: subId },
-      select: { id: true, name: true, slug: true, thumbnail: true, regionId: true, seoTitle: true, seoDescription: true, ogImage: true },
+      select: { id: true, name: true, slug: true, thumbnailKey: true, regionId: true, seoTitle: true, seoDescription: true, ogImageKey: true },
     }),
   ]);
   if (!region || !sub || sub.regionId !== id) notFound();
@@ -35,10 +38,10 @@ export default async function EditSubRegionPage({
         subId={sub.id}
         initialName={sub.name}
         initialSlug={sub.slug}
-        initialThumbnail={sub.thumbnail}
+        initialThumbnail={urlOf(sub.thumbnailKey)}
         initialSeoTitle={sub.seoTitle}
         initialSeoDescription={sub.seoDescription}
-        initialOgImage={sub.ogImage}
+        initialOgImage={urlOf(sub.ogImageKey)}
       />
     </div>
   );

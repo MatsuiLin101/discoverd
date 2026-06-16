@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import RegionForm from "@/components/admin/regions/RegionForm";
+
+const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
 
 export default async function EditRegionPage({
   params,
@@ -14,7 +17,7 @@ export default async function EditRegionPage({
   const { id } = await params;
   const region = await db.region.findUnique({
     where: { id },
-    select: { id: true, name: true, slug: true, thumbnail: true, seoTitle: true, seoDescription: true, ogImage: true },
+    select: { id: true, name: true, slug: true, thumbnailKey: true, seoTitle: true, seoDescription: true, ogImageKey: true },
   });
   if (!region) notFound();
 
@@ -28,10 +31,10 @@ export default async function EditRegionPage({
         regionId={region.id}
         initialName={region.name}
         initialSlug={region.slug}
-        initialThumbnail={region.thumbnail}
+        initialThumbnail={urlOf(region.thumbnailKey)}
         initialSeoTitle={region.seoTitle}
         initialSeoDescription={region.seoDescription}
-        initialOgImage={region.ogImage}
+        initialOgImage={urlOf(region.ogImageKey)}
       />
     </div>
   );

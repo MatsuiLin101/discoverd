@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { uploadFile, deleteFile } from "@/lib/cloudinary";
+import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 
 const updateSchema = z.object({
@@ -50,46 +50,28 @@ export async function PUT(
     const subRegion = await db.subRegion.findUnique({ where: { id: subRegionId } });
     if (!subRegion) return NextResponse.json({ error: "找不到指定次分類" }, { status: 400 });
 
-    let thumbnail: string | null = existing.thumbnail;
-    let thumbnailPublicId: string | null = existing.thumbnailPublicId;
-    const thumbFile = fd.get("thumbnail") as File | null;
+    let thumbnailKey: string | null = existing.thumbnailKey;
+    const newThumbnailKey = (fd.get("thumbnailKey") as string) || null;
     const clearThumbnail = fd.get("clearThumbnail") === "true";
 
-    if (clearThumbnail && !(thumbFile && thumbFile.size > 0)) {
-      if (existing.thumbnailPublicId) {
-        await deleteFile(existing.thumbnailPublicId, "image").catch(() => {});
-      }
-      thumbnail = null;
-      thumbnailPublicId = null;
-    } else if (thumbFile && thumbFile.size > 0) {
-      if (existing.thumbnailPublicId) {
-        await deleteFile(existing.thumbnailPublicId, "image").catch(() => {});
-      }
-      const buffer = Buffer.from(await thumbFile.arrayBuffer());
-      const result = await uploadFile(buffer, { folder: "tours", mimeType: thumbFile.type });
-      thumbnail = result.url;
-      thumbnailPublicId = result.publicId;
+    if (clearThumbnail && !newThumbnailKey) {
+      if (existing.thumbnailKey) await storage.delete(existing.thumbnailKey).catch(() => {});
+      thumbnailKey = null;
+    } else if (newThumbnailKey) {
+      if (existing.thumbnailKey) await storage.delete(existing.thumbnailKey).catch(() => {});
+      thumbnailKey = newThumbnailKey;
     }
 
-    let ogImage: string | null = existing.ogImage;
-    let ogImagePublicId: string | null = existing.ogImagePublicId;
-    const ogFile = fd.get("ogImage") as File | null;
+    let ogImageKey: string | null = existing.ogImageKey;
+    const newOgImageKey = (fd.get("ogImageKey") as string) || null;
     const clearOgImage = fd.get("clearOgImage") === "true";
 
-    if (clearOgImage && !(ogFile && ogFile.size > 0)) {
-      if (existing.ogImagePublicId) {
-        await deleteFile(existing.ogImagePublicId, "image").catch(() => {});
-      }
-      ogImage = null;
-      ogImagePublicId = null;
-    } else if (ogFile && ogFile.size > 0) {
-      if (existing.ogImagePublicId) {
-        await deleteFile(existing.ogImagePublicId, "image").catch(() => {});
-      }
-      const buffer = Buffer.from(await ogFile.arrayBuffer());
-      const result = await uploadFile(buffer, { folder: "seo-og/tours", mimeType: ogFile.type });
-      ogImage = result.url;
-      ogImagePublicId = result.publicId;
+    if (clearOgImage && !newOgImageKey) {
+      if (existing.ogImageKey) await storage.delete(existing.ogImageKey).catch(() => {});
+      ogImageKey = null;
+    } else if (newOgImageKey) {
+      if (existing.ogImageKey) await storage.delete(existing.ogImageKey).catch(() => {});
+      ogImageKey = newOgImageKey;
     }
 
     const tour = await db.tour.update({
@@ -100,24 +82,22 @@ export async function PUT(
         description: description ?? null,
         subRegionId,
         published,
-        thumbnail,
-        thumbnailPublicId,
+        thumbnailKey,
         seoTitle: seoTitle ?? null,
         seoDescription: seoDescription ?? null,
-        ogImage,
-        ogImagePublicId,
+        ogImageKey,
         tags: { set: tagIds.map((tagId) => ({ id: tagId })) },
       },
     });
-    const thumbnailChange = clearThumbnail && !(thumbFile && thumbFile.size > 0)
+    const thumbnailChange = clearThumbnail && !newThumbnailKey
       ? "removed"
-      : thumbFile && thumbFile.size > 0
-        ? existing.thumbnailPublicId ? "replaced" : "added"
+      : newThumbnailKey
+        ? existing.thumbnailKey ? "replaced" : "added"
         : "unchanged";
-    const ogImageChange = clearOgImage && !(ogFile && ogFile.size > 0)
+    const ogImageChange = clearOgImage && !newOgImageKey
       ? "removed"
-      : ogFile && ogFile.size > 0
-        ? existing.ogImagePublicId ? "replaced" : "added"
+      : newOgImageKey
+        ? existing.ogImageKey ? "replaced" : "added"
         : "unchanged";
     void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnailChange, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageChange } });
     return NextResponse.json({ data: tour });
@@ -138,25 +118,20 @@ export async function DELETE(
     const { id } = await params;
     const tour = await db.tour.findUnique({
       where: { id },
-      include: { files: { select: { publicId: true, mimeType: true } } },
+      include: { files: { select: { key: true } } },
     });
     if (!tour) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
 
     const deleteJobs: Promise<unknown>[] = [];
-    if (tour.thumbnailPublicId) {
-      deleteJobs.push(deleteFile(tour.thumbnailPublicId, "image").catch(() => {}));
-    }
-    if (tour.ogImagePublicId) {
-      deleteJobs.push(deleteFile(tour.ogImagePublicId, "image").catch(() => {}));
-    }
+    if (tour.thumbnailKey) deleteJobs.push(storage.delete(tour.thumbnailKey).catch(() => {}));
+    if (tour.ogImageKey) deleteJobs.push(storage.delete(tour.ogImageKey).catch(() => {}));
     for (const file of tour.files) {
-      const resourceType = file.mimeType === "application/pdf" ? "raw" : "image";
-      deleteJobs.push(deleteFile(file.publicId, resourceType).catch(() => {}));
+      deleteJobs.push(storage.delete(file.key).catch(() => {}));
     }
     await Promise.all(deleteJobs);
 
     await db.tour.delete({ where: { id } });
-    void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR", resourceId: id, resourceName: tour.name, detail: { id, name: tour.name, hadThumbnail: !!tour.thumbnailPublicId } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR", resourceId: id, resourceName: tour.name, detail: { id, name: tour.name, hadThumbnail: !!tour.thumbnailKey } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[DELETE /api/admin/tours/[id]]", e);

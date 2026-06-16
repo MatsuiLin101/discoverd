@@ -4,6 +4,7 @@ import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ImageLightbox from "./ImageLightbox";
+import { uploadFile } from "@/lib/upload-client";
 
 const inputClass =
   "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
@@ -102,22 +103,25 @@ export default function RegionForm({
     const fd = new FormData();
     fd.append("name", name);
     fd.append("slug", slug);
-    const file = fileRef.current?.files?.[0];
-    if (file) {
-      fd.append("thumbnail", file);
-    } else if (clearThumbnail) {
-      fd.append("clearThumbnail", "true");
-    }
     fd.append("seoTitle", seoTitle);
     fd.append("seoDescription", seoDescription);
+    const file = fileRef.current?.files?.[0];
     const ogFile = ogFileRef.current?.files?.[0];
-    if (ogFile) {
-      fd.append("ogImage", ogFile);
-    } else if (clearOgImage) {
-      fd.append("clearOgImage", "true");
-    }
 
     try {
+      if (file) {
+        const up = await uploadFile(file, "regions");
+        fd.append("thumbnailKey", up.key);
+      } else if (clearThumbnail) {
+        fd.append("clearThumbnail", "true");
+      }
+      if (ogFile) {
+        const up = await uploadFile(ogFile, "seo-og/regions");
+        fd.append("ogImageKey", up.key);
+      } else if (clearOgImage) {
+        fd.append("clearOgImage", "true");
+      }
+
       const url = isEdit ? `/api/admin/regions/${regionId}` : "/api/admin/regions";
       const res = await fetch(url, { method: isEdit ? "PUT" : "POST", body: fd });
       const data = await res.json();
@@ -131,8 +135,8 @@ export default function RegionForm({
       } else {
         setError(data.error ?? "儲存失敗");
       }
-    } catch {
-      setError("網路錯誤，請稍後再試");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "網路錯誤，請稍後再試");
     } finally {
       setIsPending(false);
     }

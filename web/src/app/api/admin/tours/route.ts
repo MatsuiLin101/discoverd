@@ -3,7 +3,6 @@ import { z } from "zod";
 import { randomBytes } from "crypto";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { uploadFile } from "@/lib/cloudinary";
 import { writeLog } from "@/lib/log";
 
 const createSchema = z.object({
@@ -17,6 +16,18 @@ const createSchema = z.object({
   seoTitle: z.string().max(100).optional(),
   seoDescription: z.string().max(160).optional(),
 });
+
+type ContentFile = { key: string; filename: string; mimeType: string };
+
+function parseContentFiles(raw: FormDataEntryValue | null): ContentFile[] {
+  if (typeof raw !== "string" || !raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? (arr as ContentFile[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,25 +62,8 @@ export async function POST(req: NextRequest) {
       slug = randomBytes(4).toString("hex");
     }
 
-    let thumbnail: string | undefined;
-    let thumbnailPublicId: string | undefined;
-    const thumbFile = fd.get("thumbnail") as File | null;
-    if (thumbFile && thumbFile.size > 0) {
-      const buffer = Buffer.from(await thumbFile.arrayBuffer());
-      const result = await uploadFile(buffer, { folder: "tours", mimeType: thumbFile.type });
-      thumbnail = result.url;
-      thumbnailPublicId = result.publicId;
-    }
-
-    let ogImage: string | undefined;
-    let ogImagePublicId: string | undefined;
-    const ogFile = fd.get("ogImage") as File | null;
-    if (ogFile && ogFile.size > 0) {
-      const buffer = Buffer.from(await ogFile.arrayBuffer());
-      const result = await uploadFile(buffer, { folder: "seo-og/tours", mimeType: ogFile.type });
-      ogImage = result.url;
-      ogImagePublicId = result.publicId;
-    }
+    const thumbnailKey = (fd.get("thumbnailKey") as string) || null;
+    const ogImageKey = (fd.get("ogImageKey") as string) || null;
 
     const tour = await db.tour.create({
       data: {
@@ -79,35 +73,30 @@ export async function POST(req: NextRequest) {
         description: description ?? null,
         subRegionId,
         published,
-        thumbnail,
-        thumbnailPublicId,
+        thumbnailKey,
         seoTitle,
         seoDescription,
-        ogImage,
-        ogImagePublicId,
+        ogImageKey,
         tags: tagIds.length > 0 ? { connect: tagIds.map((id) => ({ id })) } : undefined,
       },
     });
 
-    const contentFiles = fd.getAll("contentFiles") as File[];
+    const contentFiles = parseContentFiles(fd.get("contentFiles"));
     for (let i = 0; i < contentFiles.length; i++) {
       const file = contentFiles[i];
-      if (!file || file.size === 0) continue;
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const result = await uploadFile(buffer, { folder: "tour-files", mimeType: file.type });
+      if (!file?.key) continue;
       await db.tourFile.create({
         data: {
           tourId: tour.id,
-          url: result.url,
-          publicId: result.publicId,
-          mimeType: result.mimeType,
-          filename: file.name,
+          key: file.key,
+          mimeType: file.mimeType,
+          filename: file.filename,
           sortOrder: i,
         },
       });
     }
 
-    void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnail: thumbnail ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImage: ogImage ?? null } });
+    void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnailKey: thumbnailKey ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey: ogImageKey ?? null } });
     return NextResponse.json({ data: { id: tour.id } }, { status: 201 });
   } catch (e) {
     console.error("[POST /api/admin/tours]", e);

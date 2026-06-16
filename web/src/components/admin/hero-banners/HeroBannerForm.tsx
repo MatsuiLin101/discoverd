@@ -4,6 +4,7 @@ import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
+import { uploadFile } from "@/lib/upload-client";
 
 const inputClass =
   "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
@@ -44,9 +45,13 @@ export default function HeroBannerForm({
     const fd = new FormData();
     fd.append("title", title);
     const file = fileRef.current?.files?.[0];
-    if (file) fd.append("image", file);
 
     try {
+      if (file) {
+        const up = await uploadFile(file, "hero-banners");
+        fd.append("imageKey", up.key);
+      }
+
       const url = isEdit ? `/api/admin/hero-banners/${bannerId}` : "/api/admin/hero-banners";
       const res = await fetch(url, { method: isEdit ? "PUT" : "POST", body: fd });
       const data = await res.json();
@@ -60,8 +65,8 @@ export default function HeroBannerForm({
       } else {
         setError(data.error ?? "儲存失敗");
       }
-    } catch {
-      setError("網路錯誤，請稍後再試");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "網路錯誤，請稍後再試");
     } finally {
       setIsPending(false);
     }

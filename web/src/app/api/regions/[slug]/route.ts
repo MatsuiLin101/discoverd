@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
+
+const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
 
 const ParamSchema = z.object({
   slug: z.string().min(1),
@@ -22,13 +25,13 @@ export async function GET(
       select: {
         slug: true,
         name: true,
-        thumbnail: true,
+        thumbnailKey: true,
         subRegions: {
           orderBy: { sortOrder: "asc" },
           select: {
             slug: true,
             name: true,
-            thumbnail: true,
+            thumbnailKey: true,
             _count: { select: { tours: { where: { published: true } } } },
           },
         },
@@ -42,11 +45,11 @@ export async function GET(
     const result = {
       slug: region.slug,
       name: region.name,
-      thumbnail: region.thumbnail,
+      thumbnail: urlOf(region.thumbnailKey),
       subRegions: region.subRegions.map((sr) => ({
         slug: sr.slug,
         name: sr.name,
-        thumbnail: sr.thumbnail,
+        thumbnail: urlOf(sr.thumbnailKey),
         tourCount: sr._count.tours,
       })),
     };

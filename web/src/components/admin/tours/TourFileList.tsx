@@ -17,6 +17,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { uploadFile } from "@/lib/upload-client";
 
 interface TourFile {
   id: string;
@@ -200,13 +201,12 @@ export default function TourFileList({
     setUploading(true);
     setUploadError(null);
 
-    const fd = new FormData();
-    selected.forEach((f) => fd.append("files", f));
-
     try {
+      const uploaded = await Promise.all(selected.map((f) => uploadFile(f, "tour-files")));
       const res = await fetch(`/api/admin/tours/${tourId}/files`, {
         method: "POST",
-        body: fd,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: uploaded }),
       });
       const data = await res.json();
       if (res.ok && data.data) {
@@ -214,8 +214,8 @@ export default function TourFileList({
       } else {
         setUploadError(data.error ?? "上傳失敗");
       }
-    } catch {
-      setUploadError("網路錯誤，請稍後再試");
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "網路錯誤，請稍後再試");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

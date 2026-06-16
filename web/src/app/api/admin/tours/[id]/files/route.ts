@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { uploadFile } from "@/lib/cloudinary";
+import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+
+type IncomingFile = { key: string; filename: string; mimeType: string };
 
 export async function POST(
   req: NextRequest,
@@ -16,8 +18,8 @@ export async function POST(
     const tour = await db.tour.findUnique({ where: { id: tourId } });
     if (!tour) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
 
-    const fd = await req.formData();
-    const files = fd.getAll("files") as File[];
+    const body = (await req.json()) as { files?: IncomingFile[] };
+    const files = Array.isArray(body.files) ? body.files : [];
 
     const agg = await db.tourFile.aggregate({
       where: { tourId },
@@ -28,21 +30,18 @@ export async function POST(
     const created = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!file || file.size === 0) continue;
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const result = await uploadFile(buffer, { folder: "tour-files", mimeType: file.type });
+      if (!file?.key) continue;
       const tourFile = await db.tourFile.create({
         data: {
           tourId,
-          url: result.url,
-          publicId: result.publicId,
-          mimeType: result.mimeType,
-          filename: file.name,
+          key: file.key,
+          mimeType: file.mimeType,
+          filename: file.filename,
           sortOrder: baseOrder + i,
         },
       });
-      created.push(tourFile);
-      void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR_FILE", resourceId: tourFile.id, resourceName: file.name, detail: { tourId, tourName: tour.name, filename: file.name, mimeType: file.type } });
+      created.push({ ...tourFile, url: storage.publicUrl(tourFile.key) });
+      void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR_FILE", resourceId: tourFile.id, resourceName: file.filename, detail: { tourId, tourName: tour.name, filename: file.filename, mimeType: file.mimeType } });
     }
 
     return NextResponse.json({ data: created }, { status: 201 });

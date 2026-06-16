@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 
 const ParamSchema = z.object({
   slug: z.string().min(1),
@@ -34,14 +35,14 @@ export async function GET(
                 id: true,
                 slug: true,
                 name: true,
-                thumbnail: true,
+                thumbnailKey: true,
                 price: true,
                 description: true,
                 tags: { select: { name: true } },
                 files: {
                   where: { mimeType: { startsWith: "image/" } },
                   orderBy: { sortOrder: "asc" },
-                  select: { url: true },
+                  select: { key: true },
                 },
               },
             },
@@ -63,11 +64,11 @@ export async function GET(
           id: t.id,
           slug: t.slug,
           name: t.name,
-          thumbnail: t.thumbnail,
+          thumbnail: t.thumbnailKey ? storage.publicUrl(t.thumbnailKey) : null,
           price: t.price,
           description: t.description,
           tags: t.tags.map((tag) => tag.name),
-          images: t.files.map((f) => f.url),
+          images: t.files.map((f) => storage.publicUrl(f.key)),
         })),
       })),
     };

@@ -1,5 +1,9 @@
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import type { RegionListItem, RegionDetail, RegionTours } from "@/lib/frontend-data";
+
+/** Map a stored object key to its public URL (null-safe). */
+const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
 
 // ── Function 1 ──────────────────────────────────────────────
 // Used by: app/(frontend)/page.tsx (homepage)
@@ -9,7 +13,7 @@ export async function getRegionList(): Promise<RegionListItem[]> {
     select: {
       slug: true,
       name: true,
-      thumbnail: true,
+      thumbnailKey: true,
       subRegions: {
         select: {
           _count: { select: { tours: { where: { published: true } } } },
@@ -20,7 +24,7 @@ export async function getRegionList(): Promise<RegionListItem[]> {
   return rows.map((r) => ({
     slug: r.slug,
     name: r.name,
-    thumbnail: r.thumbnail,
+    thumbnail: urlOf(r.thumbnailKey),
     tourCount: r.subRegions.reduce((sum, sr) => sum + sr._count.tours, 0),
   }));
 }
@@ -34,16 +38,16 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
     select: {
       slug: true,
       name: true,
-      thumbnail: true,
+      thumbnailKey: true,
       seoTitle: true,
       seoDescription: true,
-      ogImage: true,
+      ogImageKey: true,
       subRegions: {
         orderBy: { sortOrder: "asc" },
         select: {
           slug: true,
           name: true,
-          thumbnail: true,
+          thumbnailKey: true,
           _count: { select: { tours: { where: { published: true } } } },
         },
       },
@@ -53,14 +57,14 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
   return {
     slug: region.slug,
     name: region.name,
-    thumbnail: region.thumbnail,
+    thumbnail: urlOf(region.thumbnailKey),
     seoTitle: region.seoTitle,
     seoDescription: region.seoDescription,
-    ogImage: region.ogImage,
+    ogImage: urlOf(region.ogImageKey),
     subRegions: region.subRegions.map((sr) => ({
       slug: sr.slug,
       name: sr.name,
-      thumbnail: sr.thumbnail,
+      thumbnail: urlOf(sr.thumbnailKey),
       tourCount: sr._count.tours,
     })),
   };
@@ -82,7 +86,7 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
           name: true,
           seoTitle: true,
           seoDescription: true,
-          ogImage: true,
+          ogImageKey: true,
           tours: {
             where: { published: true },
             orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -90,14 +94,14 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
               id: true,
               slug: true,
               name: true,
-              thumbnail: true,
+              thumbnailKey: true,
               price: true,
               description: true,
               tags: { select: { name: true } },
               files: {
                 where: { mimeType: { startsWith: "image/" } },
                 orderBy: { sortOrder: "asc" },
-                select: { url: true },
+                select: { key: true },
               },
             },
           },
@@ -113,16 +117,16 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
       name: sr.name,
       seoTitle: sr.seoTitle,
       seoDescription: sr.seoDescription,
-      ogImage: sr.ogImage,
+      ogImage: urlOf(sr.ogImageKey),
       tours: sr.tours.map((t) => ({
         id: t.id,
         slug: t.slug,
         name: t.name,
-        thumbnail: t.thumbnail,
+        thumbnail: urlOf(t.thumbnailKey),
         price: t.price,
         description: t.description,
         tags: t.tags.map((tag) => tag.name),
-        images: t.files.map((f) => f.url),
+        images: t.files.map((f) => storage.publicUrl(f.key)),
       })),
     })),
   };

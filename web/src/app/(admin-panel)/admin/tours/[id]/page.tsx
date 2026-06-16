@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import TourForm from "@/components/admin/tours/TourForm";
+
+const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
 
 export default async function EditTourPage({
   params,
@@ -19,9 +22,9 @@ export default async function EditTourPage({
     db.tour.findUnique({
       where: { id },
       select: {
-        id: true, name: true, price: true, description: true, thumbnail: true,
+        id: true, name: true, price: true, description: true, thumbnailKey: true,
         published: true, subRegionId: true, slug: true,
-        seoTitle: true, seoDescription: true, ogImage: true,
+        seoTitle: true, seoDescription: true, ogImageKey: true,
         tags: { select: { id: true } },
         files: { orderBy: { sortOrder: "asc" } },
       },
@@ -35,6 +38,20 @@ export default async function EditTourPage({
 
   if (!tour) notFound();
 
+  const { thumbnailKey, ogImageKey, files, ...rest } = tour;
+  const tourForForm = {
+    ...rest,
+    thumbnail: urlOf(thumbnailKey),
+    ogImage: urlOf(ogImageKey),
+  };
+  const initialFiles = files.map((f) => ({
+    id: f.id,
+    url: storage.publicUrl(f.key),
+    mimeType: f.mimeType,
+    filename: f.filename,
+    sortOrder: f.sortOrder,
+  }));
+
   return (
     <div>
       <div className="mb-8">
@@ -43,11 +60,11 @@ export default async function EditTourPage({
       </div>
 
       <TourForm
-        tour={tour}
+        tour={tourForForm}
         regions={regions}
         tags={tags}
         tourId={tour.id}
-        initialFiles={tour.files}
+        initialFiles={initialFiles}
         returnUrl={returnUrl}
       />
     </div>

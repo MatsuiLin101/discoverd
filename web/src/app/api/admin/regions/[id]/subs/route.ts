@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { uploadFile } from "@/lib/cloudinary";
 import { writeLog } from "@/lib/log";
 
 const schema = z.object({
@@ -48,29 +47,12 @@ export async function POST(
   });
   const sortOrder = (max._max.sortOrder ?? -1) + 1;
 
-  let thumbnail: string | undefined;
-  let thumbnailPublicId: string | undefined;
-  const file = fd.get("thumbnail") as File | null;
-  if (file && file.size > 0) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await uploadFile(buffer, { folder: "regions", mimeType: file.type });
-    thumbnail = result.url;
-    thumbnailPublicId = result.publicId;
-  }
-
-  let ogImage: string | undefined;
-  let ogImagePublicId: string | undefined;
-  const ogFile = fd.get("ogImage") as File | null;
-  if (ogFile && ogFile.size > 0) {
-    const buffer = Buffer.from(await ogFile.arrayBuffer());
-    const result = await uploadFile(buffer, { folder: "seo-og/subregions", mimeType: ogFile.type });
-    ogImage = result.url;
-    ogImagePublicId = result.publicId;
-  }
+  const thumbnailKey = (fd.get("thumbnailKey") as string) || null;
+  const ogImageKey = (fd.get("ogImageKey") as string) || null;
 
   const sub = await db.subRegion.create({
-    data: { regionId, name, slug, sortOrder, thumbnail, thumbnailPublicId, seoTitle, seoDescription, ogImage, ogImagePublicId },
+    data: { regionId, name, slug, sortOrder, thumbnailKey, seoTitle, seoDescription, ogImageKey },
   });
-  void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, parentRegion: region.name, thumbnail: thumbnail ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImage: ogImage ?? null } });
+  void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, parentRegion: region.name, thumbnailKey: thumbnailKey ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey: ogImageKey ?? null } });
   return NextResponse.json({ data: sub }, { status: 201 });
 }

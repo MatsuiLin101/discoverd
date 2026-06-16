@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { deleteFile } from "@/lib/cloudinary";
+import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 
 export async function DELETE(
@@ -16,8 +16,7 @@ export async function DELETE(
     const file = await db.tourFile.findFirst({ where: { id: fileId, tourId } });
     if (!file) return NextResponse.json({ error: "找不到此檔案" }, { status: 404 });
 
-    const resourceType = file.mimeType === "application/pdf" ? "raw" : "image";
-    await deleteFile(file.publicId, resourceType).catch(() => {});
+    await storage.delete(file.key).catch(() => {});
     await db.tourFile.delete({ where: { id: fileId } });
 
     void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR_FILE", resourceId: fileId, resourceName: file.filename ?? fileId, detail: { tourId, filename: file.filename } });
