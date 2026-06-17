@@ -1,9 +1,16 @@
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
-import type { RegionListItem, RegionDetail, RegionTours } from "@/lib/frontend-data";
+import type { RegionListItem, RegionDetail, RegionTours, TourMedia } from "@/lib/frontend-data";
 
 /** Map a stored object key to its public URL (null-safe). */
 const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
+
+/** Map a TourFile row to a frontend TourMedia item. */
+export const toTourMedia = (f: { key: string; mimeType: string; filename: string | null }): TourMedia => ({
+  kind: f.mimeType.startsWith("image/") ? "image" : "pdf",
+  url: storage.publicUrl(f.key),
+  filename: f.filename,
+});
 
 // ── Function 1 ──────────────────────────────────────────────
 // Used by: app/(frontend)/page.tsx (homepage)
@@ -99,9 +106,8 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
               description: true,
               tags: { select: { name: true } },
               files: {
-                where: { mimeType: { startsWith: "image/" } },
                 orderBy: { sortOrder: "asc" },
-                select: { key: true },
+                select: { key: true, mimeType: true, filename: true },
               },
             },
           },
@@ -126,7 +132,7 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
         price: t.price,
         description: t.description,
         tags: t.tags.map((tag) => tag.name),
-        images: t.files.map((f) => storage.publicUrl(f.key)),
+        media: t.files.map(toTourMedia),
       })),
     })),
   };

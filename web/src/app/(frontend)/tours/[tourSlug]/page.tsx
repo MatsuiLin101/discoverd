@@ -7,6 +7,8 @@ import TourDetailActions from "@/components/frontend/TourDetailActions";
 import TourShareButton from "@/components/frontend/TourShareButton";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { toTourMedia } from "@/lib/frontend-queries";
+import TourMediaGallery from "@/components/frontend/TourMediaGallery";
 
 interface Props {
   params: Promise<{ tourSlug: string }>;
@@ -61,9 +63,8 @@ export default async function TourPage({ params }: Props) {
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       },
       files: {
-        where: { mimeType: { startsWith: "image/" } },
         orderBy: { sortOrder: "asc" },
-        select: { key: true },
+        select: { key: true, mimeType: true, filename: true },
       },
       subRegion: {
         select: {
@@ -77,12 +78,8 @@ export default async function TourPage({ params }: Props) {
 
   if (!tour) notFound();
 
-  const images =
-    tour.files.length > 0
-      ? tour.files.map((f) => storage.publicUrl(f.key))
-      : tour.thumbnailKey
-        ? [storage.publicUrl(tour.thumbnailKey)]
-        : [];
+  const media = tour.files.map(toTourMedia);
+  const thumbnail = urlOf(tour.thumbnailKey);
 
   const regionSlug = tour.subRegion.region.slug;
   const subSlug = tour.subRegion.slug;
@@ -107,14 +104,7 @@ export default async function TourPage({ params }: Props) {
 
       <section className="fh-tour-detail">
         <div className="fh-modal">
-          <div className="fh-modal-gallery">
-            <div className="fh-gallery-scroll">
-              {images.map((src, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={src} alt={tour.name} />
-              ))}
-            </div>
-          </div>
+          <TourMediaGallery media={media} thumbnail={thumbnail} alt={tour.name} />
 
           <aside className="fh-modal-side">
             <div className="m-top">

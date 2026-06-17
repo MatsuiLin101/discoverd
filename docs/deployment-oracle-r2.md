@@ -145,13 +145,34 @@ DIRECT_URL=postgresql://USER:PASSWORD@localhost:5432/discovered
 
 1. 開立 A1 instance（Ubuntu 22.04 aarch64），設定 SSH 金鑰。
 2. 開放埠：Oracle VCN Security List 與 instance `ufw` 同時放行 80 / 443；SSH 限來源 IP。
-3. 安裝 Node 20、PostgreSQL 16、Nginx、PM2（或 Docker + Compose）。
+3. 安裝 Node ≥20.16.0（react-pdf/pdfjs-dist 需求；亦可用 22.x）、PostgreSQL 16、Nginx、PM2（或 Docker + Compose）。
 4. 建立 DB 與使用者，設定 `DATABASE_URL`。
 5. `git clone` → `cd web` → `npm ci` → 設定 `.env` → `npx prisma migrate deploy` → `npm run db:seed`。
 6. `npm run build`（standalone）→ PM2 啟動 `next start`。
 7. 設定 Nginx 反向代理（`proxy_pass http://127.0.0.1:3000`）+ Cloudflare Origin Cert。
 8. Cloudflare：`yourdomain.com` 指向 VPS（橘雲代理）；`files.yourdomain.com` 綁定 R2 bucket 的自訂網域。
 9. 建立 R2 bucket、API token，填入 R2 環境變數，驗證上傳 / 讀取 / 刪除。
+10. **設定 R2 bucket CORS**（見下節）：前台用 PDF.js 在瀏覽器抓取 PDF 逐頁渲染，檔案網域與站台網域不同源，bucket 必須放行站台來源的 `GET`。
+
+### 6.1 R2 CORS（前台 PDF 渲染必要）
+
+前台行程內容以 PDF.js（`react-pdf`）在瀏覽器端跨源抓取 PDF 並逐頁渲染成 canvas。因檔案在 `files.yourdomain.com`、站台在 `yourdomain.com`，屬跨來源請求，R2 bucket 需設定 CORS 放行站台來源的 `GET`，否則 PDF 會載入失敗（圖片以 `<img>` 顯示則不受影響）。
+
+於 Cloudflare R2 bucket → Settings → CORS Policy 加入（正式網域請替換，本機開發可另加 `http://localhost:3000`）：
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://yourdomain.com"],
+    "AllowedMethods": ["GET"],
+    "AllowedHeaders": ["Range"],
+    "ExposeHeaders": ["Content-Length", "Content-Range", "Accept-Ranges"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+> 切換至本機磁碟（`STORAGE_DRIVER=local`）時，檔案與站台同源，無此 CORS 需求。
 
 ---
 

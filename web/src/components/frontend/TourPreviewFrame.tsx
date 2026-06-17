@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
+import type { TourMedia } from "@/lib/frontend-data";
 import TourShareButton from "./TourShareButton";
+import TourMediaGallery from "./TourMediaGallery";
 
 interface Tour {
   slug: string;
@@ -11,7 +13,7 @@ interface Tour {
   description: string | null;
   thumbnail: string | null;
   tags: string[];
-  images: string[];
+  media: TourMedia[];
   regionName: string;
   subRegionName: string;
 }
@@ -24,14 +26,7 @@ export default function TourPreviewFrame({ tour }: { tour: Tour }) {
     <div className="fh-modal-overlay open">
       <div className="fh-modal">
         {/* Gallery */}
-        <div className="fh-modal-gallery">
-          <div className="fh-gallery-scroll">
-            {tour.images.map((src, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={src} alt={tour.name} />
-            ))}
-          </div>
-        </div>
+        <TourMediaGallery media={tour.media} thumbnail={tour.thumbnail} alt={tour.name} />
 
         {/* Info side */}
         <aside className={`fh-modal-side${collapsed ? " collapsed" : ""}`}>

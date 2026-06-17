@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { toTourMedia } from "@/lib/frontend-queries";
 
 const ParamSchema = z.object({
   slug: z.string().min(1),
@@ -40,9 +41,8 @@ export async function GET(
                 description: true,
                 tags: { select: { name: true } },
                 files: {
-                  where: { mimeType: { startsWith: "image/" } },
                   orderBy: { sortOrder: "asc" },
-                  select: { key: true },
+                  select: { key: true, mimeType: true, filename: true },
                 },
               },
             },
@@ -68,7 +68,7 @@ export async function GET(
           price: t.price,
           description: t.description,
           tags: t.tags.map((tag) => tag.name),
-          images: t.files.map((f) => storage.publicUrl(f.key)),
+          media: t.files.map(toTourMedia),
         })),
       })),
     };

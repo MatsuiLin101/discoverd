@@ -6,6 +6,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { SubRegionWithTours, TourItem } from "@/lib/frontend-data";
 import TourInquiryModal from "./TourInquiryModal";
 import TourShareButton from "./TourShareButton";
+import TourMediaGallery from "./TourMediaGallery";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 
 interface Props {
@@ -79,14 +80,6 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
     setFormOpen(false);
   }
 
-
-  const galleryImgs: string[] = modalTour
-    ? modalTour.images.length > 0
-      ? modalTour.images
-      : modalTour.thumbnail
-        ? [modalTour.thumbnail]
-        : []
-    : [];
 
   return (
     <>
@@ -183,14 +176,13 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
           </button>
 
           {/* Gallery */}
-          <div className="fh-modal-gallery">
-            <div className="fh-gallery-scroll">
-              {galleryImgs.map((src, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={src} alt={modalTour?.name ?? ""} />
-              ))}
-            </div>
-          </div>
+          {modalTour && (
+            <TourMediaGallery
+              media={modalTour.media}
+              thumbnail={modalTour.thumbnail}
+              alt={modalTour.name}
+            />
+          )}
 
           {/* Info side */}
           <aside className={`fh-modal-side${mobileCollapsed ? " collapsed" : ""}`}>

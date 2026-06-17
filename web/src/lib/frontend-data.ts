@@ -490,6 +490,13 @@ export interface SubRegionWithTours {
   tours: TourItem[];
 }
 
+/** A single tour content file (image or PDF), in admin sort order. */
+export interface TourMedia {
+  kind: "image" | "pdf";
+  url: string;
+  filename: string | null;
+}
+
 export interface TourItem {
   id: string;
   slug: string;
@@ -498,7 +505,7 @@ export interface TourItem {
   price: number;
   description: string | null;
   tags: string[];
-  /** URLs of TourFile records where mimeType starts with "image/". Empty = use thumbnail. */
-  images: string[];
+  /** All TourFile records (images + PDFs) in sort order. Empty = use thumbnail. */
+  media: TourMedia[];
 }
 

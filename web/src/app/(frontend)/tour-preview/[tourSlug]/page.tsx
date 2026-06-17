@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { toTourMedia } from "@/lib/frontend-queries";
 import TourPreviewFrame from "@/components/frontend/TourPreviewFrame";
 
 const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
@@ -29,9 +30,8 @@ export default async function TourPreviewPage({
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       },
       files: {
-        where: { mimeType: { startsWith: "image/" } },
         orderBy: { sortOrder: "asc" },
-        select: { key: true },
+        select: { key: true, mimeType: true, filename: true },
       },
       subRegion: {
         select: {
@@ -44,13 +44,6 @@ export default async function TourPreviewPage({
 
   if (!tour) notFound();
 
-  const images =
-    tour.files.length > 0
-      ? tour.files.map((f) => storage.publicUrl(f.key))
-      : tour.thumbnailKey
-        ? [storage.publicUrl(tour.thumbnailKey)]
-        : [];
-
   return (
     <TourPreviewFrame
       tour={{
@@ -60,7 +53,7 @@ export default async function TourPreviewPage({
         description: tour.description,
         thumbnail: urlOf(tour.thumbnailKey),
         tags: tour.tags.map((t) => t.name),
-        images,
+        media: tour.files.map(toTourMedia),
         regionName: tour.subRegion.region.name,
         subRegionName: tour.subRegion.name,
       }}
