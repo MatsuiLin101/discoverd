@@ -498,13 +498,13 @@
 .fh-modal-side .m-share {
   flex: none; margin-top: 6px;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; padding: 0; border-radius: 50%;
+  padding: 5px 14px; border-radius: 999px;
+  font-family: var(--fh-sans); font-size: 13px; font-weight: 500;
   background: transparent; color: var(--ink-3); border: 1.5px solid var(--line);
   cursor: pointer; transition: border-color .2s, color .2s;
 }
 .fh-modal-side .m-share:hover { border-color: var(--ink-2); color: var(--ink); }
 .fh-modal-side .m-share.copied { border-color: #06C755; color: #06C755; }
-.fh-modal-side .m-share svg { width: 14px; height: 14px; }
 
 .fh-toast {
   position: fixed; top: 32px; left: 50%; z-index: 500;
