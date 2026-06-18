@@ -197,6 +197,7 @@ DIRECT_URL=postgresql://USER:PASSWORD@localhost:5432/discovered
 - [ ] 設定 Nginx 對 `LOCAL_STORAGE_DIR` 提供靜態檔，含快取標頭與大檔 `Range` 支援。
 - [ ] `files.yourdomain.com` 由 R2 改指向 VPS Nginx（Cloudflare 仍可代理快取）。
 - [ ] 設定 `STORAGE_DRIVER=local`，確認 `STORAGE_PUBLIC_BASE_URL` 不變。
+- [ ] **（安全前置，必做）** 強化 `/api/admin/uploads/local` receiver：目前它只在 local driver 下啟用，且只檢查「key 屬於允許 folder + folder/role policy」，**但不驗證 key 是否由 presign 流程簽出**。在 R2production 下此 route 已被 404 停用而無風險；一旦改用 local driver 於 production，登入者即可對 allowed folders 提供任意 key 覆寫物件（繞過表單 / DB / 活動日誌）。遷移前應先要求 key 帶 presign 階段簽出的 HMAC／一次性 token，並驗證 folder／key／contentType／到期／角色一致。詳見 `docs/admin-rbac-change-2026-06-18-review-followup-2.md`。
 - [ ] 驗證上傳（改走 App route）、讀取、刪除；確認後台與前台皆正常。
 - [ ] 將本機 `uploads/` 納入備份計畫。
 - [ ] 觀察一段時間無誤後，再停用 R2 bucket。
@@ -208,5 +209,6 @@ DIRECT_URL=postgresql://USER:PASSWORD@localhost:5432/discovered
 - **單機單點故障**：檔案若放本機，與 App / DB 同機，主機故障即全部受影響；備份策略務必落實。
 - **ARM 相容性**：少數原生套件需確認 arm64 binary；CI / build 須在 arm64 進行。
 - **大檔上傳**：R2 走 presigned 直傳；本機走 App 轉傳會吃 App 記憶體與頻寬，需設定上傳大小上限與逾時。
+- **local driver 上傳信任邊界（技術債）**：`/api/admin/uploads/local` 在 R2 下停用、僅 local driver 啟用，且不驗證 key 來源。本機開發可接受，但若 production 改用 local driver，須先補 presign 簽出的上傳 token（見 section 8 checklist）。
 - **絕對禁止存完整網址進 DB**：否則切換網域 / driver 時需大量資料遷移，違背本設計初衷。
 - **Cloudflare 快取**：檔案網域開啟快取可同時加速 R2 與本機；更新 / 刪除檔案時注意快取失效（用內容雜湊 key 可天然避免快取衝突）。

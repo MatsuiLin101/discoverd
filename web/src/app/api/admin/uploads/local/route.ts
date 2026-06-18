@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { storage, isAllowedContentType } from "@/lib/storage";
+import {
+  storage,
+  isAllowedContentType,
+  matchUploadFolder,
+  ADMIN_ONLY_UPLOAD_FOLDERS,
+  isLocalStorageDriver,
+} from "@/lib/storage";
 
 /**
  * Receiver for the local storage driver: the upload client PUTs the raw file
@@ -8,12 +14,29 @@ import { storage, isAllowedContentType } from "@/lib/storage";
  */
 export async function PUT(req: NextRequest) {
   try {
+    // This receiver only exists for the local disk driver. Under R2 the client
+    // uploads directly via presigned URLs, so this route must not act as a
+    // server-side arbitrary-write proxy — treat it as nonexistent.
+    if (!isLocalStorageDriver) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "請先登入" }, { status: 403 });
 
     const key = req.nextUrl.searchParams.get("key");
     if (!key || key.includes("..") || key.startsWith("/")) {
       return NextResponse.json({ error: "無效的 key" }, { status: 400 });
+    }
+
+    // Re-derive the folder from the key and apply the same folder/role policy
+    // as the presign endpoint (the receiver must not trust the key blindly).
+    const folder = matchUploadFolder(key);
+    if (!folder) {
+      return NextResponse.json({ error: "無效的 key" }, { status: 400 });
+    }
+    if (ADMIN_ONLY_UPLOAD_FOLDERS.has(folder) && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "權限不足" }, { status: 403 });
     }
 
     const contentType = req.headers.get("content-type") ?? "";

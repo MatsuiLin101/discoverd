@@ -51,6 +51,28 @@ export function buildKey(folder: string, filename: string, contentType?: string)
   return `${folder}/${year}/${rand}.${ext}`;
 }
 
+/** Folders that uploads may target. */
+export const ALLOWED_UPLOAD_FOLDERS = new Set([
+  "tour-files",
+  "tours",
+  "regions",
+  "hero-banners",
+  "seo-og/tours",
+  "seo-og/regions",
+  "seo-og/subregions",
+]);
+
+/** Subset of upload folders restricted to ADMIN role (STAFF cannot write here). */
+export const ADMIN_ONLY_UPLOAD_FOLDERS = new Set(["hero-banners"]);
+
+/** Resolve which allowed folder an object key belongs to, or null if none. */
+export function matchUploadFolder(key: string): string | null {
+  for (const folder of ALLOWED_UPLOAD_FOLDERS) {
+    if (key.startsWith(`${folder}/`)) return folder;
+  }
+  return null;
+}
+
 function trimSlash(s: string): string {
   return s.replace(/\/+$/, "");
 }
@@ -149,3 +171,10 @@ function createDriver(driver?: string): StorageDriver {
 
 // Selected at runtime: "r2" | "local"
 export const storage: StorageDriver = createDriver(process.env.STORAGE_DRIVER);
+
+/**
+ * True only when the active driver writes to local disk. The R2 driver uploads
+ * directly to R2 via presigned URLs, so the server-side `/api/admin/uploads/local`
+ * receiver must be disabled (404) under R2 to avoid an arbitrary-write proxy.
+ */
+export const isLocalStorageDriver = storage instanceof LocalDriver;

@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { storage, buildKey, isAllowedContentType } from "@/lib/storage";
-
-const ALLOWED_FOLDERS = new Set([
-  "tour-files",
-  "tours",
-  "regions",
-  "hero-banners",
-  "seo-og/tours",
-  "seo-og/regions",
-  "seo-og/subregions",
-]);
+import {
+  storage,
+  buildKey,
+  isAllowedContentType,
+  ALLOWED_UPLOAD_FOLDERS,
+  ADMIN_ONLY_UPLOAD_FOLDERS,
+} from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,8 +19,11 @@ export async function POST(req: NextRequest) {
       contentType?: string;
     };
 
-    if (!folder || !ALLOWED_FOLDERS.has(folder)) {
+    if (!folder || !ALLOWED_UPLOAD_FOLDERS.has(folder)) {
       return NextResponse.json({ error: "不支援的上傳分類" }, { status: 400 });
+    }
+    if (ADMIN_ONLY_UPLOAD_FOLDERS.has(folder) && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "權限不足" }, { status: 403 });
     }
     if (!contentType || !isAllowedContentType(contentType)) {
       return NextResponse.json({ error: "不支援的檔案格式" }, { status: 400 });
