@@ -51,10 +51,12 @@ export async function getSession() {
     const payload = await verifyToken(token);
     const session = await db.session.findUnique({
       where: { token },
-      include: { user: { select: { username: true, displayName: true } } },
+      include: { user: { select: { username: true, displayName: true, role: true } } },
     });
     if (!session || session.expiresAt < new Date()) return null;
-    return { userId: payload.userId, role: payload.role, username: session.user.username, displayName: session.user.displayName };
+    // Authorize off the live DB role, not the JWT payload, so role changes
+    // (e.g. demotion) take effect immediately for existing sessions.
+    return { userId: payload.userId, role: session.user.role, username: session.user.username, displayName: session.user.displayName };
   } catch {
     return null;
   }
