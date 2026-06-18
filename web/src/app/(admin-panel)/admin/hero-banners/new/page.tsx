@@ -5,6 +5,7 @@ import HeroBannerForm from "@/components/admin/hero-banners/HeroBannerForm";
 export default async function NewHeroBannerPage() {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  if (session.role !== "ADMIN") redirect("/admin");
 
   return (
     <div>

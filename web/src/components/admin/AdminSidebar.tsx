@@ -7,6 +7,7 @@ import type { UserRole } from "@/types";
 interface NavItem {
   label: string;
   href: string;
+  adminOnly?: boolean;
 }
 
 interface NavGroup {
@@ -22,11 +23,11 @@ const navGroups: NavGroup[] = [
   {
     title: "前台管理",
     items: [
-      { label: "輪播圖管理", href: "/admin/hero-banners" },
+      { label: "輪播圖管理", href: "/admin/hero-banners", adminOnly: true },
       { label: "地區管理", href: "/admin/regions" },
       { label: "標籤管理", href: "/admin/tags" },
       { label: "旅遊方案", href: "/admin/tours" },
-      { label: "社群連結", href: "/admin/settings" },
+      { label: "社群連結", href: "/admin/settings", adminOnly: true },
     ],
   },
   {
@@ -99,6 +100,11 @@ export default function AdminSidebar({
       <nav className="flex-1 px-3 pb-4 space-y-5">
         {navGroups.map((group, i) => {
           if (group.adminOnly && role !== "ADMIN") return null;
+          const items =
+            role === "ADMIN"
+              ? group.items
+              : group.items.filter((item) => !item.adminOnly);
+          if (items.length === 0) return null;
           return (
             <div key={i}>
               {group.title && (
@@ -107,7 +113,7 @@ export default function AdminSidebar({
                 </p>
               )}
               <ul className="space-y-0.5">
-                {group.items.map((item) => (
+                {items.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}

@@ -11,6 +11,7 @@ export default async function EditHeroBannerPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  if (session.role !== "ADMIN") redirect("/admin");
 
   const { id } = await params;
   const banner = await db.heroBanner.findUnique({ where: { id } });

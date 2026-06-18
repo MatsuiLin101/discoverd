@@ -8,6 +8,7 @@ import SortableHeroBannerList from "@/components/admin/hero-banners/SortableHero
 export default async function HeroBannersPage() {
   const session = await getSession();
   if (!session) redirect("/admin/login");
+  if (session.role !== "ADMIN") redirect("/admin");
 
   const bannersRaw = await db.heroBanner.findMany({
     select: { id: true, title: true, imageKey: true, createdAt: true },
