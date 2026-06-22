@@ -1,6 +1,6 @@
 # 旅遊業者網站開發提案
 
-**提案日期：** 2026-06-16
+**提案日期：** 2026-06-09
 **提案對象：** 找到了旅行社（小組）
 **提案人：** MatsuiLin101
 
@@ -162,16 +162,16 @@
 
 目前版面配色以珊瑚玫瑰紅（`#E0506B`）與薰衣草紫（`#7166D6`）為主，搭配輕盈漸層背景貫穿全站，讓旅遊圖片、目的地分類與行程卡片成為主要視覺重點。
 
-互動版預覽請以瀏覽器開啟 `design/github/demo.html`。
+互動版預覽請以瀏覽器開啟 `docs/design/concepts/github/demo.html`。
 
 ### 原設計風格選項
 
 | 版本 | 風格名稱 | 首頁預覽 | 行程詳情預覽 |
 |------|----------|----------|--------------|
-| A | 編輯雜誌風 | `designs/Discovered_index_files/v2-a-magazine.html` | `designs/Discovered_tour_files/tour-a-magazine.html` |
-| B | 側邊直書 | `designs/Discovered_index_files/v2-b-vertical.html` | `designs/Discovered_tour_files/tour-b-vertical.html` |
-| C | 數字主張（本次選定的設計基礎） | `designs/Discovered_index_files/v2-c-numbers.html` | `designs/Discovered_tour_files/tour-c-numbers.html` |
-| D | Lookbook | `designs/Discovered_index_files/v2-d-lookbook.html` | `designs/Discovered_tour_files/tour-d-lookbook.html` |
+| A | 編輯雜誌風 | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-a-magazine.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-a-magazine.html` |
+| B | 側邊直書 | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-b-vertical.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-b-vertical.html` |
+| C | 數字主張（本次選定的設計基礎） | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-c-numbers.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-c-numbers.html` |
+| D | Lookbook | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-d-lookbook.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-d-lookbook.html` |
 
 ### 風格說明
 
@@ -206,12 +206,12 @@
 |------|----------|
 | 前台框架 | Next.js 16（React 19）— 支援 SSR，對 SEO 友好 |
 | 後台 API | Next.js API Routes — 與前台共用同一專案 |
-| 資料庫 | PostgreSQL（部署於 Oracle Cloud Always Free A1 VPS，同主機自管） |
+| 資料庫 | PostgreSQL（與主機同環境部署，或依需求改用託管資料庫） |
 | ORM / 資料模型 | Prisma |
 | 行程內容（方案 A） | 多檔上傳（PDF 或圖片），可同時選取多個檔案，統一儲存至 Cloudflare R2 |
 | 行程內容（方案 B） | Tiptap Rich Text 編輯器，內容存於資料庫 |
 | 行程內容（方案 C） | 同時支援多檔上傳與 Rich Text，後台可混用 |
-| 行程檔案 / 圖片儲存 | Cloudflare R2（S3-compatible Object Storage；初期採用） |
+| 行程檔案 / 圖片儲存 | Cloudflare R2（S3-compatible Object Storage） |
 | 大檔案上傳方式 | 前端取得授權後直接上傳至 Cloudflare R2，避免應用程式伺服器轉傳大型檔案 |
 | 清單排序 | dnd-kit（拖曳排序，適用後台清單） |
 | 後台單一登入 | JWT + Server-side Session（登入時記錄，登出或心跳中斷時清除） |
@@ -235,8 +235,6 @@
 
 - **行程檔案儲存**：客戶行程檔案單檔可能介於 10–20 MB，已不適合採 Cloudinary 免費方案；改採 Cloudflare R2，可支援較大的 PDF / 圖片檔案，且出站流量免費，較適合行程檔案瀏覽情境。
 - **大檔案上傳**：行程檔案不經由應用程式伺服器轉傳；後台由系統產生上傳授權，檔案直接上傳至 R2，完成後只將檔案 URL、檔名、排序等 metadata 存入資料庫。
-- **主機資源運用**：本版改用已申請到的 Oracle Cloud Always Free A1 VPS 額度承載 Next.js、Nginx 與 PostgreSQL，以降低固定主機月費；CPU、記憶體與磁碟配置依實際可用 A1 額度調整。
-- **本機儲存保留彈性**：初期檔案仍放在 Cloudflare R2，降低 VPS 磁碟壓力並保留出站流量優勢；若後續確認檔案量、流量與備份策略適合，才評估改用 A1 本機 Block Volume 儲存。
 - **Email 通知**：依客戶需求，採 Gmail SMTP（nodemailer）由指定 Gmail 帳號寄送諮詢通知給管理員本人；此用途適合低量表單通知，不作大量行銷信或大量交易信使用。
 - **社群連結設定**：Facebook、Instagram、LINE 連結集中於後台社群連結頁維護，前台 Header / Footer 及 LINE 諮詢按鈕會讀取同一份設定；設定異動會寫入操作日誌。
 - **Analytics 管理**：採 Google Tag Manager，後續可自行掛載 GA4、廣告追蹤碼或其他事件追蹤。
@@ -246,20 +244,18 @@
 
 ## 六、部署方案
 
-考量本案已申請到免費的 **Oracle Cloud Always Free A1 VPS** 額度，且部署與維護可由提案人處理，因此 v5 建議改採 **Oracle VPS A1 自管部署方案**。此方案以免費 A1 主機承載 Next.js、Nginx 與 PostgreSQL，行程檔案先獨立存放於 Cloudflare R2，兼顧最低固定月費、正式營運彈性與後續擴充空間。
-
-初期不建議直接把所有行程檔案放在 A1 本機磁碟，原因是 PDF / 圖片檔案容量成長較快，且前台瀏覽會產生大量檔案讀取；先使用 R2 可降低 VPS 磁碟、備份與網路流量壓力。後續若檔案量穩定、成本需要再壓低，或希望減少第三方儲存服務依賴，再評估遷移至 A1 本機 Block Volume。
+考量本案為商業網站，且行程檔案單檔可能達 10–20 MB；同時部署與維護可由提案人處理，因此建議採 **AWS Lightsail 經濟部署方案**。此方案以固定月費主機承載 Next.js 與 PostgreSQL，行程檔案則獨立存放於 Cloudflare R2，兼顧成本、檔案容量與正式營運需求。
 
 | 項目 | 建議服務 | 費用說明 |
 |------|----------|----------|
-| 網域 | 中華電信 `discoveredtravelgo.tw` | 已確定購買，一年 NT$800 |
+| 網域 | Cloudflare Registrar | 實報實銷（依實際購買網域而定） |
 | DNS / SSL / 基礎 CDN | Cloudflare | 免費方案即可 |
-| 主機 / 後端 | Oracle Cloud Always Free A1 VPS | 使用已申請到的免費 A1 額度，無固定主機月費 |
-| 資料庫 | PostgreSQL（同 Oracle A1 主機自管） | 無額外月費；資料庫容量受主機磁碟與備份策略限制 |
+| 主機 / 後端 | AWS Lightsail Linux Instance | 約 US$5–12 / 月，依 CPU / RAM 規格選擇 |
+| 資料庫 | PostgreSQL（同 Lightsail 主機自管） | 無額外月費；資料庫容量受主機磁碟空間限制 |
 | 行程檔案 / 圖片儲存 | Cloudflare R2 | 10 GB-month 免費；超出後約 US$0.015 / GB-month，出站流量免費 |
 | 諮詢表單 Email | Gmail SMTP（App Password） | 使用客戶指定 Gmail 帳號寄送給管理員本人，無額外服務月費 |
 | Analytics | Google Tag Manager + GA4 | 免費 |
-| **固定月費預估** | | **約 US$0 / 月起，不含網域、額外備份、R2 超量費用與可能的 Oracle 付費資源** |
+| **固定月費預估** | | **約 US$5–12 / 月起，不含網域、備份快照與 R2 超量費用** |
 
 > **備註：** 第三方服務費由貴方帳號自行支付，實際金額依服務商當期定價、用量與匯率為準。
 
@@ -267,7 +263,7 @@
 
 ```
 Cloudflare DNS / SSL
-└── Oracle Cloud Always Free A1 VPS
+└── AWS Lightsail
     ├── Nginx 反向代理
     ├── Next.js App（前台 + 後台 + API）
     └── PostgreSQL（行程資料、分類、標籤、網站設定、操作日誌）
@@ -283,27 +279,16 @@ Gmail SMTP
 
 | 項目 | 作法 |
 |------|------|
-| 程式部署 | Git pull / build / restart，或以 Docker Compose 部署於 Oracle A1 |
+| 程式部署 | Git pull / build / restart，或以 Docker Compose 部署 |
 | SSL | Cloudflare SSL + Nginx origin 設定 |
-| 資料庫備份 | 定期 `pg_dump`，備份檔建議同步至 Cloudflare R2 或其他異地位置 |
-| 主機備份 | 視需求啟用 Oracle Boot Volume / Block Volume 備份，或以部署文件 + 資料庫備份重建 |
-| 系統維護 | 定期更新套件、安全性修補、監控 CPU、記憶體、磁碟與 Oracle 額度狀態 |
+| 資料庫備份 | 定期 `pg_dump`，備份檔可存至 Lightsail 磁碟或 Cloudflare R2 |
+| 主機備份 | 視需求啟用 Lightsail Snapshot |
+| 系統維護 | 定期更新套件、安全性修補、監控磁碟與記憶體 |
 | 還原方式 | 使用資料庫備份 + 程式碼版本 + R2 檔案重建服務 |
 
-### A1 本機儲存評估
+### GCP 備選方案
 
-本版先使用 Cloudflare R2 作為行程檔案與圖片儲存空間，A1 本機儲存暫不列為初期交付方式。若未來要改用 A1 本機儲存，建議在以下條件明確後再評估：
-
-- 行程檔案總量與每月成長速度穩定
-- 前台檔案瀏覽流量可預估，且不會造成 VPS 網路或磁碟 I/O 壓力
-- 已建立本機檔案的異地備份策略
-- 可接受未來主機遷移時需要同步搬移檔案資料
-
-若上述條件尚未明確，R2 會是較穩定的初期選擇；資料庫只保存檔案 metadata，因此日後若要從 R2 遷移到 A1 本機儲存，也可透過批次搬移檔案並更新 URL / storage key 完成。
-
-### 備選部署方案
-
-若 Oracle A1 額度或可用區資源未來不穩定，也可改回 **AWS Lightsail + PostgreSQL + Cloudflare R2**，或採 **Google Cloud Run + Neon PostgreSQL + Cloudflare R2**。前者固定月費較可預期，後者維運負擔較低但費用較受使用量影響。
+若偏好使用 GCP，也可改採 **Google Cloud Run + Neon PostgreSQL + Cloudflare R2**。此方案維運負擔低於 VPS，但費用較受流量、Cloud Run 使用量與外部資料庫用量影響；若主要目標是最低固定月費，AWS Lightsail 較適合。
 
 ### 行程檔案容量估算
 
@@ -323,7 +308,7 @@ R2 出站流量免費，較適合行程 PDF / 圖片常被前台瀏覽的情境�
 
 | 服務 | 監控項目 |
 |------|----------|
-| Oracle A1 VPS | CPU、記憶體、磁碟空間、流量、免費額度與執行狀態 |
+| AWS Lightsail | CPU、記憶體、磁碟空間、流量 |
 | PostgreSQL | 資料庫容量、連線數、備份狀態 |
 | Cloudflare R2 | 儲存空間、請求數 |
 | Cloudflare | 流量異常、錯誤率 |
@@ -374,7 +359,7 @@ R2 出站流量免費，較適合行程 PDF / 圖片常被前台瀏覽的情境�
 
 | 項目 | 費用 |
 |------|------|
-| 年度網域費 | `discoveredtravelgo.tw`，中華電信購買，一年 NT$800 |
+| 年度網域費 | 預估 NT$280–500 / 年，實報實銷（依實際購買網域而定） |
 
 ### 本次基礎交付已納入
 
@@ -411,5 +396,5 @@ R2 出站流量免費，較適合行程 PDF / 圖片常被前台瀏覽的情境�
 
 - 本報價為優惠價，市場同規格報價通常為 NT$80,000 以上
 - 本次交付範圍以方案 A 為準；方案 B 與方案 C 為後續擴充參考
-- 年度網域費已確定為 `discoveredtravelgo.tw` 一年 NT$800（中華電信購買）；主機初期使用已申請到的 Oracle A1 免費額度，備份、R2 超量與其他第三方服務費由貴方依實際用量自行支付
+- 年度網域費實報實銷（預估 NT$280–500）；主機、備份快照與行程檔案儲存服務費由貴方依實際用量自行支付
 - 本報價範圍含第二節所列功能，**額外需求另行報價**

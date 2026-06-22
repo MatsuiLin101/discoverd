@@ -1,12 +1,12 @@
 # Proposal v5 Implementation Gaps
 
-This document records the differences found when comparing `proposal-v5.md`
+This document records the differences found when comparing `docs/proposals/proposal-v5.md`
 against the current implementation. It is intended as an implementation brief
 for Claude Code.
 
 ## Context
 
-- Source proposal: `proposal-v5.md`
+- Source proposal: `docs/proposals/proposal-v5.md`
 - Selected delivery scope: Plan A, multi-file upload
 - Current app: `web/` Next.js 16 + React 19 + Prisma
 - Important constraint: Keep the implementation aligned with the current code
@@ -242,7 +242,7 @@ Expected implementation:
 
 ## Already Mostly Aligned
 
-These areas appear broadly aligned with `proposal-v5.md`:
+These areas appear broadly aligned with `docs/proposals/proposal-v5.md`:
 
 - Next.js 16 / React 19 frontend and API routes.
 - Prisma + PostgreSQL schema.
@@ -263,4 +263,3 @@ These areas appear broadly aligned with `proposal-v5.md`:
 - Google Tag Manager integration via `NEXT_PUBLIC_GTM_ID`.
 - Sitemap and robots route.
 - Admin tour preview with desktop/mobile modes.
-

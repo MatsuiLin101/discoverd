@@ -26,7 +26,8 @@
 .codex/config.toml
 .playwright-mcp/
 memory/
-designs/
+# Large browser-saved reference-site snapshots; retained locally for offline comparison.
+_archive/browser-snapshots/
 
 # Next.js app
 web/.next/

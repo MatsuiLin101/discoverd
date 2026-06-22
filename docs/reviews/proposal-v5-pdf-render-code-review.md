@@ -1,6 +1,6 @@
 # Proposal v5 PDF Render Code Review
 
-Review target: implementation for `docs/proposal-v5-implementation-gaps.md`
+Review target: implementation for `docs/reviews/proposal-v5-implementation-gaps.md`
 item 1, "Frontend tour content does not render PDF files".
 
 Reviewer note: this file records review suggestions only. No implementation files
@@ -25,7 +25,7 @@ The core requirement appears to be mostly implemented:
 
 Files:
 
-- `docs/deployment-oracle-r2.md`
+- `docs/operations/deployment-oracle-r2.md`
 - `web/package.json`
 - `web/package-lock.json`
 

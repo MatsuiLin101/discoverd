@@ -107,10 +107,10 @@
 
 | 版本 | 風格名稱 | 首頁預覽 | 行程詳情預覽 |
 |------|----------|----------|--------------|
-| A | 編輯雜誌風 | `designs/Discovered_index_files/v2-a-magazine.html` | `designs/Discovered_tour_files/tour-a-magazine.html` |
-| B | 側邊直書 | `designs/Discovered_index_files/v2-b-vertical.html` | `designs/Discovered_tour_files/tour-b-vertical.html` |
-| C | 數字主張 | `designs/Discovered_index_files/v2-c-numbers.html` | `designs/Discovered_tour_files/tour-c-numbers.html` |
-| D | Lookbook | `designs/Discovered_index_files/v2-d-lookbook.html` | `designs/Discovered_tour_files/tour-d-lookbook.html` |
+| A | 編輯雜誌風 | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-a-magazine.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-a-magazine.html` |
+| B | 側邊直書 | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-b-vertical.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-b-vertical.html` |
+| C | 數字主張 | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-c-numbers.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-c-numbers.html` |
+| D | Lookbook | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-d-lookbook.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-d-lookbook.html` |
 
 ### 風格說明
 
@@ -259,4 +259,3 @@
 - 三種方案僅行程內容管理方式不同，其餘功能規格完全相同
 - 年度網域費實報實銷（預估 NT$280–500），主機、資料庫、圖片儲存均採免費方案，由貴方自行支付
 - 本報價範圍僅含提案內列出之功能，**額外需求另行報價**
-

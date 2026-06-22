@@ -102,10 +102,10 @@
 
 | 版本 | 風格名稱 | 首頁預覽 | 行程詳情預覽 |
 |------|----------|----------|--------------|
-| A | 編輯雜誌風 | `designs/Discovered_index_files/v2-a-magazine.html` | `designs/Discovered_tour_files/tour-a-magazine.html` |
-| B | 側邊直書 | `designs/Discovered_index_files/v2-b-vertical.html` | `designs/Discovered_tour_files/tour-b-vertical.html` |
-| C | 數字主張 | `designs/Discovered_index_files/v2-c-numbers.html` | `designs/Discovered_tour_files/tour-c-numbers.html` |
-| D | Lookbook | `designs/Discovered_index_files/v2-d-lookbook.html` | `designs/Discovered_tour_files/tour-d-lookbook.html` |
+| A | 編輯雜誌風 | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-a-magazine.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-a-magazine.html` |
+| B | 側邊直書 | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-b-vertical.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-b-vertical.html` |
+| C | 數字主張 | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-c-numbers.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-c-numbers.html` |
+| D | Lookbook | `_archive/browser-snapshots/discovered-site/Discovered_index_files/v2-d-lookbook.html` | `_archive/browser-snapshots/discovered-site/Discovered_tour_files/tour-d-lookbook.html` |
 
 ### 風格說明
 

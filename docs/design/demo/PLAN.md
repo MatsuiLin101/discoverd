@@ -20,7 +20,7 @@
 ## 檔案結構
 
 ```
-demo/
+docs/design/demo/
 ├── PLAN.md         # 本文件
 ├── admin.html      # 後台：新增 / 編輯行程，可切換兩種編輯器
 └── showcase.html   # 展示頁：行程列表 + 詳情 Modal
