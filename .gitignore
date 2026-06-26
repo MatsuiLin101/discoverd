@@ -28,6 +28,9 @@
 memory/
 # Large browser-saved reference-site snapshots; retained locally for offline comparison.
 _archive/browser-snapshots/
+_archive/client-screenshots/
+# Client contract drafts; kept local only.
+docs/contracts/
 
 # Next.js app
 web/.next/
