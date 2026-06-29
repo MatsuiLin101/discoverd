@@ -1,0 +1,14 @@
+.next
+node_modules
+npm-debug.log
+# Generated in-container by `prisma generate`; keeping the host copy out avoids
+# shipping the wrong-arch (macOS) query engine into the Linux image.
+src/generated
+Dockerfile
+docker-compose*.yml
+.env
+.env.*
+!.env.production.example
+.git
+.gitignore
+README.md

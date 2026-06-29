@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import AdminLayoutShell from "@/components/admin/AdminLayoutShell";
 import HeartbeatProvider from "@/components/admin/HeartbeatProvider";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPanelLayout({
   children,
 }: {

@@ -5,6 +5,8 @@
 **適用對象：** 工程實作 / 部署維運
 **範圍：** 主機由 AWS Lightsail 改為 Oracle Cloud（Ampere A1）；檔案儲存先採 Cloudflare R2，並保留未來切換至本機磁碟的能力。
 
+> 2026-06 更新：目前建議的可執行部署方案已工程化為 **Docker Compose + Caddy + PostgreSQL + R2**。實際操作請優先參考 [`deployment-caddy-docker.md`](./deployment-caddy-docker.md)。本文保留作為架構背景與 R2 / 本機儲存遷移備忘。
+
 ---
 
 ## 1. 背景與目標

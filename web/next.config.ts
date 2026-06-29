@@ -15,6 +15,7 @@ const storagePattern: RemotePattern[] = (() => {
 })();
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   turbopack: {
     root: __dirname,
   },
