@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 const inputClass =
   "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
@@ -21,6 +22,7 @@ export default function UserEditForm({
   initialRole: "ADMIN" | "STAFF";
 }) {
   const router = useRouter();
+  const adminPath = useAdminPath();
   const [username, setUsername] = useState(initialUsername);
   const [displayName, setDisplayName] = useState(initialDisplayName ?? "");
   const [email, setEmail] = useState(initialEmail ?? "");
@@ -119,7 +121,7 @@ export default function UserEditForm({
         </button>
         <button
           type="button"
-          onClick={() => router.push("/admin/users")}
+          onClick={() => router.push(`${adminPath}/users`)}
           className="cursor-pointer rounded-lg border border-gray-200 px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
         >
           返回列表

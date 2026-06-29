@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ImageLightbox from "./ImageLightbox";
 import { uploadFile } from "@/lib/upload-client";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 const inputClass =
   "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
@@ -37,6 +38,7 @@ export default function RegionForm({
   initialOgImage,
 }: Props) {
   const router = useRouter();
+  const adminPath = useAdminPath();
   const isEdit = !!regionId;
 
   const [name, setName] = useState(initialName);
@@ -130,7 +132,7 @@ export default function RegionForm({
           "adminSaveMsg",
           isEdit ? `已更新主分類「${name}」` : `已新增主分類「${name}」`
         );
-        router.push("/admin/regions");
+        router.push(`${adminPath}/regions`);
         router.refresh();
       } else {
         setError(data.error ?? "儲存失敗");
@@ -298,7 +300,7 @@ export default function RegionForm({
         </button>
         <button
           type="button"
-          onClick={() => router.push("/admin/regions")}
+          onClick={() => router.push(`${adminPath}/regions`)}
           className="cursor-pointer rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
           返回列表

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import TagForm from "@/components/admin/tags/TagForm";
@@ -9,14 +10,14 @@ export default async function EditTagPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const { id } = await params;
   const tag = await db.tag.findUnique({
     where: { id },
     select: { id: true, name: true },
   });
-  if (!tag) redirect("/admin/tags");
+  if (!tag) redirect(adminUrl("/tags"));
 
   return (
     <div>

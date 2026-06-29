@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import DeleteRegionButton from "./DeleteRegionButton";
 import ImageLightbox from "./ImageLightbox";
 import FloatingToast from "@/components/admin/FloatingToast";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 interface Region {
   id: string;
@@ -46,6 +47,7 @@ function GripIcon() {
 }
 
 function SortableRow({ region, onImageClick, onDelete }: { region: Region; onImageClick: (src: string) => void; onDelete: (name: string) => void }) {
+  const adminPath = useAdminPath();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: region.id });
 
@@ -91,13 +93,13 @@ function SortableRow({ region, onImageClick, onDelete }: { region: Region; onIma
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
-            href={`/admin/regions/${region.id}/subs`}
+            href={`${adminPath}/regions/${region.id}/subs`}
             className="whitespace-nowrap rounded-md border border-[#D12351]/40 bg-rose-50 px-2.5 py-1 text-xs font-medium text-[#D12351] transition-colors hover:border-[#D12351] hover:bg-rose-100"
           >
             次分類
           </Link>
           <Link
-            href={`/admin/regions/${region.id}`}
+            href={`${adminPath}/regions/${region.id}`}
             className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             編輯
@@ -117,6 +119,7 @@ function SortableRow({ region, onImageClick, onDelete }: { region: Region; onIma
 
 export default function SortableRegionList({ regions: initial }: { regions: Region[] }) {
   const [regions, setRegions] = useState(initial);
+  const adminPath = useAdminPath();
   const [error, setError] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -206,13 +209,13 @@ export default function SortableRegionList({ regions: initial }: { regions: Regi
             </div>
             <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
               <Link
-                href={`/admin/regions/${region.id}/subs`}
+                href={`${adminPath}/regions/${region.id}/subs`}
                 className="rounded-md border border-[#D12351]/40 bg-rose-50 px-2.5 py-1 text-xs font-medium text-[#D12351] transition-colors hover:border-[#D12351] hover:bg-rose-100"
               >
                 次分類
               </Link>
               <Link
-                href={`/admin/regions/${region.id}`}
+                href={`${adminPath}/regions/${region.id}`}
                 className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 編輯

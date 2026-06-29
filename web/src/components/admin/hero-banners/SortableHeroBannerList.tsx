@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import DeleteHeroBannerButton from "./DeleteHeroBannerButton";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import FloatingToast from "@/components/admin/FloatingToast";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 interface Banner {
   id: string;
@@ -51,6 +52,7 @@ function SortableRow({
   onImageClick: (src: string) => void;
   onDelete: (title: string) => void;
 }) {
+  const adminPath = useAdminPath();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: banner.id });
 
@@ -93,7 +95,7 @@ function SortableRow({
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
-            href={`/admin/hero-banners/${banner.id}`}
+            href={`${adminPath}/hero-banners/${banner.id}`}
             className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             編輯
@@ -111,6 +113,7 @@ function SortableRow({
 
 export default function SortableHeroBannerList({ banners: initial }: { banners: Banner[] }) {
   const [banners, setBanners] = useState(initial);
+  const adminPath = useAdminPath();
   const [error, setError] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -192,7 +195,7 @@ export default function SortableHeroBannerList({ banners: initial }: { banners: 
             </div>
             <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
               <Link
-                href={`/admin/hero-banners/${banner.id}`}
+                href={`${adminPath}/hero-banners/${banner.id}`}
                 className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 編輯

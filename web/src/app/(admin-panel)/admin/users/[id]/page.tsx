@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import UserEditForm from "@/components/admin/users/UserEditForm";
@@ -10,7 +11,7 @@ export default async function EditUserPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect("/admin");
+  if (!session || session.role !== "ADMIN") redirect(adminUrl());
 
   const { id } = await params;
   const user = await db.user.findUnique({

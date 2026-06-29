@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -25,7 +26,7 @@ export default async function ToursPage({
   }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const { q, regionId, subRegionId, tagIds, published, page: pageParam, limit: limitParam, sortMode } =
     await searchParams;
@@ -116,7 +117,7 @@ export default async function ToursPage({
     const ps = new URLSearchParams(baseQs.toString());
     if (p > 1) ps.set("page", String(p));
     const qs = ps.toString();
-    return `/admin/tours${qs ? `?${qs}` : ""}`;
+    return `${adminUrl("/tours")}${qs ? `?${qs}` : ""}`;
   }
 
   const prevHref = !isSortMode && currentPage > 1 ? pageHref(currentPage - 1) : null;
@@ -128,7 +129,7 @@ export default async function ToursPage({
 
   const returnUrlQs = new URLSearchParams(baseQs.toString());
   if (!isSortMode && currentPage > 1) returnUrlQs.set("page", String(currentPage));
-  const returnUrl = `/admin/tours${returnUrlQs.toString() ? `?${returnUrlQs.toString()}` : ""}`;
+  const returnUrl = `${adminUrl("/tours")}${returnUrlQs.toString() ? `?${returnUrlQs.toString()}` : ""}`;
 
   return (
     <div>
@@ -139,7 +140,7 @@ export default async function ToursPage({
         </div>
         {!isSortMode && (
           <Link
-            href={`/admin/tours/new?returnUrl=${encodeURIComponent(returnUrl)}`}
+            href={`${adminUrl("/tours/new")}?returnUrl=${encodeURIComponent(returnUrl)}`}
             className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg hover:opacity-85 whitespace-nowrap"
             style={{ backgroundColor: "#D12351" }}
           >
@@ -154,7 +155,7 @@ export default async function ToursPage({
             排序模式：{sortModeSubRegion.regionName} › {sortModeSubRegion.name}
           </span>
           <Link
-            href="/admin/tours"
+            href={adminUrl("/tours")}
             className="px-3 py-1.5 text-xs font-medium text-amber-700 border border-amber-300 rounded-lg hover:bg-amber-100 transition-colors whitespace-nowrap"
           >
             離開排序模式

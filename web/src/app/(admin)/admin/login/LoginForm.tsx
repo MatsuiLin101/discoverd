@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
-export default function LoginForm() {
+export default function LoginForm({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +24,7 @@ export default function LoginForm() {
       const data = await res.json();
 
       if (data.ok) {
-        router.push("/admin");
+        router.push(redirectTo);
       } else {
         setError(data.error ?? "登入失敗，請再試一次");
       }

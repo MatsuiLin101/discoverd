@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import TagForm from "@/components/admin/tags/TagForm";
 
 export default async function NewTagPage() {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   return (
     <div>

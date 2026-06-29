@@ -23,6 +23,7 @@ import DeleteTourButton from "./DeleteTourButton";
 import TourPreviewModal from "./TourPreviewModal";
 import FloatingToast from "@/components/admin/FloatingToast";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 type TourRow = {
   id: string;
@@ -80,6 +81,7 @@ function TourMobileCard({
   onPreview: (tour: TourRow) => void;
   sortMode: boolean;
 }) {
+  const adminPath = useAdminPath();
   return (
     <div
       className={`rounded-xl border bg-white p-3 ${
@@ -152,7 +154,7 @@ function TourMobileCard({
                 </svg>
               </button>
               <Link
-                href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
+                href={`${adminPath}/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
                 className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 編輯
@@ -189,6 +191,7 @@ function SortableTourRow({
   onPreview,
   sortMode,
 }: SortableTourRowProps) {
+  const adminPath = useAdminPath();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tour.id,
   });
@@ -285,7 +288,7 @@ function SortableTourRow({
               </svg>
             </button>
             <Link
-              href={`/admin/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
+              href={`${adminPath}/tours/${tour.id}?returnUrl=${encodeURIComponent(returnUrl)}`}
               className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
             >
               編輯
@@ -388,6 +391,7 @@ export default function TourListClient({
   const [dragError, setDragError] = useState<string | null>(null);
 
   const router = useRouter();
+  const adminPath = useAdminPath();
   const sensors = useSensors(useSensor(PointerSensor));
 
   const canDrag = sortMode;
@@ -855,7 +859,7 @@ export default function TourListClient({
               </button>
               <button
                 onClick={() => {
-                  router.push(`/admin/tours?subRegionId=${sortModalSubRegionId}&limit=0&sortMode=1`);
+                  router.push(`${adminPath}/tours?subRegionId=${sortModalSubRegionId}&limit=0&sortMode=1`);
                   setSortModeModalOpen(false);
                 }}
                 disabled={!sortModalSubRegionId}

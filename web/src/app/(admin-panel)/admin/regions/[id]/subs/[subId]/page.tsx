@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
@@ -12,7 +13,7 @@ export default async function EditSubRegionPage({
   params: Promise<{ id: string; subId: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const { id, subId } = await params;
   const [region, sub] = await Promise.all([

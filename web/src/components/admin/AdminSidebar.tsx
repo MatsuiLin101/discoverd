@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 import type { UserRole } from "@/types";
 
 interface NavItem {
@@ -16,26 +17,28 @@ interface NavGroup {
   items: NavItem[];
 }
 
+// `href` is a sub-path under the admin prefix ("" = admin home); the full URL
+// is built at render time from the configurable admin prefix.
 const navGroups: NavGroup[] = [
   {
-    items: [{ label: "後台首頁", href: "/admin" }],
+    items: [{ label: "後台首頁", href: "" }],
   },
   {
     title: "前台管理",
     items: [
-      { label: "輪播圖管理", href: "/admin/hero-banners", adminOnly: true },
-      { label: "地區管理", href: "/admin/regions" },
-      { label: "標籤管理", href: "/admin/tags" },
-      { label: "旅遊方案", href: "/admin/tours" },
-      { label: "社群連結", href: "/admin/settings", adminOnly: true },
+      { label: "輪播圖管理", href: "/hero-banners", adminOnly: true },
+      { label: "地區管理", href: "/regions" },
+      { label: "標籤管理", href: "/tags" },
+      { label: "旅遊方案", href: "/tours" },
+      { label: "社群連結", href: "/settings", adminOnly: true },
     ],
   },
   {
     title: "系統管理",
     adminOnly: true,
     items: [
-      { label: "操作日誌", href: "/admin/logs" },
-      { label: "使用者管理", href: "/admin/users" },
+      { label: "操作日誌", href: "/logs" },
+      { label: "使用者管理", href: "/users" },
     ],
   },
 ];
@@ -51,15 +54,17 @@ export default function AdminSidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const adminBase = useAdminPath();
+  const fullHref = (sub: string) => (sub ? `${adminBase}${sub}` : adminBase);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/admin/login");
+    router.push(`${adminBase}/login`);
   }
 
   function isActive(href: string) {
-    if (href === "/admin") return pathname === "/admin";
-    return pathname.startsWith(href);
+    if (href === "") return pathname === adminBase;
+    return pathname.startsWith(fullHref(href));
   }
 
   return (
@@ -116,7 +121,7 @@ export default function AdminSidebar({
                 {items.map((item) => (
                   <li key={item.href}>
                     <Link
-                      href={item.href}
+                      href={fullHref(item.href)}
                       onClick={onClose}
                       className={`flex items-center rounded-lg px-3 py-2 text-sm transition-colors ${
                         isActive(item.href)

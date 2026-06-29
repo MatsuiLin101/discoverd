@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import DeleteUserButton from "@/components/admin/users/DeleteUserButton";
@@ -11,7 +12,7 @@ const roleLabel: Record<string, string> = {
 
 export default async function UsersPage() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect("/admin");
+  if (!session || session.role !== "ADMIN") redirect(adminUrl());
 
   const users = await db.user.findMany({
     select: { id: true, username: true, displayName: true, role: true, createdAt: true },
@@ -26,7 +27,7 @@ export default async function UsersPage() {
           <p className="mt-1 text-sm text-gray-500">管理後台使用者帳號</p>
         </div>
         <Link
-          href="/admin/users/new"
+          href={adminUrl("/users/new")}
           className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg whitespace-nowrap hover:opacity-85"
           style={{ backgroundColor: "#D12351" }}
         >
@@ -60,7 +61,7 @@ export default async function UsersPage() {
             </div>
             <p className="text-xs text-gray-400 whitespace-nowrap">{user.createdAt.toLocaleDateString("zh-TW")}</p>
             <div className="flex items-center gap-4">
-              <Link href={`/admin/users/${user.id}`} className="text-sm text-gray-500 hover:text-gray-800 whitespace-nowrap">
+              <Link href={adminUrl(`/users/${user.id}`)} className="text-sm text-gray-500 hover:text-gray-800 whitespace-nowrap">
                 編輯
               </Link>
               <DeleteUserButton userId={user.id} isSelf={user.id === session.userId} />
@@ -108,7 +109,7 @@ export default async function UsersPage() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-4">
-                    <Link href={`/admin/users/${user.id}`} className="text-gray-500 hover:text-gray-800 whitespace-nowrap">
+                    <Link href={adminUrl(`/users/${user.id}`)} className="text-gray-500 hover:text-gray-800 whitespace-nowrap">
                       編輯
                     </Link>
                     <DeleteUserButton userId={user.id} isSelf={user.id === session.userId} />

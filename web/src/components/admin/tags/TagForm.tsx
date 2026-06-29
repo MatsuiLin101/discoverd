@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 const inputClass =
   "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
@@ -14,6 +15,7 @@ interface Tag {
 
 export default function TagForm({ tag }: { tag?: Tag }) {
   const router = useRouter();
+  const adminPath = useAdminPath();
   const isEdit = !!tag;
   const [name, setName] = useState(tag?.name ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export default function TagForm({ tag }: { tag?: Tag }) {
           "adminSaveMsg",
           isEdit ? `已更新標籤「${name}」` : `已新增標籤「${name}」`
         );
-        router.push("/admin/tags");
+        router.push(`${adminPath}/tags`);
         router.refresh();
       } else {
         setError(data.error ?? (isEdit ? "更新失敗" : "新增失敗"));
@@ -76,7 +78,7 @@ export default function TagForm({ tag }: { tag?: Tag }) {
         </button>
         <button
           type="button"
-          onClick={() => router.push("/admin/tags")}
+          onClick={() => router.push(`${adminPath}/tags`)}
           className="cursor-pointer rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
         >
           {isEdit ? "返回列表" : "取消"}

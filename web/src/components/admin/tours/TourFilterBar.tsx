@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 type FilterRegion = {
   id: string;
@@ -32,6 +33,7 @@ const labelClass = "text-xs font-medium text-gray-500";
 
 export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
   const router = useRouter();
+  const adminPath = useAdminPath();
   const searchParams = useSearchParams();
 
   const currentQ = searchParams.get("q") ?? "";
@@ -59,7 +61,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
       if (keyword) params.set("q", keyword);
       else params.delete("q");
       params.delete("page");
-      router.replace(`/admin/tours?${params.toString()}`);
+      router.replace(`${adminPath}/tours?${params.toString()}`);
     }, 300);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,7 +84,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
     else params.delete(key);
     if (key === "regionId") params.delete("subRegionId");
     params.delete("page");
-    router.replace(`/admin/tours?${params.toString()}`);
+    router.replace(`${adminPath}/tours?${params.toString()}`);
   }
 
   function toggleTagId(tagId: string) {
@@ -93,7 +95,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
     if (next.length > 0) params.set("tagIds", next.join(","));
     else params.delete("tagIds");
     params.delete("page");
-    router.replace(`/admin/tours?${params.toString()}`);
+    router.replace(`${adminPath}/tours?${params.toString()}`);
   }
 
   const selectedRegion = regions.find((r) => r.id === currentRegionId);
@@ -221,7 +223,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
                           const params = new URLSearchParams(searchParams.toString());
                           params.delete("tagIds");
                           params.delete("page");
-                          router.replace(`/admin/tours?${params.toString()}`);
+                          router.replace(`${adminPath}/tours?${params.toString()}`);
                           setTagDropdownOpen(false);
                         }}
                         className="mt-2 w-full rounded-lg py-1 text-xs text-gray-400 hover:text-gray-600"
@@ -293,7 +295,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
 
         {hasFilters && (
           <Link
-            href="/admin/tours"
+            href={`${adminPath}/tours`}
             className={`${controlH} flex items-center rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-600 transition-colors hover:bg-gray-50`}
           >
             清除篩選

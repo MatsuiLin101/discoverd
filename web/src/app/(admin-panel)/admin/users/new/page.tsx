@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import UserCreateForm from "@/components/admin/users/UserCreateForm";
 
 export default async function NewUserPage() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect("/admin");
+  if (!session || session.role !== "ADMIN") redirect(adminUrl());
 
   return (
     <div>

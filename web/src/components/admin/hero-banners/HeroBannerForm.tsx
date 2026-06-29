@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import { uploadFile } from "@/lib/upload-client";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 const inputClass =
   "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
@@ -22,6 +23,7 @@ export default function HeroBannerForm({
   initialImage,
 }: Props) {
   const router = useRouter();
+  const adminPath = useAdminPath();
   const isEdit = !!bannerId;
 
   const [title, setTitle] = useState(initialTitle);
@@ -60,7 +62,7 @@ export default function HeroBannerForm({
           "adminSaveMsg",
           isEdit ? `已更新輪播圖「${title}」` : `已新增輪播圖「${title}」`
         );
-        router.push("/admin/hero-banners");
+        router.push(`${adminPath}/hero-banners`);
         router.refresh();
       } else {
         setError(data.error ?? "儲存失敗");
@@ -144,7 +146,7 @@ export default function HeroBannerForm({
           </button>
           <button
             type="button"
-            onClick={() => router.push("/admin/hero-banners")}
+            onClick={() => router.push(`${adminPath}/hero-banners`)}
             className="cursor-pointer rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             返回列表

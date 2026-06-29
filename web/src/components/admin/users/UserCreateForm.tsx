@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 const inputClass =
   "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
@@ -9,6 +10,7 @@ const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
 export default function UserCreateForm() {
   const router = useRouter();
+  const adminPath = useAdminPath();
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,7 +38,7 @@ export default function UserCreateForm() {
       });
       const data = await res.json();
       if (data.data) {
-        router.push("/admin/users");
+        router.push(`${adminPath}/users`);
       } else {
         setError(data.error ?? "新增失敗");
       }
@@ -117,7 +119,7 @@ export default function UserCreateForm() {
         </button>
         <button
           type="button"
-          onClick={() => router.push("/admin/users")}
+          onClick={() => router.push(`${adminPath}/users`)}
           className="cursor-pointer rounded-lg border border-gray-200 px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
         >
           取消

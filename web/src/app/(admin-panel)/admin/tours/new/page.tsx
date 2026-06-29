@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import TourForm from "@/components/admin/tours/TourForm";
@@ -9,7 +10,7 @@ export default async function NewTourPage({
   searchParams: Promise<{ returnUrl?: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const [{ returnUrl }, regions, tags] = await Promise.all([
     searchParams,

@@ -19,6 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import DeleteTagButton from "./DeleteTagButton";
 import FloatingToast from "@/components/admin/FloatingToast";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 interface Tag {
   id: string;
@@ -46,6 +47,7 @@ function SortableRow({
   tag: Tag;
   onDelete: (name: string) => void;
 }) {
+  const adminPath = useAdminPath();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: tag.id });
 
@@ -75,7 +77,7 @@ function SortableRow({
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
-            href={`/admin/tags/${tag.id}`}
+            href={`${adminPath}/tags/${tag.id}`}
             className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             編輯
@@ -94,6 +96,7 @@ function SortableRow({
 
 export default function SortableTagList({ tags: initial }: { tags: Tag[] }) {
   const [tags, setTags] = useState(initial);
+  const adminPath = useAdminPath();
   const [error, setError] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -163,7 +166,7 @@ export default function SortableTagList({ tags: initial }: { tags: Tag[] }) {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Link
-                href={`/admin/tags/${tag.id}`}
+                href={`${adminPath}/tags/${tag.id}`}
                 className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 編輯

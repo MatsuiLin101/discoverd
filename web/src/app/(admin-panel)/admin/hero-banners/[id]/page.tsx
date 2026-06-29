@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
@@ -10,8 +11,8 @@ export default async function EditHeroBannerPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
-  if (session.role !== "ADMIN") redirect("/admin");
+  if (!session) redirect(adminUrl("/login"));
+  if (session.role !== "ADMIN") redirect(adminUrl());
 
   const { id } = await params;
   const banner = await db.heroBanner.findUnique({ where: { id } });

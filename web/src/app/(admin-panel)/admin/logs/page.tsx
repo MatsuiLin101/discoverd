@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import LogList from "@/components/admin/logs/LogList";
 
 export default async function LogsPage() {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") redirect("/admin");
+  if (!session || session.role !== "ADMIN") redirect(adminUrl());
 
   const users = await db.user.findMany({
     select: { id: true, username: true },

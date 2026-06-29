@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
@@ -11,7 +12,7 @@ export default async function SubRegionsPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const { id } = await params;
   const region = await db.region.findUnique({
@@ -41,7 +42,7 @@ export default async function SubRegionsPage({
   return (
     <div>
       <div className="mb-1">
-        <Link href="/admin/regions" className="text-sm text-gray-400 hover:text-gray-600">
+        <Link href={adminUrl("/regions")} className="text-sm text-gray-400 hover:text-gray-600">
           ← 返回地區列表
         </Link>
       </div>
@@ -53,7 +54,7 @@ export default async function SubRegionsPage({
           <p className="mt-1 text-sm text-gray-500">管理此主分類下的次分類</p>
         </div>
         <Link
-          href={`/admin/regions/${id}/subs/new`}
+          href={adminUrl(`/regions/${id}/subs/new`)}
           className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg hover:opacity-85 whitespace-nowrap"
           style={{ backgroundColor: "#D12351" }}
         >

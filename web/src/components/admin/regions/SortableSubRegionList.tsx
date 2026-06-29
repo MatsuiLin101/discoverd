@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import DeleteSubRegionButton from "./DeleteSubRegionButton";
 import ImageLightbox from "./ImageLightbox";
 import FloatingToast from "@/components/admin/FloatingToast";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 interface SubRegion {
   id: string;
@@ -44,6 +45,7 @@ function GripIcon() {
 }
 
 function SortableRow({ sub, regionId, onImageClick, onDelete }: { sub: SubRegion; regionId: string; onImageClick: (src: string) => void; onDelete: (name: string) => void }) {
+  const adminPath = useAdminPath();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: sub.id });
 
@@ -88,7 +90,7 @@ function SortableRow({ sub, regionId, onImageClick, onDelete }: { sub: SubRegion
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <Link
-            href={`/admin/regions/${regionId}/subs/${sub.id}`}
+            href={`${adminPath}/regions/${regionId}/subs/${sub.id}`}
             className="whitespace-nowrap rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
             編輯
@@ -114,6 +116,7 @@ export default function SortableSubRegionList({
   subs: SubRegion[];
 }) {
   const [subs, setSubs] = useState(initial);
+  const adminPath = useAdminPath();
   const [error, setError] = useState<string | null>(null);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -197,7 +200,7 @@ export default function SortableSubRegionList({
             </div>
             <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
               <Link
-                href={`/admin/regions/${regionId}/subs/${sub.id}`}
+                href={`${adminPath}/regions/${regionId}/subs/${sub.id}`}
                 className="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
               >
                 編輯

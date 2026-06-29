@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 const quickLinks = [
-  { label: "地區管理", href: "/admin/regions", desc: "管理地區與子地區" },
-  { label: "標籤管理", href: "/admin/tags", desc: "管理旅遊方案標籤" },
-  { label: "旅遊方案", href: "/admin/tours", desc: "管理旅遊方案與行程" },
+  { label: "地區管理", sub: "/regions", desc: "管理地區與子地區" },
+  { label: "標籤管理", sub: "/tags", desc: "管理旅遊方案標籤" },
+  { label: "旅遊方案", sub: "/tours", desc: "管理旅遊方案與行程" },
 ];
 
 export default async function AdminDashboardPage() {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const user = await db.user.findUnique({
     where: { id: session.userId },
@@ -30,8 +31,8 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {quickLinks.map((link) => (
           <Link
-            key={link.href}
-            href={link.href}
+            key={link.sub}
+            href={adminUrl(link.sub)}
             className="p-4 transition-shadow bg-white border border-gray-200 rounded-xl hover:shadow-md sm:p-5"
           >
             <p className="font-medium text-gray-800">{link.label}</p>

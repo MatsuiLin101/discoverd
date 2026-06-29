@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import RegionForm from "@/components/admin/regions/RegionForm";
 
 export default async function NewRegionPage() {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   return (
     <div>

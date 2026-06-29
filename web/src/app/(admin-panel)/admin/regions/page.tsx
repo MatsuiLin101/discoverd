@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
@@ -7,7 +8,7 @@ import SortableRegionList from "@/components/admin/regions/SortableRegionList";
 
 export default async function RegionsPage() {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const regionsRaw = await db.region.findMany({
     select: {
@@ -35,7 +36,7 @@ export default async function RegionsPage() {
           <p className="mt-1 text-sm text-gray-500">管理前台地區分類</p>
         </div>
         <Link
-          href="/admin/regions/new"
+          href={adminUrl("/regions/new")}
           className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg hover:opacity-85 whitespace-nowrap"
           style={{ backgroundColor: "#D12351" }}
         >

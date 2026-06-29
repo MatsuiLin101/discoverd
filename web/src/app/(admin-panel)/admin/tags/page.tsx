@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import SortableTagList from "@/components/admin/tags/SortableTagList";
 
 export default async function TagsPage() {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const tagsRaw = await db.tag.findMany({
     include: { _count: { select: { tours: true } } },
@@ -25,7 +26,7 @@ export default async function TagsPage() {
           <p className="mt-1 text-sm text-gray-500">管理旅遊方案標籤</p>
         </div>
         <Link
-          href="/admin/tags/new"
+          href={adminUrl("/tags/new")}
           className="px-4 py-2 text-sm font-medium text-white transition-opacity rounded-lg hover:opacity-85 whitespace-nowrap"
           style={{ backgroundColor: "#D12351" }}
         >

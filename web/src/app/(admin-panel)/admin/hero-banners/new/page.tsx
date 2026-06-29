@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import HeroBannerForm from "@/components/admin/hero-banners/HeroBannerForm";
 
 export default async function NewHeroBannerPage() {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
-  if (session.role !== "ADMIN") redirect("/admin");
+  if (!session) redirect(adminUrl("/login"));
+  if (session.role !== "ADMIN") redirect(adminUrl());
 
   return (
     <div>

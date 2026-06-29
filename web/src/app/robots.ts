@@ -7,7 +7,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/tour-preview"],
+        // The admin panel lives behind a secret ADMIN_PATH prefix and the
+        // physical /admin route returns 404, so it is intentionally not listed
+        // here (listing the secret prefix would defeat the purpose).
+        disallow: ["/tour-preview"],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

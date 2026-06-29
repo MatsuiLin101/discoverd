@@ -6,6 +6,7 @@ import Image from "next/image";
 import TourFileList from "./TourFileList";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import { uploadFile } from "@/lib/upload-client";
+import { useAdminPath } from "@/components/admin/AdminPathProvider";
 
 interface SubRegion {
   id: string;
@@ -62,8 +63,9 @@ const fileInputClass =
 
 export default function TourForm({ tour, regions, tags, tourId, initialFiles, returnUrl }: Props) {
   const router = useRouter();
+  const adminPath = useAdminPath();
   const isEdit = !!tour;
-  const backUrl = returnUrl ?? "/admin/tours";
+  const backUrl = returnUrl ?? `${adminPath}/tours`;
   const contentFilesInputRef = useRef<HTMLInputElement>(null);
 
   const initialRegionId = (() => {

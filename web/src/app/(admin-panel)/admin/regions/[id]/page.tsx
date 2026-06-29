@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
@@ -12,7 +13,7 @@ export default async function EditRegionPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
+  if (!session) redirect(adminUrl("/login"));
 
   const { id } = await params;
   const region = await db.region.findUnique({
