@@ -122,9 +122,11 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
         <div className="fh-form-head">
           <div className="fh-form-eyebrow">線上諮詢</div>
           <h3 className="fh-form-title">填寫諮詢單</h3>
-          <p className="fh-form-trip">
-            關於 <b>{tourName || "—"}</b>
-          </p>
+          {tourName && (
+            <p className="fh-form-trip">
+              關於 <b>{tourName}</b>
+            </p>
+          )}
         </div>
 
         {formSubmitted ? (

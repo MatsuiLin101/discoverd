@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import FooterContactActions from "./FooterContactActions";
 
 export default async function SiteFooter() {
   const setting = await db.siteSetting.findUnique({ where: { id: "singleton" } });
@@ -24,47 +25,20 @@ export default async function SiteFooter() {
                 </span>
               </span>
             </Link>
-            <p>
-              找到了旅遊股份有限公司
+            <p className="company-name">找到了旅行社股份有限公司</p>
+            <p className="company-meta">
+              綜合旅行社 │ 交觀綜字222700號
               <br />
-              10688 台北市大安區忠孝東路四段 137 號 2 樓
+              旅行業品質保障協會北2738號
               <br />
-              營業時間 ／ 週一至週六 10:00–20:00
+              統一編號 00161819 │ 負責人 艾施鴻
+              <br />
+              網站負責人 周柏廷
             </p>
-            <div className="lic">交觀甲 9876 ・ 品保中 0123</div>
+            <p className="company-addr">台北市內湖區內湖路一段120巷15弄25號3、7樓</p>
           </div>
 
-          <div className="fh-footer-col">
-            <h5>瀏覽</h5>
-            <ul>
-              <li>
-                <Link href="/regions/japan">日本行程</Link>
-              </li>
-              <li>
-                <Link href="/regions/europe">歐洲行程</Link>
-              </li>
-              <li>
-                <Link href="/">編輯精選</Link>
-              </li>
-              <li>
-                <Link href="/">關於我們</Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="fh-footer-col">
-            <h5>聯絡</h5>
-            <ul>
-              <li>
-                <a href="tel:0277290001">02 7729 0001</a>
-              </li>
-              <li>
-                <a href="mailto:hello@foundholiday.tw">hello@foundholiday.tw</a>
-              </li>
-              <li>線上諮詢</li>
-              <li>門市資訊</li>
-            </ul>
-          </div>
+          <FooterContactActions />
 
           {(setting?.facebookUrl || setting?.instagramUrl || setting?.lineUrl) && (
             <div className="fh-footer-col">
@@ -99,8 +73,7 @@ export default async function SiteFooter() {
         </div>
       </div>
       <div className="fh-footer-bottom">
-        <span>© 2026 找到了旅遊股份有限公司 ／ 版權所有</span>
-        <span>隱私權 ・ 服務條款 ・ 使用須知</span>
+        <span>© 2026 找到了旅行社股份有限公司 ／ 版權所有</span>
       </div>
     </footer>
   );
