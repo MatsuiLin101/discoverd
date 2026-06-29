@@ -43,7 +43,7 @@ export default function UserEditForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username,
-          displayName: displayName || undefined,
+          displayName,
           email: email || undefined,
           role,
         }),
@@ -76,9 +76,10 @@ export default function UserEditForm({
       </div>
 
       <div>
-        <label className={labelClass}>顯示名稱</label>
+        <label className={labelClass}>顯示名稱<span className="ml-0.5 text-rose-500">*</span></label>
         <input
           type="text"
+          required
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           className={inputClass}

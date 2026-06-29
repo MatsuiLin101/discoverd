@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth";
 
 const createSchema = z.object({
   username:    z.string().min(1, { error: "帳號不可為空" }),
-  displayName: z.string().optional(),
+  displayName: z.string().min(1, { error: "顯示名稱不可為空" }),
   email:       z.string().email().optional(),
   password:    z.string().min(8, { error: "密碼至少 8 個字元" }),
   role:        z.enum(["ADMIN", "STAFF"]),
@@ -32,14 +32,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "此帳號已被使用" }, { status: 409 });
     }
 
+    const dupName = await db.user.findFirst({ where: { displayName } });
+    if (dupName) {
+      return NextResponse.json({ error: "此顯示名稱已被使用" }, { status: 409 });
+    }
+
     const hash = await bcrypt.hash(password, 12);
     const user = await db.user.create({
-      data: { username, displayName: displayName ?? null, email: email ?? null, password: hash, role },
+      data: { username, displayName, email: email ?? null, password: hash, role },
       select: { id: true, username: true, displayName: true, email: true, role: true },
     });
 
     return NextResponse.json({ data: user }, { status: 201 });
-  } catch {
+  } catch (err) {
+    if (err && typeof err === "object" && "code" in err && err.code === "P2002") {
+      return NextResponse.json({ error: "帳號或顯示名稱已被使用" }, { status: 409 });
+    }
     return NextResponse.json({ error: "伺服器錯誤，請稍後再試" }, { status: 500 });
   }
 }

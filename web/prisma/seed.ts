@@ -24,9 +24,10 @@ async function main() {
     return;
   }
 
+  const displayName = process.env.SEED_ADMIN_DISPLAY_NAME || username;
   const hash = await bcrypt.hash(password, 12);
   const user = await db.user.create({
-    data: { username, password: hash, role: "ADMIN" },
+    data: { username, displayName, password: hash, role: "ADMIN" },
   });
   console.log(`Created admin user: ${user.username}`);
 }

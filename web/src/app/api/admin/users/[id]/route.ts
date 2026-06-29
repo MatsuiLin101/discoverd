@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 
 const updateSchema = z.object({
   username:    z.string().min(1, { error: "帳號不可為空" }),
-  displayName: z.string().optional(),
+  displayName: z.string().min(1, { error: "顯示名稱不可為空" }),
   email:       z.string().email().optional(),
   role:        z.enum(["ADMIN", "STAFF"]),
 });
@@ -53,14 +53,25 @@ export async function PUT(
       }
     }
 
+    // Check displayName uniqueness if changed
+    if (displayName !== target.displayName) {
+      const dupName = await db.user.findFirst({ where: { displayName } });
+      if (dupName) {
+        return NextResponse.json({ error: "此顯示名稱已被使用" }, { status: 409 });
+      }
+    }
+
     const updated = await db.user.update({
       where: { id },
-      data: { username, displayName: displayName ?? null, email: email ?? null, role },
+      data: { username, displayName, email: email ?? null, role },
       select: { id: true, username: true, displayName: true, email: true, role: true },
     });
 
     return NextResponse.json({ data: updated });
-  } catch {
+  } catch (err) {
+    if (err && typeof err === "object" && "code" in err && err.code === "P2002") {
+      return NextResponse.json({ error: "帳號或顯示名稱已被使用" }, { status: 409 });
+    }
     return NextResponse.json({ error: "伺服器錯誤，請稍後再試" }, { status: 500 });
   }
 }
