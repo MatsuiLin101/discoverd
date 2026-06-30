@@ -32,22 +32,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "帳號或密碼錯誤" }, { status: 401 });
     }
 
-    // Global single login: reject if any other account has an active session
-    const occupied = await db.session.findFirst({
-      where: {
-        expiresAt: { gt: new Date() },
-        userId: { not: user.id },
-      },
-      include: { user: { select: { username: true, displayName: true } } },
-    });
-    if (occupied) {
-      const occupiedName = occupied.user.displayName ?? occupied.user.username;
-      return NextResponse.json(
-        { error: `後台目前由 ${occupiedName} 登入中，請稍後再試` },
-        { status: 409 }
-      );
-    }
-
     await createSession(user.id, user.role);
     void writeLog({ userId: user.id, userAccount: user.username, action: "LOGIN", resource: "AUTH", resourceId: user.id, resourceName: user.username });
     return NextResponse.json({ ok: true });

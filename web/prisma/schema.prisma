@@ -27,7 +27,8 @@ model User {
   updatedAt   DateTime      @updatedAt
 }
 
-// Single concurrent login: each login invalidates previous sessions via userId uniqueness
+// One session per user (userId unique → same account is single-device; a new login
+// replaces the previous one). Different accounts each have their own session and coexist.
 model Session {
   id        String   @id @default(cuid())
   userId    String   @unique

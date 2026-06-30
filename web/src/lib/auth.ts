@@ -24,7 +24,7 @@ export async function createSession(userId: string, role: string) {
   const token = await signToken({ userId, role });
   const expiresAt = new Date(Date.now() + SESSION_IDLE_TIMEOUT * 1000);
 
-  // Single concurrent login: upsert replaces any existing session for this user
+  // One session per user: upsert replaces this user's previous session (kicks old device)
   await db.session.upsert({
     where: { userId },
     create: { userId, token, expiresAt },
