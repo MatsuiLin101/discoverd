@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import FooterContactActions from "./FooterContactActions";
+import LineIcon from "./LineIcon";
 
 export default async function SiteFooter() {
   const setting = await db.siteSetting.findUnique({ where: { id: "singleton" } });
@@ -62,9 +63,7 @@ export default async function SiteFooter() {
                 )}
                 {setting.lineUrl && (
                   <a href={setting.lineUrl} aria-label="LINE" target="_blank" rel="noopener noreferrer">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 3.5c-5 0-9 3.2-9 7.2 0 3.6 3.2 6.6 7.5 7.16.29.06.69.19.79.44.09.22.06.57.03.8l-.13.77c-.04.22-.18.9.79.49 1-.41 5.36-3.16 7.31-5.41 1.34-1.48 1.71-2.99 1.71-4.25 0-4-4-7.2-9-7.2z" />
-                    </svg>
+                    <LineIcon />
                   </a>
                 )}
               </div>
