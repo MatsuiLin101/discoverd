@@ -763,19 +763,25 @@
   .fh-modal-side .m-note { font-size: 11px; line-height: 1.55; margin-top: 8px; }
   .fh-modal-side .m-actions { flex-direction: row; gap: 8px; }
   .fh-modal-side .m-actions button { flex: 1; padding: 11px 10px; font-size: 13px; gap: 7px; }
-  .fh-modal-side.collapsed .m-eyebrow,
   .fh-modal-side.collapsed .m-en,
   .fh-modal-side.collapsed .m-tags,
   .fh-modal-side.collapsed .m-lede,
-  .fh-modal-side.collapsed .m-note,
-  .fh-modal-side.collapsed .m-actions { display: none; }
+  .fh-modal-side.collapsed .m-note { display: none; }
+  .fh-modal-side.collapsed .m-eyebrow { margin-bottom: 4px; }
   .fh-modal-side.collapsed .m-name-row { margin-bottom: 0; }
   .fh-modal-side.collapsed .m-name { margin-bottom: 0; font-size: 17px; padding-right: 36px; }
-  .fh-modal-side.collapsed .m-price { margin-top: 5px; }
+  .fh-modal-side.collapsed .m-bottom {
+    flex-direction: row; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .fh-modal-side.collapsed .m-price { margin-top: 0; }
   .fh-modal-side.collapsed .m-price .cur { font-size: 12px; }
   .fh-modal-side.collapsed .m-price .num { font-size: 23px; }
   .fh-modal-side.collapsed .m-price .unit { font-size: 14px; }
-  .fh-modal-side.collapsed .m-bottom { gap: 0; }
+  .fh-modal-side.collapsed .m-actions { flex: none; flex-direction: row; gap: 8px; }
+  .fh-modal-side.collapsed .m-actions button,
+  .fh-modal-side.collapsed .m-actions a {
+    flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; letter-spacing: 0; gap: 0;
+  }
 }
 @media (max-width: 640px) {
   .fh-trow { grid-template-columns: 1fr; }
