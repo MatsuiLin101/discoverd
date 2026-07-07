@@ -110,6 +110,29 @@ model TourFile {
 }
 
 
+// Sales team info: regions are simple named, drag-sortable buckets; each holds
+// business-card files (agents) that only need an uploaded image/PDF, no fields.
+model SalesRegion {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  sortOrder Int          @default(0)
+  agents    SalesAgent[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model SalesAgent {
+  id        String      @id @default(cuid())
+  regionId  String
+  region    SalesRegion @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  cardKey   String
+  mimeType  String
+  filename  String?
+  sortOrder Int         @default(0)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
 enum LogAction {
   CREATE
   UPDATE
@@ -128,6 +151,8 @@ enum LogResource {
   AUTH
   HERO_BANNER
   SITE_SETTING
+  SALES_REGION
+  SALES_AGENT
 }
 
 model HeroBanner {

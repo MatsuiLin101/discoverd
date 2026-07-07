@@ -1,13 +1,30 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface StaffCard {
+  id: string;
+  url: string;
+  mimeType: string;
+  filename: string | null;
+}
+
+interface StaffRegion {
+  id: string;
+  name: string;
+  cards: StaffCard[];
+}
+
 export default function FooterStaffModal({ isOpen, onClose }: Props) {
+  const [regions, setRegions] = useState<StaffRegion[] | null>(null);
+  const [error, setError] = useState(false);
+  const startedRef = useRef(false);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape" && isOpen) onClose();
@@ -15,6 +32,20 @@ export default function FooterStaffModal({ isOpen, onClose }: Props) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
+
+  // Fetch once, the first time the modal is opened. Only setState in async
+  // callbacks so no synchronous cascading render is triggered from the effect.
+  useEffect(() => {
+    if (!isOpen || startedRef.current) return;
+    startedRef.current = true;
+    fetch("/api/sales")
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((json) => setRegions(json.data ?? []))
+      .catch(() => setError(true));
+  }, [isOpen]);
+
+  const loading = regions === null && !error;
+  const isEmpty = regions !== null && regions.length === 0;
 
   return (
     <div
@@ -37,7 +68,43 @@ export default function FooterStaffModal({ isOpen, onClose }: Props) {
         </div>
 
         <div className="fh-form-body">
-          <p className="fh-staff-placeholder">業務名單即將上線，敬請期待。</p>
+          {loading && <p className="fh-staff-placeholder">載入中…</p>}
+          {!loading && error && (
+            <p className="fh-staff-placeholder">載入失敗，請稍後再試。</p>
+          )}
+          {!loading && !error && isEmpty && (
+            <p className="fh-staff-placeholder">業務名單即將上線，敬請期待。</p>
+          )}
+          {!loading && !error && !isEmpty && regions !== null && (
+            <div className="fh-staff-list">
+              {regions.map((region) => (
+                <div key={region.id} className="fh-staff-region">
+                  <h4 className="fh-staff-region-name">{region.name}</h4>
+                  <div className="fh-staff-grid">
+                    {region.cards.map((card) => {
+                      const isImage = card.mimeType.startsWith("image/");
+                      return (
+                        <a
+                          key={card.id}
+                          href={card.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="fh-staff-card"
+                        >
+                          {isImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={card.url} alt={card.filename ?? "業務名片"} loading="lazy" />
+                          ) : (
+                            <span className="fh-staff-card-file">檢視名片（PDF）</span>
+                          )}
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

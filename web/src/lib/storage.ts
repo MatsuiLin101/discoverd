@@ -57,6 +57,7 @@ export const ALLOWED_UPLOAD_FOLDERS = new Set([
   "tours",
   "regions",
   "hero-banners",
+  "sales-cards",
   "seo-og/tours",
   "seo-og/regions",
   "seo-og/subregions",

@@ -53,6 +53,8 @@ const RESOURCE_LABELS: Record<LogResource, string> = {
   AUTH: "系統登入",
   HERO_BANNER: "輪播圖",
   SITE_SETTING: "網站設定",
+  SALES_REGION: "業務地區",
+  SALES_AGENT: "業務名片",
 };
 
 function formatDate(iso: string) {
