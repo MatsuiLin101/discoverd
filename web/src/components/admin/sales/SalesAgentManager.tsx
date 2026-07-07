@@ -194,9 +194,16 @@ export default function SalesAgentManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cards: uploaded }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { data?: SalesAgent[]; error?: string } = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setUploadError(`儲存失敗（伺服器回應非預期格式，狀態碼 ${res.status}，請重新整理或重啟開發伺服器後再試）`);
+        return;
+      }
       if (res.ok && data.data) {
-        setAgents((prev) => [...prev, ...data.data]);
+        setAgents((prev) => [...prev, ...data.data!]);
       } else {
         setUploadError(data.error ?? "上傳失敗");
       }
