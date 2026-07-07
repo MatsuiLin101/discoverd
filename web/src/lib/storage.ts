@@ -64,7 +64,7 @@ export const ALLOWED_UPLOAD_FOLDERS = new Set([
 ]);
 
 /** Subset of upload folders restricted to ADMIN role (STAFF cannot write here). */
-export const ADMIN_ONLY_UPLOAD_FOLDERS = new Set(["hero-banners"]);
+export const ADMIN_ONLY_UPLOAD_FOLDERS = new Set(["hero-banners", "sales-cards"]);
 
 /** Resolve which allowed folder an object key belongs to, or null if none. */
 export function matchUploadFolder(key: string): string | null {

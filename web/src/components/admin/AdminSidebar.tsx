@@ -30,7 +30,7 @@ const navGroups: NavGroup[] = [
       { label: "地區管理", href: "/regions" },
       { label: "標籤管理", href: "/tags" },
       { label: "旅遊方案", href: "/tours" },
-      { label: "業務資訊", href: "/sales" },
+      { label: "業務資訊", href: "/sales", adminOnly: true },
       { label: "社群連結", href: "/settings", adminOnly: true },
     ],
   },

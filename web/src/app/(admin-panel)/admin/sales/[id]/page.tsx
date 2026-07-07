@@ -13,6 +13,7 @@ export default async function SalesAgentsPage({
 }) {
   const session = await getSession();
   if (!session) redirect(adminUrl("/login"));
+  if (session.role !== "ADMIN") redirect(adminUrl());
 
   const { id } = await params;
   const region = await db.salesRegion.findUnique({

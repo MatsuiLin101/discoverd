@@ -10,7 +10,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ error: "請先登入" }, { status: 403 });
+    if (!session || session.role !== "ADMIN") return NextResponse.json({ error: "權限不足" }, { status: 403 });
 
     const { id: regionId, agentId } = await params;
     const agent = await db.salesAgent.findFirst({ where: { id: agentId, regionId } });

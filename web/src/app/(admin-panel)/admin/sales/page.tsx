@@ -7,6 +7,7 @@ import SortableSalesRegionList from "@/components/admin/sales/SortableSalesRegio
 export default async function SalesRegionsPage() {
   const session = await getSession();
   if (!session) redirect(adminUrl("/login"));
+  if (session.role !== "ADMIN") redirect(adminUrl());
 
   const regionsRaw = await db.salesRegion.findMany({
     select: {
