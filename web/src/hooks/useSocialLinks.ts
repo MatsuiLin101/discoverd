@@ -6,6 +6,7 @@ interface SocialLinks {
   facebookUrl: string | null;
   instagramUrl: string | null;
   lineUrl: string | null;
+  lineCommunityUrl: string | null;
 }
 
 export function useSocialLinks(): SocialLinks {
@@ -13,6 +14,7 @@ export function useSocialLinks(): SocialLinks {
     facebookUrl: null,
     instagramUrl: null,
     lineUrl: null,
+    lineCommunityUrl: null,
   });
 
   useEffect(() => {

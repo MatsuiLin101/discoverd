@@ -165,11 +165,12 @@ model HeroBanner {
 }
 
 model SiteSetting {
-  id           String   @id @default("singleton")
-  facebookUrl  String?
-  instagramUrl String?
-  lineUrl      String?
-  updatedAt    DateTime @updatedAt
+  id               String   @id @default("singleton")
+  facebookUrl      String?
+  instagramUrl     String?
+  lineUrl          String?
+  lineCommunityUrl String?
+  updatedAt        DateTime @updatedAt
 }
 
 model ActivityLog {

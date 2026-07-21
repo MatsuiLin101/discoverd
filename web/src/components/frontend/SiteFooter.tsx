@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import FooterContactActions from "./FooterContactActions";
 import LineIcon from "./LineIcon";
+import LineCommunityIcon from "./LineCommunityIcon";
 
 export default async function SiteFooter() {
   const setting = await db.siteSetting.findUnique({ where: { id: "singleton" } });
@@ -41,7 +42,7 @@ export default async function SiteFooter() {
 
           <FooterContactActions />
 
-          {(setting?.facebookUrl || setting?.instagramUrl || setting?.lineUrl) && (
+          {(setting?.facebookUrl || setting?.instagramUrl || setting?.lineUrl || setting?.lineCommunityUrl) && (
             <div className="fh-footer-col">
               <h5>追蹤我們</h5>
               <div className="fh-footer-social">
@@ -64,6 +65,11 @@ export default async function SiteFooter() {
                 {setting.lineUrl && (
                   <a href={setting.lineUrl} aria-label="LINE" target="_blank" rel="noopener noreferrer">
                     <LineIcon />
+                  </a>
+                )}
+                {setting.lineCommunityUrl && (
+                  <a href={setting.lineCommunityUrl} aria-label="LINE 社群" target="_blank" rel="noopener noreferrer">
+                    <LineCommunityIcon />
                   </a>
                 )}
               </div>

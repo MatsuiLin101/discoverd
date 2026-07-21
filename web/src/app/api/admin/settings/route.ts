@@ -8,6 +8,7 @@ const schema = z.object({
   facebookUrl: z.string().url("請輸入有效的 Facebook 網址").or(z.literal("")).optional(),
   instagramUrl: z.string().url("請輸入有效的 Instagram 網址").or(z.literal("")).optional(),
   lineUrl: z.string().url("請輸入有效的 LINE 網址").or(z.literal("")).optional(),
+  lineCommunityUrl: z.string().url("請輸入有效的 LINE 社群網址").or(z.literal("")).optional(),
 });
 
 const SINGLETON_ID = "singleton";
@@ -39,7 +40,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
 
-  const { facebookUrl, instagramUrl, lineUrl } = parsed.data;
+  const { facebookUrl, instagramUrl, lineUrl, lineCommunityUrl } = parsed.data;
 
   const setting = await db.siteSetting.upsert({
     where: { id: SINGLETON_ID },
@@ -48,11 +49,13 @@ export async function PUT(req: NextRequest) {
       facebookUrl: facebookUrl || null,
       instagramUrl: instagramUrl || null,
       lineUrl: lineUrl || null,
+      lineCommunityUrl: lineCommunityUrl || null,
     },
     update: {
       facebookUrl: facebookUrl || null,
       instagramUrl: instagramUrl || null,
       lineUrl: lineUrl || null,
+      lineCommunityUrl: lineCommunityUrl || null,
     },
   });
 
@@ -63,7 +66,7 @@ export async function PUT(req: NextRequest) {
     resource: "SITE_SETTING",
     resourceId: SINGLETON_ID,
     resourceName: "社群媒體連結",
-    detail: { facebookUrl, instagramUrl, lineUrl },
+    detail: { facebookUrl, instagramUrl, lineUrl, lineCommunityUrl },
   });
 
   return NextResponse.json({ data: setting });

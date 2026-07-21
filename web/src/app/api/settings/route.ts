@@ -6,7 +6,7 @@ export async function GET() {
     where: { id: "singleton" },
     create: { id: "singleton" },
     update: {},
-    select: { facebookUrl: true, instagramUrl: true, lineUrl: true },
+    select: { facebookUrl: true, instagramUrl: true, lineUrl: true, lineCommunityUrl: true },
   });
 
   return NextResponse.json({ data: setting });

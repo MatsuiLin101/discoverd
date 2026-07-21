@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import LineIcon from "./LineIcon";
+import LineCommunityIcon from "./LineCommunityIcon";
 
 interface SearchResult {
   id: string;
@@ -194,7 +195,7 @@ export default function SiteHeader() {
         </div>
 
         {/* Social */}
-        {(socialLinks.facebookUrl || socialLinks.instagramUrl || socialLinks.lineUrl) && (
+        {(socialLinks.facebookUrl || socialLinks.instagramUrl || socialLinks.lineUrl || socialLinks.lineCommunityUrl) && (
           <div className="fh-social">
             {socialLinks.facebookUrl && (
               <a href={socialLinks.facebookUrl} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
@@ -215,6 +216,11 @@ export default function SiteHeader() {
             {socialLinks.lineUrl && (
               <a href={socialLinks.lineUrl} aria-label="LINE" target="_blank" rel="noopener noreferrer">
                 <LineIcon />
+              </a>
+            )}
+            {socialLinks.lineCommunityUrl && (
+              <a href={socialLinks.lineCommunityUrl} aria-label="LINE 社群" target="_blank" rel="noopener noreferrer">
+                <LineCommunityIcon />
               </a>
             )}
           </div>

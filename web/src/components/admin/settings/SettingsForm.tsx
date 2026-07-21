@@ -10,6 +10,7 @@ export default function SettingsForm() {
   const [facebookUrl, setFacebookUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [lineUrl, setLineUrl] = useState("");
+  const [lineCommunityUrl, setLineCommunityUrl] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
@@ -24,6 +25,7 @@ export default function SettingsForm() {
           setFacebookUrl(data.facebookUrl ?? "");
           setInstagramUrl(data.instagramUrl ?? "");
           setLineUrl(data.lineUrl ?? "");
+          setLineCommunityUrl(data.lineCommunityUrl ?? "");
         }
       })
       .finally(() => setLoading(false));
@@ -39,7 +41,7 @@ export default function SettingsForm() {
       const res = await fetch("/api/admin/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ facebookUrl, instagramUrl, lineUrl }),
+        body: JSON.stringify({ facebookUrl, instagramUrl, lineUrl, lineCommunityUrl }),
       });
       const data = await res.json();
       if (data.data) {
@@ -95,6 +97,17 @@ export default function SettingsForm() {
               onChange={(e) => setLineUrl(e.target.value)}
               className={inputClass}
               placeholder="https://line.me/ti/p/~yourlineid"
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>LINE 社群網址</label>
+            <input
+              type="url"
+              value={lineCommunityUrl}
+              onChange={(e) => setLineCommunityUrl(e.target.value)}
+              className={inputClass}
+              placeholder="https://line.me/ti/g2/yourgroupid"
             />
           </div>
 
