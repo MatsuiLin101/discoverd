@@ -20,7 +20,3 @@ Follow **Angular Conventional Commits**:
 ```
 
 Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`.
-
-## Agent Policy
-
-- Sub-agents must never spawn further sub-agents.
