@@ -3,10 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
-
-const inputClass =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
-const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
+import CharCountField from "@/components/admin/CharCountField";
 
 interface Tag {
   id: string;
@@ -53,17 +50,14 @@ export default function TagForm({ tag }: { tag?: Tag }) {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
-      <div>
-        <label className={labelClass}>標籤名稱<span className="ml-0.5 text-rose-500">*</span></label>
-        <input
-          type="text"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={inputClass}
-          placeholder="例如：家庭旅遊"
-        />
-      </div>
+      <CharCountField
+        label="標籤名稱"
+        required
+        value={name}
+        onChange={setName}
+        maxLength={20}
+        placeholder="例如：家庭旅遊"
+      />
 
       {error && <p className="text-sm text-rose-600">{error}</p>}
 
