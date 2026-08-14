@@ -352,11 +352,10 @@
 .fh-subtabs button:hover { border-color: var(--accent); color: var(--ink); }
 .fh-subtabs button.active { background: var(--ink); border-color: var(--ink); color: #fff; }
 
-.fh-tour-list { margin-top: 36px; display: grid; gap: 20px; }
+.fh-tour-list { margin-top: 36px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; align-items: stretch; }
 .fh-trow {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--panel-solid);
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -369,21 +368,22 @@
   transform: translateY(-3px);
   border-color: var(--line-2);
 }
-.fh-trow .t-img { position: relative; overflow: hidden; background: #d8cfe0; min-height: 232px; }
+/* Fixed 4:3 preview frame (#4) — image never stretches with source ratio */
+.fh-trow .t-img { position: relative; overflow: hidden; background: #d8cfe0; aspect-ratio: 4 / 3; }
 .fh-trow .t-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; position: absolute; inset: 0; }
 .fh-trow:hover .t-img img { transform: scale(1.07); }
-.fh-trow .t-body { padding: 28px 30px; display: flex; flex-direction: column; min-width: 0; }
+.fh-trow .t-body { padding: 24px 24px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .fh-trow .t-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .fh-trow .t-tags span {
   font-family: var(--fh-sans); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--accent); border: 1px solid var(--accent); padding: 4px 10px; border-radius: 999px; white-space: nowrap;
 }
 .fh-trow .t-name {
-  font-family: var(--fh-sans); font-weight: 500; font-size: clamp(22px, 2vw, 28px);
-  letter-spacing: 0.04em; line-height: 1.32; margin: 0 0 6px;
+  font-family: var(--fh-sans); font-weight: 500; font-size: clamp(19px, 1.4vw, 22px);
+  letter-spacing: 0.04em; line-height: 1.32; margin: 0 0 8px;
 }
 .fh-trow .t-en { font-family: var(--fh-sans); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 14px; }
-.fh-trow .t-lede { font-size: 13.5px; line-height: 1.8; color: var(--ink-2); margin: 0 0 22px; max-width: 460px; }
+.fh-trow .t-lede { font-size: 13.5px; line-height: 1.8; color: var(--ink-2); margin: 0 0 20px; white-space: pre-wrap; }
 .fh-trow .t-foot {
   margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line);
   display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
@@ -471,7 +471,7 @@
   font-family: var(--fh-sans); font-size: 10.5px; letter-spacing: 0.1em;
   padding: 6px 13px; border-radius: 999px; background: transparent; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap;
 }
-.fh-modal-side .m-lede { font-size: 14px; line-height: 1.75; color: var(--ink-2); margin: 16px 0 0; }
+.fh-modal-side .m-lede { font-size: 14px; line-height: 1.75; color: var(--ink-2); margin: 16px 0 0; white-space: pre-wrap; }
 .fh-modal-side .m-bottom { display: flex; flex-direction: column; gap: 24px; }
 .fh-modal-side .m-price { display: flex; align-items: flex-end; gap: 5px; font-weight: 500; color: var(--accent); line-height: 1; margin-top: 10px; }
 .fh-modal-side .m-price .cur { font-size: 16px; }
@@ -737,7 +737,8 @@
   .brand { grid-column: 1; grid-row: 1; }
   .fh-social { grid-column: 2; grid-row: 1; justify-self: end; }
   .fh-search { grid-column: 1 / -1; grid-row: 2; max-width: 100%; }
-  .fh-trow { grid-template-columns: 240px 1fr; }
+  /* Tablet (768–1080): 2 cards per row (#2) */
+  .fh-tour-list { grid-template-columns: repeat(2, 1fr); gap: 24px; }
 }
 @media (max-width: 860px) {
   .fh-sec-head { grid-template-columns: 1fr; gap: 14px; }
@@ -800,9 +801,11 @@
     flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; letter-spacing: 0; gap: 0;
   }
 }
+@media (max-width: 767px) {
+  /* Mobile (<768): 1 card per row (#2) */
+  .fh-tour-list { grid-template-columns: 1fr; gap: 22px; }
+}
 @media (max-width: 640px) {
-  .fh-trow { grid-template-columns: 1fr; }
-  .fh-trow .t-img { min-height: 200px; aspect-ratio: 16/10; }
   .fh-trow .t-body { padding: 22px 22px; }
   .fh-footer-grid { grid-template-columns: 1fr; gap: 28px; }
   .fh-footer-bottom { flex-direction: column; align-items: center; }

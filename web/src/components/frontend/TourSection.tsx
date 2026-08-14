@@ -131,7 +131,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                   src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
                   alt={tour.name}
                   fill
-                  sizes="300px"
+                  sizes="(max-width: 767px) 100vw, (max-width: 1080px) 50vw, 33vw"
                   style={{ objectFit: "cover" }}
                 />
               </div>
