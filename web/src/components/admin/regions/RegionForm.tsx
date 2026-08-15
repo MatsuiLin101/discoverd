@@ -6,9 +6,8 @@ import Image from "next/image";
 import ImageLightbox from "./ImageLightbox";
 import { uploadFile } from "@/lib/upload-client";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
+import CharCountField from "@/components/admin/CharCountField";
 
-const inputClass =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
 function autoSlug(name: string) {
@@ -56,14 +55,13 @@ export default function RegionForm({
   const fileRef = useRef<HTMLInputElement>(null);
   const ogFileRef = useRef<HTMLInputElement>(null);
 
-  function handleNameChange(e: ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
+  function handleNameChange(val: string) {
     setName(val);
     if (!slugManual) setSlug(autoSlug(val));
   }
 
-  function handleSlugChange(e: ChangeEvent<HTMLInputElement>) {
-    setSlug(e.target.value);
+  function handleSlugChange(val: string) {
+    setSlug(val);
     setSlugManual(true);
   }
 
@@ -151,32 +149,24 @@ export default function RegionForm({
   return (
     <>
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
-      <div>
-        <label className={labelClass}>顯示名稱<span className="ml-0.5 text-rose-500">*</span></label>
-        <input
-          type="text"
-          required
-          value={name}
-          onChange={handleNameChange}
-          className={inputClass}
-          placeholder="例：日本"
-        />
-      </div>
+      <CharCountField
+        label="顯示名稱"
+        required
+        value={name}
+        onChange={handleNameChange}
+        maxLength={30}
+        placeholder="例：日本"
+      />
 
-      <div>
-        <label className={labelClass}>Slug（網址代碼）<span className="ml-0.5 text-rose-500">*</span></label>
-        <input
-          type="text"
-          required
-          value={slug}
-          onChange={handleSlugChange}
-          className={inputClass}
-          placeholder="例：japan"
-        />
-        <p className="mt-1 text-xs text-gray-400">
-          只允許小寫英文字母（a-z）、數字（0-9）、連字號（-），例：/japan
-        </p>
-      </div>
+      <CharCountField
+        label="Slug（網址代碼）"
+        required
+        value={slug}
+        onChange={handleSlugChange}
+        maxLength={50}
+        placeholder="例：japan"
+        hint="只允許小寫英文字母（a-z）、數字（0-9）、連字號（-），例：/japan"
+      />
 
 
       <div>
@@ -227,30 +217,22 @@ export default function RegionForm({
           SEO 設定 <span className="text-xs font-normal text-gray-400">（選填）</span>
         </summary>
         <div className="space-y-4 border-t border-gray-200 px-4 py-4">
-          <div>
-            <label className={labelClass}>SEO 標題</label>
-            <input
-              type="text"
-              value={seoTitle}
-              onChange={(e) => setSeoTitle(e.target.value)}
-              maxLength={100}
-              className={inputClass}
-              placeholder="留空則自動使用：{名稱} ／ 找到了旅遊 FOUND HOLIDAY"
-            />
-            <p className="mt-1 text-xs text-gray-400">{seoTitle.length}/100</p>
-          </div>
-          <div>
-            <label className={labelClass}>SEO 描述</label>
-            <textarea
-              rows={3}
-              value={seoDescription}
-              onChange={(e) => setSeoDescription(e.target.value)}
-              maxLength={160}
-              className={inputClass}
-              placeholder="留空則自動產生描述文字"
-            />
-            <p className="mt-1 text-xs text-gray-400">{seoDescription.length}/160</p>
-          </div>
+          <CharCountField
+            label="SEO 標題"
+            value={seoTitle}
+            onChange={setSeoTitle}
+            maxLength={100}
+            placeholder="留空則自動使用：{名稱} ／ 找到了旅遊 FOUND HOLIDAY"
+          />
+          <CharCountField
+            label="SEO 描述"
+            multiline
+            rows={3}
+            value={seoDescription}
+            onChange={setSeoDescription}
+            maxLength={160}
+            placeholder="留空則自動產生描述文字"
+          />
           <div>
             <label className={labelClass}>OG 圖片（社群分享縮圖）</label>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">

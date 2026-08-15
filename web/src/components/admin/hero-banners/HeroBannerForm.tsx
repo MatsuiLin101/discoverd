@@ -6,9 +6,8 @@ import Image from "next/image";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import { uploadFile } from "@/lib/upload-client";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
+import CharCountField from "@/components/admin/CharCountField";
 
-const inputClass =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
 interface Props {
@@ -79,20 +78,15 @@ export default function HeroBannerForm({
   return (
     <>
       <form onSubmit={handleSubmit} className="max-w-md space-y-5">
-        <div>
-          <label className={labelClass}>
-            標題（圖片 alt 文字）<span className="ml-0.5 text-rose-500">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={inputClass}
-            placeholder="例：北海道 美瑛夏日"
-          />
-          <p className="mt-1 text-xs text-gray-400">用於描述圖片內容，同時作為無障礙 alt 屬性</p>
-        </div>
+        <CharCountField
+          label="標題（圖片 alt 文字）"
+          required
+          value={title}
+          onChange={setTitle}
+          maxLength={60}
+          placeholder="例：北海道 美瑛夏日"
+          hint="用於描述圖片內容，同時作為無障礙 alt 屬性"
+        />
 
         <div>
           <label className={labelClass}>

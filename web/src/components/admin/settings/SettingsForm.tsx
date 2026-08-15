@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
-
-const inputClass =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
-const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
+import CharCountField from "@/components/admin/CharCountField";
 
 export default function SettingsForm() {
   const [facebookUrl, setFacebookUrl] = useState("");
@@ -67,49 +64,41 @@ export default function SettingsForm() {
         <p className="text-sm text-gray-400">載入中…</p>
       ) : (
         <form onSubmit={handleSubmit} className="max-w-md space-y-5">
-          <div>
-            <label className={labelClass}>Facebook 網址</label>
-            <input
-              type="url"
-              value={facebookUrl}
-              onChange={(e) => setFacebookUrl(e.target.value)}
-              className={inputClass}
-              placeholder="https://www.facebook.com/yourpage"
-            />
-          </div>
+          <CharCountField
+            label="Facebook 網址"
+            type="url"
+            value={facebookUrl}
+            onChange={setFacebookUrl}
+            maxLength={300}
+            placeholder="https://www.facebook.com/yourpage"
+          />
 
-          <div>
-            <label className={labelClass}>Instagram 網址</label>
-            <input
-              type="url"
-              value={instagramUrl}
-              onChange={(e) => setInstagramUrl(e.target.value)}
-              className={inputClass}
-              placeholder="https://www.instagram.com/yourhandle"
-            />
-          </div>
+          <CharCountField
+            label="Instagram 網址"
+            type="url"
+            value={instagramUrl}
+            onChange={setInstagramUrl}
+            maxLength={300}
+            placeholder="https://www.instagram.com/yourhandle"
+          />
 
-          <div>
-            <label className={labelClass}>LINE 網址</label>
-            <input
-              type="url"
-              value={lineUrl}
-              onChange={(e) => setLineUrl(e.target.value)}
-              className={inputClass}
-              placeholder="https://line.me/ti/p/~yourlineid"
-            />
-          </div>
+          <CharCountField
+            label="LINE 網址"
+            type="url"
+            value={lineUrl}
+            onChange={setLineUrl}
+            maxLength={300}
+            placeholder="https://line.me/ti/p/~yourlineid"
+          />
 
-          <div>
-            <label className={labelClass}>LINE 社群網址</label>
-            <input
-              type="url"
-              value={lineCommunityUrl}
-              onChange={(e) => setLineCommunityUrl(e.target.value)}
-              className={inputClass}
-              placeholder="https://line.me/ti/g2/yourgroupid"
-            />
-          </div>
+          <CharCountField
+            label="LINE 社群網址"
+            type="url"
+            value={lineCommunityUrl}
+            onChange={setLineCommunityUrl}
+            maxLength={300}
+            placeholder="https://line.me/ti/g2/yourgroupid"
+          />
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
           {success && <p className="text-sm text-emerald-600">已成功儲存</p>}
