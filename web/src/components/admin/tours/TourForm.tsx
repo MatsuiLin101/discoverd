@@ -7,6 +7,7 @@ import TourFileList from "./TourFileList";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import { uploadFile } from "@/lib/upload-client";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
+import CharCountField from "@/components/admin/CharCountField";
 
 interface SubRegion {
   id: string;
@@ -82,7 +83,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
     tour?.tags.map((t) => t.id) ?? []
   );
-  const [published, setPublished] = useState(tour?.published ?? false);
+  const [published, setPublished] = useState(tour?.published ?? true);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
   const [clearThumbnail, setClearThumbnail] = useState(false);
@@ -214,17 +215,14 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     <>
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
         {/* 行程名稱 */}
-        <div>
-          <label className={labelClass}>行程名稱<span className="ml-0.5 text-rose-500">*</span></label>
-          <input
-            type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={inputClass}
-            placeholder="例如：日本東京 5 日遊"
-          />
-        </div>
+        <CharCountField
+          label="行程名稱"
+          required
+          value={name}
+          onChange={setName}
+          maxLength={60}
+          placeholder="例如：日本東京 5 日遊"
+        />
 
         {/* 價格 */}
         <div>
@@ -241,18 +239,15 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
         </div>
 
         {/* 行程簡介 */}
-        <div>
-          <label className={labelClass}>行程簡介</label>
-          <textarea
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className={inputClass}
-            placeholder="簡短描述此行程的特色（選填）"
-            maxLength={500}
-          />
-          <p className="mt-1 text-xs text-gray-400">最多 500 字</p>
-        </div>
+        <CharCountField
+          label="行程簡介"
+          multiline
+          rows={4}
+          value={description}
+          onChange={setDescription}
+          maxLength={500}
+          placeholder="簡短描述此行程的特色（選填）"
+        />
 
         {/* 主分類 / 次分類 */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -430,36 +425,28 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             SEO 設定 <span className="text-xs font-normal text-gray-400">（選填）</span>
           </summary>
           <div className="space-y-4 border-t border-gray-200 px-4 py-4">
-            <div>
-              <label className={labelClass}>SEO 標題</label>
-              <input
-                type="text"
-                value={seoTitle}
-                onChange={(e) => setSeoTitle(e.target.value)}
-                maxLength={100}
-                className={inputClass}
-                placeholder="留空則自動使用：{行程名稱} ／ 找到了旅遊 FOUND HOLIDAY"
-              />
-              <p className="mt-1 text-xs text-gray-400">{seoTitle.length}/100</p>
-            </div>
-            <div>
-              <label className={labelClass}>SEO 描述</label>
-              <textarea
-                rows={3}
-                value={seoDescription}
-                onChange={(e) => setSeoDescription(e.target.value)}
-                maxLength={160}
-                className={inputClass}
-                placeholder="留空則自動使用行程簡介前 150 字"
-              />
-              <p className="mt-1 text-xs text-gray-400">{seoDescription.length}/160</p>
-            </div>
+            <CharCountField
+              label="SEO 標題"
+              value={seoTitle}
+              onChange={setSeoTitle}
+              maxLength={100}
+              placeholder="留空則自動使用：{行程名稱} ／ 找到了旅遊 FOUND HOLIDAY"
+            />
+            <CharCountField
+              label="SEO 描述"
+              multiline
+              rows={3}
+              value={seoDescription}
+              onChange={setSeoDescription}
+              maxLength={160}
+              placeholder="留空則自動使用行程簡介前 150 字"
+            />
             <div>
               <label className={labelClass}>OG 圖片（社群分享縮圖）</label>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div
                   className={`relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-100${(ogPreview ?? tour?.ogImage) && !clearOgImage ? " cursor-zoom-in" : ""}`}
-                  onClick={(ogPreview ?? tour?.ogImage) && !clearOgImage ? () => setLightbox(ogPreview ?? tour?.ogImage!) : undefined}
+                  onClick={(ogPreview ?? tour?.ogImage) && !clearOgImage ? () => setLightbox((ogPreview ?? tour?.ogImage) as string) : undefined}
                 >
                   <Image
                     src={clearOgImage ? "/images/tour-placeholder.svg" : (ogPreview ?? tour?.ogImage ?? "/images/tour-placeholder.svg")}

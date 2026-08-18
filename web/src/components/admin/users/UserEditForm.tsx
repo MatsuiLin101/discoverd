@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
+import CharCountField from "@/components/admin/CharCountField";
 
 const inputClass =
   "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
@@ -64,37 +65,32 @@ export default function UserEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md space-y-5">
-      <div>
-        <label className={labelClass}>帳號<span className="ml-0.5 text-rose-500">*</span></label>
-        <input
-          type="text"
-          required
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className={inputClass}
-        />
-      </div>
+      <CharCountField
+        label="帳號"
+        required
+        value={username}
+        onChange={setUsername}
+        maxLength={30}
+        className={inputClass}
+      />
 
-      <div>
-        <label className={labelClass}>顯示名稱<span className="ml-0.5 text-rose-500">*</span></label>
-        <input
-          type="text"
-          required
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          className={inputClass}
-        />
-      </div>
+      <CharCountField
+        label="顯示名稱"
+        required
+        value={displayName}
+        onChange={setDisplayName}
+        maxLength={30}
+        className={inputClass}
+      />
 
-      <div>
-        <label className={labelClass}>電子郵件</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={inputClass}
-        />
-      </div>
+      <CharCountField
+        label="電子郵件"
+        type="email"
+        value={email}
+        onChange={setEmail}
+        maxLength={100}
+        className={inputClass}
+      />
 
       <div>
         <label className={labelClass}>角色</label>
