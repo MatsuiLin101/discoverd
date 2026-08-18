@@ -31,6 +31,9 @@ _archive/browser-snapshots/
 _archive/client-screenshots/
 # Client contract drafts; kept local only.
 docs/contracts/
+# Real client tour data for batch import; kept local only. The format template is committed.
+web/scripts/fixtures/*.xlsx
+!web/scripts/fixtures/tours-import-template.xlsx
 
 # Next.js app
 web/.next/
