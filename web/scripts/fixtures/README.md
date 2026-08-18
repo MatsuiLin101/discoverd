@@ -36,4 +36,15 @@
 - **預設不發佈**：新建行程 `published = false`（缺行程內容檔，需匯入後於後台補圖與內容檔再發佈）。
 - **縮圖／內容檔**不在此 Excel 內，匯入後於後台編輯補充。
 
-詳細用法請見匯入腳本本身的 `--help`。
+## 匯入腳本
+
+實作於 `web/scripts/import-tours.sh`（進入點）與 `web/scripts/import-tours.ts`（實際解析 + upsert）。
+
+```bash
+web/scripts/import-tours.sh <xlsx 路徑> --list                     # 列出工作表與筆數
+web/scripts/import-tours.sh <xlsx 路徑> --sheets "國旅,泰國" --dry-run  # 試跑不寫入
+web/scripts/import-tours.sh <xlsx 路徑> --sheets all               # 匯入全部工作表
+web/scripts/import-tours.sh <xlsx 路徑>                            # 互動式選擇工作表
+```
+
+其餘選項見 `web/scripts/import-tours.sh <xlsx 路徑> --help`。
