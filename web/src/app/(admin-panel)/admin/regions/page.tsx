@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import SortableRegionList from "@/components/admin/regions/SortableRegionList";
+import ImportExportPanel from "@/components/admin/ImportExportPanel";
 
 export default async function RegionsPage() {
   const session = await getSession();
@@ -43,6 +44,18 @@ export default async function RegionsPage() {
           新增主分類
         </Link>
       </div>
+      <div className="mb-6">
+        <ImportExportPanel
+          moduleLabel="地區"
+          exportHref="/api/admin/regions/export"
+          templateHref="/api/admin/regions/export?template=1"
+          previewUrl="/api/admin/regions/import/preview"
+          commitUrl="/api/admin/regions/import/commit"
+          columnsHint="主分類代碼、主分類名稱、次分類代碼、次分類名稱、SEO標題、SEO描述"
+          canImport={session.role === "ADMIN"}
+        />
+      </div>
+
       <SortableRegionList regions={regions} />
     </div>
   );
