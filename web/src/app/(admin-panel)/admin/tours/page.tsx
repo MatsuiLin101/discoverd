@@ -8,6 +8,7 @@ import { storage } from "@/lib/storage";
 import type { Prisma } from "@/generated/prisma/client";
 import TourFilterBar from "@/components/admin/tours/TourFilterBar";
 import TourListClient from "@/components/admin/tours/TourListClient";
+import ImportExportPanel from "@/components/admin/ImportExportPanel";
 
 const VALID_LIMITS = [0, 10, 20, 50, 100];
 
@@ -148,6 +149,20 @@ export default async function ToursPage({
           </Link>
         )}
       </div>
+
+      {!isSortMode && (
+        <div className="mb-6">
+          <ImportExportPanel
+            moduleLabel="旅遊方案"
+            exportHref="/api/admin/tours/export"
+            templateHref="/api/admin/tours/export?template=1"
+            previewUrl="/api/admin/tours/import/preview"
+            commitUrl="/api/admin/tours/import/commit"
+            columnsHint="ProductID、主分類、次分類、標籤（逗號分隔）、行程名稱、價格、行程簡介、發布(Y/N)、SEO標題、SEO描述"
+            canImport={session.role === "ADMIN"}
+          />
+        </div>
+      )}
 
       {isSortMode && sortModeSubRegion && (
         <div className="mb-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
