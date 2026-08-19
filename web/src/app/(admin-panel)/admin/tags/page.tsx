@@ -4,6 +4,7 @@ import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import SortableTagList from "@/components/admin/tags/SortableTagList";
+import ImportExportPanel from "@/components/admin/ImportExportPanel";
 
 export default async function TagsPage() {
   const session = await getSession();
@@ -32,6 +33,18 @@ export default async function TagsPage() {
         >
           新增標籤
         </Link>
+      </div>
+
+      <div className="mb-6">
+        <ImportExportPanel
+          moduleLabel="標籤"
+          exportHref="/api/admin/tags/export"
+          templateHref="/api/admin/tags/export?template=1"
+          previewUrl="/api/admin/tags/import/preview"
+          commitUrl="/api/admin/tags/import/commit"
+          columnsHint="標籤名稱"
+          canImport={session.role === "ADMIN"}
+        />
       </div>
 
       <SortableTagList tags={tags} />
