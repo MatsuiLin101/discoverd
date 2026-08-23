@@ -13,13 +13,15 @@ import type { Prisma } from "@/generated/prisma/client";
 export const IMPORT_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
 
 export interface RowIssue {
-  row: number; // Excel row number
+  row: number; // Excel row number (per worksheet)
+  sheet?: string; // worksheet name, for multi-sheet files
   message: string;
 }
 
 /** One preview row shown to the user before committing. */
 export interface PreviewRowDisplay {
   row: number;
+  sheet?: string; // worksheet name, for multi-sheet files
   action: "create" | "update" | "skip";
   label: string; // main identifier (tag/region/tour name)
   detail?: string; // secondary info (e.g. productId, price)

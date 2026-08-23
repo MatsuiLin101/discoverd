@@ -6,8 +6,10 @@
 import ExcelJS from "exceljs";
 
 export interface SheetRow {
-  /** 1-based Excel row number, for error reporting. */
+  /** 1-based Excel row number (per worksheet), for error reporting. */
   rowNumber: number;
+  /** Worksheet name the row came from (for multi-sheet files). */
+  sheetName?: string;
   /** Cell text by 0-based column index. */
   cells: string[];
 }
@@ -45,13 +47,39 @@ export async function readFirstSheetRows(buf: ArrayBuffer): Promise<SheetRow[]> 
     });
     // Drop rows that are entirely blank.
     if (cells.some((c) => (c ?? "").trim() !== "")) {
-      rows.push({ rowNumber, cells });
+      rows.push({ rowNumber, sheetName: ws.name, cells });
     }
   });
   return rows;
 }
 
+/** Read every worksheet as rows of string cells (empty rows dropped). */
+export async function readAllSheetRows(buf: ArrayBuffer): Promise<SheetRow[]> {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(buf);
+  const rows: SheetRow[] = [];
+  wb.worksheets.forEach((ws) => {
+    ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      const cells: string[] = [];
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        cells[colNumber - 1] = cellText(cell.value);
+      });
+      if (cells.some((c) => (c ?? "").trim() !== "")) {
+        rows.push({ rowNumber, sheetName: ws.name, cells });
+      }
+    });
+  });
+  return rows;
+}
+
 export type CellValue = string | number | null;
+
+/** Sanitize a worksheet name: strip characters Excel forbids and cap at 31. */
+export function sanitizeSheetName(name: string): string {
+  let n = name.replace(/[[\]*?/\\:]/g, "").trim();
+  if (n.length === 0) n = "Sheet";
+  return n.length > 31 ? n.slice(0, 31) : n;
+}
 
 /** Build a single-sheet .xlsx buffer with a bold header row. */
 export async function buildWorkbook(
@@ -69,6 +97,30 @@ export async function buildWorkbook(
     const header = headers[i] ?? "";
     col.width = Math.min(Math.max(header.length + 4, 12), 40);
   });
+  const buf = await wb.xlsx.writeBuffer();
+  return Buffer.from(buf);
+}
+
+export interface WorkbookSheet {
+  name: string;
+  headers: string[];
+  rows: CellValue[][];
+}
+
+/** Build a multi-sheet .xlsx buffer (one worksheet per entry, bold headers). */
+export async function buildMultiSheetWorkbook(sheets: WorkbookSheet[]): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  if (sheets.length === 0) wb.addWorksheet("(無資料)");
+  for (const s of sheets) {
+    const ws = wb.addWorksheet(sanitizeSheetName(s.name));
+    ws.addRow(s.headers);
+    ws.getRow(1).font = { bold: true };
+    for (const r of s.rows) ws.addRow(r);
+    ws.columns.forEach((col, i) => {
+      const header = s.headers[i] ?? "";
+      col.width = Math.min(Math.max(header.length + 4, 12), 40);
+    });
+  }
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }

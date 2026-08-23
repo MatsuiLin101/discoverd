@@ -158,7 +158,7 @@ export default async function ToursPage({
             templateHref="/api/admin/tours/export?template=1"
             previewUrl="/api/admin/tours/import/preview"
             commitUrl="/api/admin/tours/import/commit"
-            columnsHint="ProductID、主分類、次分類、標籤（逗號分隔）、行程名稱、價格、行程簡介、發布(Y/N)、SEO標題、SEO描述"
+            columnsHint="ProductID、主分類、次分類、標籤（逗號分隔）、行程名稱、價格、行程簡介、發布(Y/N)；匯出依主分類分工作表、依 ProductID 排序"
             canImport={session.role === "ADMIN"}
           />
         </div>

@@ -14,13 +14,22 @@
  */
 import { db } from "@/lib/db";
 import { randomBytes } from "crypto";
-import { readFirstSheetRows, buildWorkbook, type SheetRow } from "./xlsx";
+import {
+  readAllSheetRows,
+  buildWorkbook,
+  buildMultiSheetWorkbook,
+  sanitizeSheetName,
+  type SheetRow,
+  type WorkbookSheet,
+} from "./xlsx";
 import type { Prisma } from "@/generated/prisma/client";
 import { parseTags, parsePrice, parsePublished, formatPublished } from "./normalize";
 import { allocateTourProductId, DailyQuotaError, nextRegionCode, nextSubCode } from "./product-id";
 import type { ImportPreview, PreviewRowDisplay, RowIssue } from "./import-core";
 
 export const TOUR_SHEET = "旅遊方案";
+// Export groups tours into one worksheet per region (named `{code}{name}`);
+// import reads every worksheet. SEO columns are intentionally excluded.
 export const TOUR_HEADERS = [
   "ProductID",
   "主分類",
@@ -30,12 +39,11 @@ export const TOUR_HEADERS = [
   "價格",
   "行程簡介",
   "發布(Y/N)",
-  "SEO標題",
-  "SEO描述",
 ];
 
 export interface TourOpRow {
   row: number;
+  sheet?: string;
   action: "create" | "update";
   productId: string | null; // update: existing id; create: null
   regionName: string;
@@ -45,8 +53,6 @@ export interface TourOpRow {
   tags: string[];
   description: string | null;
   published: boolean;
-  seoTitle: string | null;
-  seoDescription: string | null;
 }
 
 export interface TourImportPayload {
@@ -99,7 +105,8 @@ export async function analyzeTours(
   const fileCombos = new Set<string>();
 
   for (const sr of rows) {
-    if (sr.rowNumber === 1) continue; // header
+    if (sr.rowNumber === 1) continue; // header (per worksheet)
+    const sheet = sr.sheetName;
     const productId = col(sr, 0);
     const regionName = col(sr, 1);
     const subName = col(sr, 2);
@@ -108,28 +115,27 @@ export async function analyzeTours(
     const priceRaw = col(sr, 5);
     const description = sr.cells[6] ?? ""; // keep newlines/spaces
     const publishedRaw = col(sr, 7);
-    const seoTitle = col(sr, 8);
-    const seoDescription = col(sr, 9);
 
     if (!productId && !regionName && !subName && !name && !priceRaw) continue; // blank row
 
     // Validation
     if (!name) {
-      errors.push({ row: sr.rowNumber, message: "缺少行程名稱" });
+      errors.push({ row: sr.rowNumber, sheet, message: "缺少行程名稱" });
       continue;
     }
     if (!regionName || !subName) {
-      errors.push({ row: sr.rowNumber, message: "缺少主分類或次分類" });
+      errors.push({ row: sr.rowNumber, sheet, message: "缺少主分類或次分類" });
       continue;
     }
     const price = parsePrice(priceRaw);
     if (price === null) {
-      errors.push({ row: sr.rowNumber, message: `價格無法解析：「${priceRaw}」` });
+      errors.push({ row: sr.rowNumber, sheet, message: `價格無法解析：「${priceRaw}」` });
       continue;
     }
 
     const base = {
       row: sr.rowNumber,
+      sheet,
       regionName,
       subName,
       name,
@@ -137,14 +143,12 @@ export async function analyzeTours(
       tags: parseTags(tagsRaw),
       description: description.length > 0 ? description : null,
       published: parsePublished(publishedRaw),
-      seoTitle: seoTitle || null,
-      seoDescription: seoDescription || null,
     };
 
     if (productId) {
       if (seenIds.has(productId)) {
-        duplicates.push({ row: sr.rowNumber, message: `檔案內重複的 ProductID「${productId}」，已略過` });
-        display.push({ row: sr.rowNumber, action: "skip", label: name, detail: `ProductID ${productId} 重複`, duplicate: true });
+        duplicates.push({ row: sr.rowNumber, sheet, message: `檔案內重複的 ProductID「${productId}」，已略過` });
+        display.push({ row: sr.rowNumber, sheet, action: "skip", label: name, detail: `ProductID ${productId} 重複`, duplicate: true });
         skippedCount++;
         continue;
       }
@@ -152,11 +156,11 @@ export async function analyzeTours(
       const existing = existingById.get(productId);
       if (existing) {
         updatedCount++;
-        display.push({ row: sr.rowNumber, action: "update", label: name, detail: `ProductID ${productId}` });
+        display.push({ row: sr.rowNumber, sheet, action: "update", label: name, detail: `ProductID ${productId}` });
         valid.push({ ...base, action: "update", productId });
       } else {
         createdCount++;
-        display.push({ row: sr.rowNumber, action: "create", label: name, detail: `填入的編號 ${productId} 不存在，將配發新編號` });
+        display.push({ row: sr.rowNumber, sheet, action: "create", label: name, detail: `填入的編號 ${productId} 不存在，將配發新編號` });
         valid.push({ ...base, action: "create", productId: null });
       }
     } else {
@@ -167,13 +171,14 @@ export async function analyzeTours(
       createdCount++;
       display.push({
         row: sr.rowNumber,
+        sheet,
         action: "create",
         label: name,
         detail: isDup ? "疑似重複（將建立為新行程）" : "新行程",
         duplicate: isDup,
       });
       if (isDup) {
-        duplicates.push({ row: sr.rowNumber, message: `已存在相同「主分類/次分類/行程名稱」：${regionName} / ${subName} / ${name}` });
+        duplicates.push({ row: sr.rowNumber, sheet, message: `已存在相同「主分類/次分類/行程名稱」：${regionName} / ${subName} / ${name}` });
       }
       valid.push({ ...base, action: "create", productId: null });
     }
@@ -290,6 +295,7 @@ export async function commitTours(rows: TourOpRow[]): Promise<{
         }
 
         if (existing) {
+          // SEO is not in the tour sheet, so it is preserved (not overwritten).
           await tx.tour.update({
             where: { id: existing.id },
             data: {
@@ -298,8 +304,6 @@ export async function commitTours(rows: TourOpRow[]): Promise<{
               description: r.description,
               published: r.published,
               subRegionId,
-              seoTitle: r.seoTitle,
-              seoDescription: r.seoDescription,
               tags: { set: tagIds.map((id) => ({ id })) },
             },
           });
@@ -329,8 +333,6 @@ export async function commitTours(rows: TourOpRow[]): Promise<{
             description: r.description,
             subRegionId,
             published: r.published,
-            seoTitle: r.seoTitle,
-            seoDescription: r.seoDescription,
             sortOrder: (max._max.sortOrder ?? -1) + 1,
             tags: tagIds.length ? { connect: tagIds.map((id) => ({ id })) } : undefined,
           },
@@ -345,39 +347,49 @@ export async function commitTours(rows: TourOpRow[]): Promise<{
 }
 
 export async function buildTourExport(): Promise<Buffer> {
-  const tours = await db.tour.findMany({
-    orderBy: [
-      { subRegion: { region: { sortOrder: "asc" } } },
-      { subRegion: { sortOrder: "asc" } },
-      { sortOrder: "asc" },
-    ],
+  // One worksheet per region, ordered by region code (101, 102, …); rows within
+  // a sheet sorted by ProductID.
+  const regions = await db.region.findMany({
     include: {
-      subRegion: { include: { region: true } },
-      tags: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }] },
+      subRegions: {
+        include: { tours: { include: { tags: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }] } } } },
+      },
     },
   });
-  const rows = tours.map((t) => [
-    t.productId ?? "",
-    t.subRegion.region.name,
-    t.subRegion.name,
-    t.tags.map((tag) => tag.name).join(","),
-    t.name,
-    t.price,
-    t.description ?? "",
-    formatPublished(t.published),
-    t.seoTitle ?? "",
-    t.seoDescription ?? "",
-  ]);
-  return buildWorkbook(TOUR_SHEET, TOUR_HEADERS, rows);
+  const codeNum = (c: string | null) => (c ? parseInt(c, 10) : Number.MAX_SAFE_INTEGER);
+  regions.sort((a, b) => codeNum(a.code) - codeNum(b.code));
+
+  const sheets: WorkbookSheet[] = regions.map((region) => {
+    const tours = region.subRegions.flatMap((sub) =>
+      sub.tours.map((t) => ({ sub, t })),
+    );
+    tours.sort((a, b) => (a.t.productId ?? "").localeCompare(b.t.productId ?? ""));
+    const rows = tours.map(({ sub, t }) => [
+      t.productId ?? "",
+      region.name,
+      sub.name,
+      t.tags.map((tag) => tag.name).join(","),
+      t.name,
+      t.price,
+      t.description ?? "",
+      formatPublished(t.published),
+    ]);
+    return {
+      name: sanitizeSheetName(`${region.code ?? ""}${region.name}`),
+      headers: TOUR_HEADERS,
+      rows,
+    };
+  });
+  return buildMultiSheetWorkbook(sheets);
 }
 
 export async function buildTourTemplate(): Promise<Buffer> {
   return buildWorkbook(TOUR_SHEET, TOUR_HEADERS, [
-    ["", "範例主分類", "範例次分類", "標籤一,標籤二", "範例行程 5 日", 12888, "行程簡介，可換行。", "Y", "", ""],
-    ["", "範例主分類", "範例次分類", "標籤一", "範例行程 3 日", 8999, "簡短簡介", "N", "", ""],
+    ["", "範例主分類", "範例次分類", "標籤一,標籤二", "範例行程 5 日", 12888, "行程簡介，可換行。", "Y"],
+    ["", "範例主分類", "範例次分類", "標籤一", "範例行程 3 日", 8999, "簡短簡介", "N"],
   ]);
 }
 
 export async function readTourRows(buf: ArrayBuffer): Promise<SheetRow[]> {
-  return readFirstSheetRows(buf);
+  return readAllSheetRows(buf);
 }

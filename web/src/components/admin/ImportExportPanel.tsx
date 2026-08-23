@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 interface PreviewRow {
   row: number;
+  sheet?: string;
   action: "create" | "update" | "skip";
   label: string;
   detail?: string;
@@ -12,7 +13,12 @@ interface PreviewRow {
 }
 interface RowIssue {
   row: number;
+  sheet?: string;
   message: string;
+}
+
+function rowLabel(sheet: string | undefined, row: number): string {
+  return sheet ? `${sheet}・第 ${row} 列` : `第 ${row} 列`;
 }
 interface Preview {
   rows: PreviewRow[];
@@ -138,6 +144,7 @@ export default function ImportExportPanel({
   }
 
   const hasBlocking = !!preview && preview.createdCount + preview.updatedCount === 0;
+  const hasSheets = !!preview && preview.rows.some((r) => !!r.sheet);
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white">
@@ -214,7 +221,7 @@ export default function ImportExportPanel({
                   <p className="font-medium">錯誤列（不會匯入）：</p>
                   <ul className="mt-1 list-inside list-disc">
                     {preview.errors.slice(0, 50).map((e) => (
-                      <li key={e.row}>第 {e.row} 列：{e.message}</li>
+                      <li key={`${e.sheet ?? ""}-${e.row}`}>{rowLabel(e.sheet, e.row)}：{e.message}</li>
                     ))}
                   </ul>
                 </div>
@@ -225,7 +232,7 @@ export default function ImportExportPanel({
                   <p className="font-medium">⚠️ 疑似重複（仍可匯入，將視為新資料）：</p>
                   <ul className="mt-1 list-inside list-disc">
                     {preview.duplicates.slice(0, 50).map((d) => (
-                      <li key={d.row}>第 {d.row} 列：{d.message}</li>
+                      <li key={`${d.sheet ?? ""}-${d.row}`}>{rowLabel(d.sheet, d.row)}：{d.message}</li>
                     ))}
                   </ul>
                 </div>
@@ -235,6 +242,7 @@ export default function ImportExportPanel({
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-gray-50 text-left text-xs text-gray-500">
                     <tr>
+                      {hasSheets && <th className="px-3 py-2">工作表</th>}
                       <th className="px-3 py-2">列</th>
                       <th className="px-3 py-2">動作</th>
                       <th className="px-3 py-2">內容</th>
@@ -243,7 +251,8 @@ export default function ImportExportPanel({
                   </thead>
                   <tbody>
                     {preview.rows.slice(0, 300).map((r) => (
-                      <tr key={r.row} className="border-t border-gray-100">
+                      <tr key={`${r.sheet ?? ""}-${r.row}`} className="border-t border-gray-100">
+                        {hasSheets && <td className="px-3 py-1.5 text-gray-500">{r.sheet ?? ""}</td>}
                         <td className="px-3 py-1.5 text-gray-400">{r.row}</td>
                         <td className="px-3 py-1.5">
                           <span className={`rounded px-1.5 py-0.5 text-xs ${ACTION_STYLE[r.action]}`}>
