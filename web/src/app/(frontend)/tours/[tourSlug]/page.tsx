@@ -18,11 +18,13 @@ const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(ke
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tourSlug } = await params;
-  const tour = await db.tour.findUnique({
-    where: { slug: tourSlug, published: true },
+  const tour = await db.tour.findFirst({
+    where: { published: true, OR: [{ productId: tourSlug }, { slug: tourSlug }] },
     select: {
       name: true,
       description: true,
+      productId: true,
+      slug: true,
       thumbnailKey: true,
       seoTitle: true,
       seoDescription: true,
@@ -37,11 +39,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
   if (!tour) return {};
   const ogImageUrl = urlOf(tour.ogImageKey) ?? urlOf(tour.thumbnailKey) ?? (tour.files[0] ? storage.publicUrl(tour.files[0].key) : undefined);
+  // Canonical URL uses the ProductID (falls back to slug when not yet assigned),
+  // so old random-string links stay valid but point search engines at the new URL.
+  const canonicalPath = `/tours/${tour.productId ?? tour.slug}`;
   return {
     title: tour.seoTitle ?? `${tour.name} ／ 找到了旅遊 FOUND HOLIDAY`,
     description: tour.seoDescription ?? tour.description?.slice(0, 150) ?? undefined,
+    alternates: { canonical: canonicalPath },
     openGraph: {
-      url: `/tours/${tourSlug}`,
+      url: canonicalPath,
       images: ogImageUrl ? [ogImageUrl] : [],
     },
   };
@@ -50,13 +56,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TourPage({ params }: Props) {
   const { tourSlug } = await params;
 
-  const tour = await db.tour.findUnique({
-    where: { slug: tourSlug, published: true },
+  const tour = await db.tour.findFirst({
+    where: { published: true, OR: [{ productId: tourSlug }, { slug: tourSlug }] },
     select: {
       id: true,
       name: true,
       price: true,
       description: true,
+      productId: true,
+      slug: true,
       thumbnailKey: true,
       tags: {
         select: { name: true },
@@ -113,7 +121,7 @@ export default async function TourPage({ params }: Props) {
               </div>
               <div className="m-name-row">
                 <h1 className="m-name">{tour.name}</h1>
-                <TourShareButton slug={tourSlug} />
+                <TourShareButton urlId={tour.productId ?? tour.slug} />
               </div>
               <div className="m-tags">
                 {tour.tags.map((t) => (

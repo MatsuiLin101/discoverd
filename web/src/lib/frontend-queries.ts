@@ -100,6 +100,7 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
             select: {
               id: true,
               slug: true,
+              productId: true,
               name: true,
               thumbnailKey: true,
               price: true,
@@ -127,6 +128,7 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
       tours: sr.tours.map((t) => ({
         id: t.id,
         slug: t.slug,
+        productId: t.productId,
         name: t.name,
         thumbnail: urlOf(t.thumbnailKey),
         price: t.price,

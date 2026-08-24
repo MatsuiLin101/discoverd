@@ -9,6 +9,7 @@ import LineCommunityIcon from "./LineCommunityIcon";
 interface SearchResult {
   id: string;
   slug: string;
+  productId: string | null;
   name: string;
   thumbnail: string | null;
   price: number;
@@ -157,7 +158,7 @@ export default function SiteHeader() {
                   {matches.map((m, i) => (
                     <Link
                       key={m.id}
-                      href={`/regions/${m.regionSlug}/${m.subRegionSlug}?tour=${m.slug}`}
+                      href={`/regions/${m.regionSlug}/${m.subRegionSlug}?tour=${m.productId ?? m.slug}`}
                       className={`fh-sr-item${i === activeIndex ? " sr-active" : ""}`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setOpen(false)}

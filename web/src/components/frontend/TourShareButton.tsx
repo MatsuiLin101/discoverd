@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 
-export default function TourShareButton({ slug }: { slug: string }) {
+export default function TourShareButton({ urlId }: { urlId: string }) {
   const [copied, setCopied] = useState(false);
 
   function copy() {
-    const url = `${window.location.origin}/tours/${slug}`;
+    const url = `${window.location.origin}/tours/${urlId}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

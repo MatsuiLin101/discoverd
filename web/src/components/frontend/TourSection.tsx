@@ -47,7 +47,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
     const tourSlug = searchParams.get("tour");
     if (!tourSlug) return;
     for (const region of regions) {
-      const tour = region.tours.find((t) => t.slug === tourSlug);
+      const tour = region.tours.find((t) => t.productId === tourSlug || t.slug === tourSlug);
       if (tour) {
         setModalTour(tour);
         setMobileCollapsed(false);
@@ -122,7 +122,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
           activeRegion.tours.map((tour, i) => (
             <a
               key={i}
-              href={`/tours/${tour.slug}`}
+              href={`/tours/${tour.productId ?? tour.slug}`}
               className="fh-trow"
               onClick={(e) => { e.preventDefault(); openModal(tour); }}
             >
@@ -204,7 +204,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
               </div>
               <div className="m-name-row">
                 <h3 className="m-name">{modalTour?.name}</h3>
-                {modalTour && <TourShareButton key={modalTour.slug} slug={modalTour.slug} />}
+                {modalTour && <TourShareButton key={modalTour.slug} urlId={modalTour.productId ?? modalTour.slug} />}
               </div>
               <div className="m-tags">
                 {modalTour?.tags.map((tag) => (

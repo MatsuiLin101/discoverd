@@ -9,6 +9,7 @@ import LineIcon from "./LineIcon";
 
 interface Tour {
   slug: string;
+  productId: string | null;
   name: string;
   price: number;
   description: string | null;
@@ -47,7 +48,7 @@ export default function TourPreviewFrame({ tour }: { tour: Tour }) {
             </div>
             <div className="m-name-row">
               <h3 className="m-name">{tour.name}</h3>
-              <TourShareButton slug={tour.slug} />
+              <TourShareButton urlId={tour.productId ?? tour.slug} />
             </div>
             <div className="m-tags">
               {tour.tags.map((tag) => (
