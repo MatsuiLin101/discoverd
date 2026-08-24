@@ -26,16 +26,36 @@ export interface PreviewRowDisplay {
   label: string; // main identifier (tag/region/tour name)
   detail?: string; // secondary info (e.g. productId, price)
   duplicate?: boolean; // flagged as a possible duplicate
+  /** Values keyed by column key, for the rich (per-column) preview table. */
+  values?: Record<string, string>;
+}
+
+/** A column in the rich preview table (in display order). */
+export interface PreviewColumn {
+  key: string;
+  label: string;
 }
 
 /** The full preview payload returned to the client (module-agnostic shape). */
 export interface ImportPreview {
   rows: PreviewRowDisplay[];
+  /**
+   * When present, the client renders a rich table with these data columns plus
+   * per-row selection checkboxes and per-worksheet tabs. When absent, a simple
+   * table is shown. Structural columns (checkbox, 列號, 動作, 備註) are added by
+   * the client; `columns` lists only the module's data columns in between.
+   */
+  columns?: PreviewColumn[];
   createdCount: number;
   updatedCount: number;
   skippedCount: number;
   errors: RowIssue[];
   duplicates: RowIssue[];
+}
+
+/** Stable key for a preview/payload row (worksheet + row number). */
+export function rowKey(sheet: string | undefined, row: number): string {
+  return `${sheet ?? ""}::${row}`;
 }
 
 /** md5 of the uploaded file bytes (hex). */

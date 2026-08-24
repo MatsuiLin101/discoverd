@@ -10,18 +10,20 @@ interface PreviewRow {
   label: string;
   detail?: string;
   duplicate?: boolean;
+  values?: Record<string, string>;
+}
+interface PreviewColumn {
+  key: string;
+  label: string;
 }
 interface RowIssue {
   row: number;
   sheet?: string;
   message: string;
 }
-
-function rowLabel(sheet: string | undefined, row: number): string {
-  return sheet ? `${sheet}・第 ${row} 列` : `第 ${row} 列`;
-}
 interface Preview {
   rows: PreviewRow[];
+  columns?: PreviewColumn[];
   createdCount: number;
   updatedCount: number;
   skippedCount: number;
@@ -34,15 +36,11 @@ interface PriorImport {
 }
 
 interface Props {
-  /** e.g. "標籤" */
   moduleLabel: string;
-  /** GET endpoints */
   exportHref: string;
   templateHref: string;
-  /** POST endpoints */
   previewUrl: string;
   commitUrl: string;
-  /** Short description of the expected columns. */
   columnsHint?: string;
   /** Import is ADMIN-only; STAFF sees export/template only. */
   canImport?: boolean;
@@ -58,6 +56,13 @@ const ACTION_LABEL: Record<PreviewRow["action"], string> = {
   update: "修改",
   skip: "略過",
 };
+
+function keyOf(r: { sheet?: string; row: number }): string {
+  return `${r.sheet ?? ""}::${r.row}`;
+}
+function rowLabel(sheet: string | undefined, row: number): string {
+  return sheet ? `${sheet}・第 ${row} 列` : `第 ${row} 列`;
+}
 
 export default function ImportExportPanel({
   moduleLabel,
@@ -78,6 +83,8 @@ export default function ImportExportPanel({
   const [preview, setPreview] = useState<Preview | null>(null);
   const [priorImport, setPriorImport] = useState<PriorImport | null>(null);
   const [result, setResult] = useState<{ createdCount: number; updatedCount: number; skippedCount: number } | null>(null);
+  const [activeSheet, setActiveSheet] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   function reset() {
     setToken(null);
@@ -86,6 +93,8 @@ export default function ImportExportPanel({
     setResult(null);
     setError(null);
     setFilename(null);
+    setActiveSheet(null);
+    setSelected(new Set());
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -107,9 +116,14 @@ export default function ImportExportPanel({
         setError(json.error ?? "匯入預覽失敗");
         return;
       }
+      const pv: Preview = json.data.preview;
       setToken(json.data.token);
-      setPreview(json.data.preview);
+      setPreview(pv);
       setPriorImport(json.data.priorImport ?? null);
+      // Default: every importable (create/update) row selected.
+      setSelected(new Set(pv.rows.filter((r) => r.action !== "skip").map(keyOf)));
+      // Rich mode opens on the first worksheet.
+      setActiveSheet(pv.columns ? pv.rows.find((r) => r.sheet)?.sheet ?? null : null);
     } catch {
       setError("上傳失敗，請稍後再試");
     } finally {
@@ -118,14 +132,17 @@ export default function ImportExportPanel({
   }
 
   async function handleCommit() {
-    if (!token) return;
+    if (!token || !preview) return;
     setBusy(true);
     setError(null);
     try {
+      const body: { token: string; selected?: string[] } = { token };
+      // Only send a selection when the module supports it (rich mode).
+      if (preview.columns) body.selected = [...selected];
       const res = await fetch(commitUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -143,24 +160,59 @@ export default function ImportExportPanel({
     }
   }
 
-  const hasBlocking = !!preview && preview.createdCount + preview.updatedCount === 0;
+  const isRich = !!preview?.columns;
   const hasSheets = !!preview && preview.rows.some((r) => !!r.sheet);
+
+  // Distinct worksheet names in first-seen order (rich mode tabs).
+  const sheets: string[] = [];
+  if (preview) {
+    for (const r of preview.rows) {
+      if (r.sheet && !sheets.includes(r.sheet)) sheets.push(r.sheet);
+    }
+  }
+
+  const visibleRows = preview
+    ? isRich && activeSheet
+      ? preview.rows.filter((r) => r.sheet === activeSheet)
+      : preview.rows
+    : [];
+
+  const visibleSelectableKeys = visibleRows.filter((r) => r.action !== "skip").map(keyOf);
+  const allVisibleSelected =
+    visibleSelectableKeys.length > 0 && visibleSelectableKeys.every((k) => selected.has(k));
+
+  function toggleRow(k: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  }
+  function toggleAllVisible() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleSelectableKeys.forEach((k) => next.delete(k));
+      else visibleSelectableKeys.forEach((k) => next.add(k));
+      return next;
+    });
+  }
+
+  const selectableCount = preview ? preview.rows.filter((r) => r.action !== "skip").length : 0;
+  const selectedCount = selected.size;
+  const commitDisabled = busy || (isRich ? selectedCount === 0 : preview?.createdCount === 0 && preview?.updatedCount === 0);
+
+  const rowsToRender = visibleRows.slice(0, 500);
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3">
         <span className="text-sm font-medium text-gray-700">{moduleLabel}匯入 / 匯出</span>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <a
-            href={exportHref}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          <a href={exportHref} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
             匯出 Excel
           </a>
-          <a
-            href={templateHref}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          <a href={templateHref} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
             下載範本
           </a>
           {canImport && (
@@ -204,15 +256,16 @@ export default function ImportExportPanel({
 
           {preview && (
             <div className="mt-4">
-              <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex flex-wrap items-center gap-4 text-sm">
                 <span className="text-emerald-700">新增 {preview.createdCount}</span>
                 <span className="text-sky-700">修改 {preview.updatedCount}</span>
                 <span className="text-gray-500">略過 {preview.skippedCount}</span>
-                {preview.duplicates.length > 0 && (
-                  <span className="text-amber-700">疑似重複 {preview.duplicates.length}</span>
-                )}
-                {preview.errors.length > 0 && (
-                  <span className="text-rose-600">錯誤 {preview.errors.length}</span>
+                {preview.duplicates.length > 0 && <span className="text-amber-700">疑似重複 {preview.duplicates.length}</span>}
+                {preview.errors.length > 0 && <span className="text-rose-600">錯誤 {preview.errors.length}</span>}
+                {isRich && (
+                  <span className="ml-auto rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+                    已勾選 {selectedCount} / {selectableCount} 筆將匯入
+                  </span>
                 )}
               </div>
 
@@ -238,38 +291,94 @@ export default function ImportExportPanel({
                 </div>
               )}
 
-              <div className="mt-3 max-h-72 overflow-auto rounded-lg border border-gray-200">
+              {/* Worksheet tabs (rich mode with multiple sheets) */}
+              {isRich && sheets.length > 1 && (
+                <div className="mt-3 flex flex-wrap gap-1 border-b border-gray-200">
+                  {sheets.map((s) => {
+                    const count = preview.rows.filter((r) => r.sheet === s).length;
+                    const active = s === activeSheet;
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setActiveSheet(s)}
+                        className={`rounded-t-lg px-3 py-1.5 text-sm ${active ? "bg-[#D12351] text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                      >
+                        {s}
+                        <span className={`ml-1 text-xs ${active ? "text-white/80" : "text-gray-400"}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="mt-3 max-h-96 overflow-auto rounded-lg border border-gray-200">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-gray-50 text-left text-xs text-gray-500">
                     <tr>
-                      {hasSheets && <th className="px-3 py-2">工作表</th>}
-                      <th className="px-3 py-2">列</th>
+                      {isRich && (
+                        <th className="px-3 py-2">
+                          <input
+                            type="checkbox"
+                            aria-label="全選本頁"
+                            checked={allVisibleSelected}
+                            onChange={toggleAllVisible}
+                          />
+                        </th>
+                      )}
+                      {!isRich && hasSheets && <th className="px-3 py-2">工作表</th>}
+                      <th className="px-3 py-2">列號</th>
+                      {isRich
+                        ? preview.columns!.map((c) => <th key={c.key} className="px-3 py-2">{c.label}</th>)
+                        : <th className="px-3 py-2">內容</th>}
                       <th className="px-3 py-2">動作</th>
-                      <th className="px-3 py-2">內容</th>
                       <th className="px-3 py-2">備註</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {preview.rows.slice(0, 300).map((r) => (
-                      <tr key={`${r.sheet ?? ""}-${r.row}`} className="border-t border-gray-100">
-                        {hasSheets && <td className="px-3 py-1.5 text-gray-500">{r.sheet ?? ""}</td>}
-                        <td className="px-3 py-1.5 text-gray-400">{r.row}</td>
-                        <td className="px-3 py-1.5">
-                          <span className={`rounded px-1.5 py-0.5 text-xs ${ACTION_STYLE[r.action]}`}>
-                            {ACTION_LABEL[r.action]}
-                          </span>
-                        </td>
-                        <td className="px-3 py-1.5">
-                          {r.label}
-                          {r.duplicate && <span className="ml-1 text-amber-600">⚠️</span>}
-                        </td>
-                        <td className="px-3 py-1.5 text-gray-500">{r.detail ?? ""}</td>
-                      </tr>
-                    ))}
+                    {rowsToRender.map((r) => {
+                      const k = keyOf(r);
+                      const selectable = r.action !== "skip";
+                      const checked = selected.has(k);
+                      return (
+                        <tr key={k} className={`border-t border-gray-100 ${isRich && selectable && !checked ? "opacity-50" : ""}`}>
+                          {isRich && (
+                            <td className="px-3 py-1.5">
+                              <input
+                                type="checkbox"
+                                aria-label={`選取第 ${r.row} 列`}
+                                disabled={!selectable}
+                                checked={checked}
+                                onChange={() => toggleRow(k)}
+                              />
+                            </td>
+                          )}
+                          {!isRich && hasSheets && <td className="px-3 py-1.5 text-gray-500">{r.sheet ?? ""}</td>}
+                          <td className="px-3 py-1.5 text-gray-400">{r.row}</td>
+                          {isRich ? (
+                            preview.columns!.map((c) => (
+                              <td key={c.key} className="px-3 py-1.5">
+                                {r.values?.[c.key] ?? ""}
+                                {c.key === "name" && r.duplicate && <span className="ml-1 text-amber-600">⚠️</span>}
+                              </td>
+                            ))
+                          ) : (
+                            <td className="px-3 py-1.5">
+                              {r.label}
+                              {r.duplicate && <span className="ml-1 text-amber-600">⚠️</span>}
+                            </td>
+                          )}
+                          <td className="px-3 py-1.5">
+                            <span className={`rounded px-1.5 py-0.5 text-xs ${ACTION_STYLE[r.action]}`}>{ACTION_LABEL[r.action]}</span>
+                          </td>
+                          <td className="px-3 py-1.5 text-gray-500">{r.detail ?? ""}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
-                {preview.rows.length > 300 && (
-                  <p className="px-3 py-2 text-xs text-gray-400">僅顯示前 300 列，其餘照規則處理。</p>
+                {visibleRows.length > rowsToRender.length && (
+                  <p className="px-3 py-2 text-xs text-gray-400">僅顯示前 {rowsToRender.length} 列，其餘照勾選狀態處理。</p>
                 )}
               </div>
 
@@ -277,10 +386,10 @@ export default function ImportExportPanel({
                 <button
                   type="button"
                   onClick={handleCommit}
-                  disabled={busy || hasBlocking}
+                  disabled={commitDisabled}
                   className="rounded-lg bg-[#D12351] px-4 py-2 text-sm font-medium text-white hover:bg-[#b51d45] disabled:opacity-50"
                 >
-                  確定匯入
+                  {isRich ? `確定匯入所選 ${selectedCount} 筆` : "確定匯入"}
                 </button>
                 <button
                   type="button"
@@ -290,9 +399,7 @@ export default function ImportExportPanel({
                 >
                   取消
                 </button>
-                {hasBlocking && (
-                  <span className="text-xs text-gray-400">沒有可新增或修改的資料。</span>
-                )}
+                {commitDisabled && !busy && <span className="text-xs text-gray-400">沒有可匯入的資料。</span>}
               </div>
             </div>
           )}

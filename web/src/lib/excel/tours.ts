@@ -144,11 +144,19 @@ export async function analyzeTours(
       description: description.length > 0 ? description : null,
       published: parsePublished(publishedRaw),
     };
+    // Per-column values shown in the rich preview table.
+    const values: Record<string, string> = {
+      subName,
+      tags: base.tags.join("、"),
+      name,
+      price: String(price),
+      published: base.published ? "Y" : "N",
+    };
 
     if (productId) {
       if (seenIds.has(productId)) {
         duplicates.push({ row: sr.rowNumber, sheet, message: `檔案內重複的 ProductID「${productId}」，已略過` });
-        display.push({ row: sr.rowNumber, sheet, action: "skip", label: name, detail: `ProductID ${productId} 重複`, duplicate: true });
+        display.push({ row: sr.rowNumber, sheet, action: "skip", label: name, detail: `ProductID ${productId} 重複`, duplicate: true, values });
         skippedCount++;
         continue;
       }
@@ -156,11 +164,11 @@ export async function analyzeTours(
       const existing = existingById.get(productId);
       if (existing) {
         updatedCount++;
-        display.push({ row: sr.rowNumber, sheet, action: "update", label: name, detail: `ProductID ${productId}` });
+        display.push({ row: sr.rowNumber, sheet, action: "update", label: name, detail: `ProductID ${productId}`, values });
         valid.push({ ...base, action: "update", productId });
       } else {
         createdCount++;
-        display.push({ row: sr.rowNumber, sheet, action: "create", label: name, detail: `填入的編號 ${productId} 不存在，將配發新編號` });
+        display.push({ row: sr.rowNumber, sheet, action: "create", label: name, detail: `填入的編號 ${productId} 不存在，將配發新編號`, values });
         valid.push({ ...base, action: "create", productId: null });
       }
     } else {
@@ -176,6 +184,7 @@ export async function analyzeTours(
         label: name,
         detail: isDup ? "疑似重複（將建立為新行程）" : "新行程",
         duplicate: isDup,
+        values,
       });
       if (isDup) {
         duplicates.push({ row: sr.rowNumber, sheet, message: `已存在相同「主分類/次分類/行程名稱」：${regionName} / ${subName} / ${name}` });
@@ -186,6 +195,13 @@ export async function analyzeTours(
 
   const preview: ImportPreview = {
     rows: display,
+    columns: [
+      { key: "subName", label: "次分類" },
+      { key: "tags", label: "標籤" },
+      { key: "name", label: "行程名稱" },
+      { key: "price", label: "價格" },
+      { key: "published", label: "發布" },
+    ],
     createdCount,
     updatedCount,
     skippedCount,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { writeLog } from "@/lib/log";
-import { loadPending, markCommitted } from "@/lib/excel/import-core";
+import { loadPending, markCommitted, rowKey } from "@/lib/excel/import-core";
 import { commitTours, type TourImportPayload } from "@/lib/excel/tours";
 
 export async function POST(req: NextRequest) {
@@ -13,19 +13,26 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const token = typeof body.token === "string" ? body.token : "";
     if (!token) return NextResponse.json({ error: "缺少匯入批次" }, { status: 400 });
+    // Optional per-row selection (keys from the preview). Omitted = import all.
+    const selected: string[] | null = Array.isArray(body.selected) ? body.selected : null;
 
     const res = await loadPending(token, "TOUR", session.userId);
     if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
 
     const payload = res.log.payload as unknown as TourImportPayload;
-    const applied = await commitTours(payload.rows);
+    const rowsToApply = selected
+      ? payload.rows.filter((r) => selected.includes(rowKey(r.sheet, r.row)))
+      : payload.rows;
+    const deselectedCount = payload.rows.length - rowsToApply.length;
 
-    // Preview-level skips (duplicate ProductIDs) + any commit-time quota skips.
+    const applied = await commitTours(rowsToApply);
+
+    // Preview-level skips (duplicate ProductIDs) + user-deselected rows + quota skips.
     const previewSkipped = (res.log.summary as { skippedCount?: number }).skippedCount ?? 0;
     const counts = {
       createdCount: applied.createdCount,
       updatedCount: applied.updatedCount,
-      skippedCount: previewSkipped + applied.quotaSkipped.length,
+      skippedCount: previewSkipped + deselectedCount + applied.quotaSkipped.length,
     };
     await markCommitted(token, counts);
 
