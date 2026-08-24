@@ -9,6 +9,7 @@ import TourShareButton from "./TourShareButton";
 import TourMediaGallery from "./TourMediaGallery";
 import LineIcon from "./LineIcon";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
+import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 
 interface Props {
   parent: { name: string };
@@ -149,9 +150,15 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
                 {tour.description && <p className="t-lede">{tour.description}</p>}
                 <div className="t-foot">
                   <span className="t-amt">
-                    <span className="cur">$</span>
-                    <span className="num">{tour.price.toLocaleString("zh-TW")}</span>
-                    <span className="unit">起</span>
+                    {isCustomQuote(tour.price) ? (
+                      <span className="custom-quote">{CUSTOM_QUOTE_LABEL}</span>
+                    ) : (
+                      <>
+                        <span className="cur">$</span>
+                        <span className="num">{tour.price.toLocaleString("zh-TW")}</span>
+                        <span className="unit">起</span>
+                      </>
+                    )}
                   </span>
                   <span className="t-cta">查看行程 →</span>
                 </div>
@@ -219,9 +226,15 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
             <div className="m-bottom">
               <div>
                 <div className="m-price">
-                  <span className="cur">NT$</span>
-                  <span className="num">{modalTour?.price.toLocaleString("zh-TW")}</span>
-                  <span className="unit">起</span>
+                  {modalTour && isCustomQuote(modalTour.price) ? (
+                    <span className="custom-quote">{CUSTOM_QUOTE_LABEL}</span>
+                  ) : (
+                    <>
+                      <span className="cur">NT$</span>
+                      <span className="num">{modalTour?.price.toLocaleString("zh-TW")}</span>
+                      <span className="unit">起</span>
+                    </>
+                  )}
                 </div>
                 <p className="m-note">※ 優惠方案及出發日期請洽服務專員</p>
               </div>

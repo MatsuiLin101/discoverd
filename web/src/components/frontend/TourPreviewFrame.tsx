@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import type { TourMedia } from "@/lib/frontend-data";
+import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 import TourShareButton from "./TourShareButton";
 import TourMediaGallery from "./TourMediaGallery";
 import LineIcon from "./LineIcon";
@@ -61,9 +62,15 @@ export default function TourPreviewFrame({ tour }: { tour: Tour }) {
           <div className="m-bottom">
             <div>
               <div className="m-price">
-                <span className="cur">NT$</span>
-                <span className="num">{tour.price.toLocaleString("zh-TW")}</span>
-                <span className="unit">起</span>
+                {isCustomQuote(tour.price) ? (
+                  <span className="custom-quote">{CUSTOM_QUOTE_LABEL}</span>
+                ) : (
+                  <>
+                    <span className="cur">NT$</span>
+                    <span className="num">{tour.price.toLocaleString("zh-TW")}</span>
+                    <span className="unit">起</span>
+                  </>
+                )}
               </div>
               <p className="m-note">※ 優惠方案及出發日期請洽服務專員</p>
             </div>

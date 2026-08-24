@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { toTourMedia } from "@/lib/frontend-queries";
 import TourMediaGallery from "@/components/frontend/TourMediaGallery";
+import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 
 interface Props {
   params: Promise<{ tourSlug: string }>;
@@ -134,9 +135,15 @@ export default async function TourPage({ params }: Props) {
             <div className="m-bottom">
               <div>
                 <div className="m-price">
-                  <span className="cur">NT$</span>
-                  <span className="num">{tour.price.toLocaleString("zh-TW")}</span>
-                  <span className="unit">起</span>
+                  {isCustomQuote(tour.price) ? (
+                    <span className="custom-quote">{CUSTOM_QUOTE_LABEL}</span>
+                  ) : (
+                    <>
+                      <span className="cur">NT$</span>
+                      <span className="num">{tour.price.toLocaleString("zh-TW")}</span>
+                      <span className="unit">起</span>
+                    </>
+                  )}
                 </div>
                 <p className="m-note">※ 優惠方案及出發日期請洽服務專員</p>
               </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
+import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 import LineIcon from "./LineIcon";
 import LineCommunityIcon from "./LineCommunityIcon";
 
@@ -183,9 +184,15 @@ export default function SiteHeader() {
                         </div>
                       </div>
                       <div className="fh-sr-price">
-                        <span className="cur">$</span>
-                        <span className="num">{m.price.toLocaleString()}</span>
-                        <span className="unit">起</span>
+                        {isCustomQuote(m.price) ? (
+                          <span className="custom-quote">{CUSTOM_QUOTE_LABEL}</span>
+                        ) : (
+                          <>
+                            <span className="cur">$</span>
+                            <span className="num">{m.price.toLocaleString()}</span>
+                            <span className="unit">起</span>
+                          </>
+                        )}
                       </div>
                     </Link>
                   ))}
