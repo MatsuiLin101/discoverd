@@ -52,7 +52,6 @@ export default async function RegionsPage() {
           previewUrl="/api/admin/regions/import/preview"
           commitUrl="/api/admin/regions/import/commit"
           columnsHint="主分類代碼、主分類名稱、次分類代碼、次分類名稱、SEO標題、SEO描述"
-          canImport={session.role === "ADMIN"}
         />
       </div>
 

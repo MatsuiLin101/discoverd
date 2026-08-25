@@ -78,6 +78,7 @@ export default async function ToursPage({
       select: {
         id: true,
         name: true,
+        code: true,
         subRegions: {
           orderBy: { sortOrder: "asc" },
           select: { id: true, name: true },
@@ -159,7 +160,10 @@ export default async function ToursPage({
             previewUrl="/api/admin/tours/import/preview"
             commitUrl="/api/admin/tours/import/commit"
             columnsHint="ProductID、主分類、次分類、標籤（逗號分隔）、行程名稱、價格、行程簡介、發布(Y/N)；匯出依主分類分工作表、依 ProductID 排序"
-            canImport={session.role === "ADMIN"}
+            exportRegions={regions.map((r) => ({
+              id: r.id,
+              label: r.code ? `${r.code} ${r.name}` : r.name,
+            }))}
           />
         </div>
       )}

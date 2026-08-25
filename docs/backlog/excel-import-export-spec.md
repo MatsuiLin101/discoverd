@@ -115,8 +115,8 @@ model ImportLog {
 
 | 端點 | 權限 | 作用 |
 |------|------|------|
-| `POST /api/admin/{tags,regions,tours}/import/preview` | ADMIN | 上傳 → 解析驗證 → 建 PENDING ImportLog → 回 `{token, preview}` |
-| `POST /api/admin/{...}/import/commit` | ADMIN | 憑 token → transaction 套用 → 回實際結果 |
+| `POST /api/admin/{tags,regions,tours}/import/preview` | 登入即可 | 上傳 → 解析驗證 → 建 PENDING ImportLog → 回 `{token, preview}` |
+| `POST /api/admin/{...}/import/commit` | 登入即可 | 憑 token → transaction 套用 → 回實際結果 |
 | `GET  /api/admin/{...}/export` | 登入即可 | 產生 xlsx 下載（`Content-Disposition: attachment`），欄位含 code / productId |
 | `GET  /api/admin/{...}/export?template=1` | 登入即可 | 空白範本（表頭＋示範列）下載 |
 
@@ -151,6 +151,7 @@ model ImportLog {
 **旅遊方案（Tour）**：
 `ProductID | 主分類 | 次分類 | 標籤 | 行程名稱 | 價格 | 行程簡介 | 發布(Y/N)`
 - **匯出採多工作表**：依主分類（region）分成不同工作表，工作表名稱為 `{主分類代碼}{主分類名稱}`（例：`101日本`），依主分類代碼 101、102… 排序；每張工作表內的資料列**依 ProductID 排序**。
+- **可指定地區匯出**：工具列「指定地區匯出」可勾選部分主分類，只匯出所選（`GET .../tours/export?regions=<id,id>`）；不選＝全部。
 - **匯入讀取所有工作表**，並以每列的「主分類／次分類」欄位落位（工作表名稱僅供人閱讀，不影響判定）；預覽與錯誤訊息會標示來源工作表。
 - **不含 SEO 欄位**；更新既有行程時 SEO 保留不動，新建行程 SEO 留空（後台補）。
 - identity：見第一節判定表（純看 ProductID，不比名稱；ProductID 內嵌區碼不與名稱欄位做一致性檢查）。
@@ -177,7 +178,7 @@ model ImportLog {
 | productId 有值但不存在 | 當新行程、忽略填入值、配新號、報告標註 |
 | 當日序號 | (主分類,次分類) 每日 01~99，UTC+8，超過跳過並提示 |
 | 手動新建 | 也配發 productId，走共用層 |
-| 匯入權限 | ADMIN only；匯出登入即可 |
+| 匯入權限 | 所有登入使用者皆可（原為 ADMIN only，已放寬）；匯出登入即可 |
 | 防呆 | 列級疑似重複警示（主）+ MD5/ImportLog（次，兼稽核）|
 | 兩段式 | 有狀態 token，PENDING→COMMITTED，15 分鐘過期 |
 | published | 「發布」欄用 `Y`/`N`，**預設發布**；去空白不分大小寫，非 `N` 一律發布；匯出輸出 `Y`/`N` |

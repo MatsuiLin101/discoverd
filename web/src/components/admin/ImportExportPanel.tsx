@@ -42,7 +42,9 @@ interface Props {
   previewUrl: string;
   commitUrl: string;
   columnsHint?: string;
-  /** Import is ADMIN-only; STAFF sees export/template only. */
+  /** When set, offer a "指定地區匯出" picker that filters the export by region. */
+  exportRegions?: { id: string; label: string }[];
+  /** Gate the import UI. Defaults to on. */
   canImport?: boolean;
 }
 
@@ -71,10 +73,13 @@ export default function ImportExportPanel({
   previewUrl,
   commitUrl,
   columnsHint,
+  exportRegions,
   canImport = true,
 }: Props) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [regionExportOpen, setRegionExportOpen] = useState(false);
+  const [exportRegionSel, setExportRegionSel] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -210,8 +215,17 @@ export default function ImportExportPanel({
         <span className="text-sm font-medium text-gray-700">{moduleLabel}匯入 / 匯出</span>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <a href={exportHref} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            匯出 Excel
+            匯出 Excel{exportRegions && exportRegions.length > 0 ? "（全部）" : ""}
           </a>
+          {exportRegions && exportRegions.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setRegionExportOpen((v) => !v)}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              {regionExportOpen ? "收合地區" : "指定地區匯出"}
+            </button>
+          )}
           <a href={templateHref} className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
             下載範本
           </a>
@@ -229,6 +243,57 @@ export default function ImportExportPanel({
           )}
         </div>
       </div>
+
+      {exportRegions && regionExportOpen && (
+        <div className="border-t border-gray-200 px-4 py-3">
+          <p className="mb-2 text-xs text-gray-500">勾選要匯出的地區（可複選）：</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {exportRegions.map((r) => (
+              <label key={r.id} className="flex items-center gap-1.5 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={exportRegionSel.has(r.id)}
+                  onChange={() =>
+                    setExportRegionSel((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(r.id)) next.delete(r.id);
+                      else next.add(r.id);
+                      return next;
+                    })
+                  }
+                />
+                {r.label}
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <a
+              href={
+                exportRegionSel.size
+                  ? `${exportHref}?regions=${[...exportRegionSel].join(",")}`
+                  : undefined
+              }
+              aria-disabled={exportRegionSel.size === 0}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                exportRegionSel.size
+                  ? "bg-[#D12351] text-white hover:bg-[#b51d45]"
+                  : "pointer-events-none bg-gray-200 text-gray-400"
+              }`}
+            >
+              下載所選（{exportRegionSel.size}）
+            </a>
+            {exportRegionSel.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setExportRegionSel(new Set())}
+                className="text-xs text-gray-400 hover:text-gray-600"
+              >
+                清除
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {canImport && open && (
         <div className="border-t border-gray-200 px-4 py-4">

@@ -362,10 +362,12 @@ export async function commitTours(rows: TourOpRow[]): Promise<{
   );
 }
 
-export async function buildTourExport(): Promise<Buffer> {
+export async function buildTourExport(regionIds?: string[]): Promise<Buffer> {
   // One worksheet per region, ordered by region code (101, 102, …); rows within
-  // a sheet sorted by ProductID.
+  // a sheet sorted by ProductID. An optional regionIds filter exports only those
+  // regions (omitted / empty = all).
   const regions = await db.region.findMany({
+    where: regionIds && regionIds.length ? { id: { in: regionIds } } : undefined,
     include: {
       subRegions: {
         include: { tours: { include: { tags: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }] } } } },

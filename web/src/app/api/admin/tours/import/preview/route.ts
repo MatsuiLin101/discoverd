@@ -7,8 +7,8 @@ import type { Prisma } from "@/generated/prisma/client";
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ADMIN") {
-      return NextResponse.json({ error: "僅限管理員操作" }, { status: 403 });
+    if (!session) {
+      return NextResponse.json({ error: "請先登入" }, { status: 403 });
     }
     const fd = await req.formData();
     const file = fd.get("file");

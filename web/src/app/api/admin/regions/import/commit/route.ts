@@ -7,8 +7,8 @@ import { commitRegions, type RegionImportPayload } from "@/lib/excel/regions";
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ADMIN") {
-      return NextResponse.json({ error: "僅限管理員操作" }, { status: 403 });
+    if (!session) {
+      return NextResponse.json({ error: "請先登入" }, { status: 403 });
     }
     const body = await req.json().catch(() => ({}));
     const token = typeof body.token === "string" ? body.token : "";

@@ -43,7 +43,6 @@ export default async function TagsPage() {
           previewUrl="/api/admin/tags/import/preview"
           commitUrl="/api/admin/tags/import/commit"
           columnsHint="標籤名稱"
-          canImport={session.role === "ADMIN"}
         />
       </div>
 
