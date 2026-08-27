@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { parseCropField } from "@/lib/crop";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -48,10 +49,11 @@ export async function POST(
   const sortOrder = (max._max.sortOrder ?? -1) + 1;
 
   const thumbnailKey = (fd.get("thumbnailKey") as string) || null;
+  const thumbnailCrop = thumbnailKey ? parseCropField(fd.get("thumbnailCrop")) : null;
   const ogImageKey = (fd.get("ogImageKey") as string) || null;
 
   const sub = await db.subRegion.create({
-    data: { regionId, name, slug, sortOrder, thumbnailKey, seoTitle, seoDescription, ogImageKey },
+    data: { regionId, name, slug, sortOrder, thumbnailKey, thumbnailCrop: thumbnailCrop ?? undefined, seoTitle, seoDescription, ogImageKey },
   });
   void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, parentRegion: region.name, thumbnailKey: thumbnailKey ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey: ogImageKey ?? null } });
   return NextResponse.json({ data: sub }, { status: 201 });

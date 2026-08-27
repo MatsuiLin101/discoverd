@@ -3,6 +3,7 @@ import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { normalizeCrop } from "@/lib/crop";
 import TourForm from "@/components/admin/tours/TourForm";
 
 const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
@@ -24,6 +25,7 @@ export default async function EditTourPage({
       where: { id },
       select: {
         id: true, name: true, price: true, description: true, thumbnailKey: true,
+        thumbnailCrop: true,
         published: true, subRegionId: true, slug: true,
         seoTitle: true, seoDescription: true, ogImageKey: true,
         tags: { select: { id: true } },
@@ -39,10 +41,11 @@ export default async function EditTourPage({
 
   if (!tour) notFound();
 
-  const { thumbnailKey, ogImageKey, files, ...rest } = tour;
+  const { thumbnailKey, thumbnailCrop, ogImageKey, files, ...rest } = tour;
   const tourForForm = {
     ...rest,
     thumbnail: urlOf(thumbnailKey),
+    thumbnailCrop: normalizeCrop(thumbnailCrop),
     ogImage: urlOf(ogImageKey),
   };
   const initialFiles = files.map((f) => ({

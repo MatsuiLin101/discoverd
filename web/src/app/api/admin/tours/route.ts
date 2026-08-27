@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { parseCropField } from "@/lib/crop";
 import { allocateTourProductId, DailyQuotaError } from "@/lib/excel/product-id";
 
 const createSchema = z.object({
@@ -57,6 +58,8 @@ export async function POST(req: NextRequest) {
     if (!subRegion) return NextResponse.json({ error: "找不到指定次分類" }, { status: 400 });
 
     const thumbnailKey = (fd.get("thumbnailKey") as string) || null;
+    // Crop only meaningful when a thumbnail exists.
+    const thumbnailCrop = thumbnailKey ? parseCropField(fd.get("thumbnailCrop")) : null;
     const ogImageKey = (fd.get("ogImageKey") as string) || null;
 
     // Allocate a frozen productId and create the tour in one transaction so the
@@ -81,6 +84,7 @@ export async function POST(req: NextRequest) {
             subRegionId,
             published,
             thumbnailKey,
+            thumbnailCrop: thumbnailCrop ?? undefined,
             seoTitle,
             seoDescription,
             ogImageKey,

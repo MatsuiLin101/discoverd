@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { normalizeCrop } from "@/lib/crop";
 import type { RegionListItem, RegionDetail, RegionTours, TourMedia } from "@/lib/frontend-data";
 
 /** Map a stored object key to its public URL (null-safe). */
@@ -21,6 +22,7 @@ export async function getRegionList(): Promise<RegionListItem[]> {
       slug: true,
       name: true,
       thumbnailKey: true,
+      thumbnailCrop: true,
       subRegions: {
         select: {
           _count: { select: { tours: { where: { published: true } } } },
@@ -32,6 +34,7 @@ export async function getRegionList(): Promise<RegionListItem[]> {
     slug: r.slug,
     name: r.name,
     thumbnail: urlOf(r.thumbnailKey),
+    crop: normalizeCrop(r.thumbnailCrop),
     tourCount: r.subRegions.reduce((sum, sr) => sum + sr._count.tours, 0),
   }));
 }
@@ -46,6 +49,7 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
       slug: true,
       name: true,
       thumbnailKey: true,
+      thumbnailCrop: true,
       seoTitle: true,
       seoDescription: true,
       ogImageKey: true,
@@ -55,6 +59,7 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
           slug: true,
           name: true,
           thumbnailKey: true,
+          thumbnailCrop: true,
           _count: { select: { tours: { where: { published: true } } } },
         },
       },
@@ -65,6 +70,7 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
     slug: region.slug,
     name: region.name,
     thumbnail: urlOf(region.thumbnailKey),
+    crop: normalizeCrop(region.thumbnailCrop),
     seoTitle: region.seoTitle,
     seoDescription: region.seoDescription,
     ogImage: urlOf(region.ogImageKey),
@@ -72,6 +78,7 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
       slug: sr.slug,
       name: sr.name,
       thumbnail: urlOf(sr.thumbnailKey),
+      crop: normalizeCrop(sr.thumbnailCrop),
       tourCount: sr._count.tours,
     })),
   };
@@ -103,6 +110,7 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
               productId: true,
               name: true,
               thumbnailKey: true,
+              thumbnailCrop: true,
               price: true,
               description: true,
               tags: { select: { name: true } },
@@ -131,6 +139,7 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
         productId: t.productId,
         name: t.name,
         thumbnail: urlOf(t.thumbnailKey),
+        crop: normalizeCrop(t.thumbnailCrop),
         price: t.price,
         description: t.description,
         tags: t.tags.map((tag) => tag.name),

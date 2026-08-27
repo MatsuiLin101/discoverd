@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { SubRegionWithTours, TourItem } from "@/lib/frontend-data";
 import TourInquiryModal from "./TourInquiryModal";
 import TourShareButton from "./TourShareButton";
 import TourMediaGallery from "./TourMediaGallery";
+import CroppedThumb from "./CroppedThumb";
 import LineIcon from "./LineIcon";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
@@ -128,12 +128,11 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
               onClick={(e) => { e.preventDefault(); openModal(tour); }}
             >
               <div className="t-img">
-                <Image
+                <CroppedThumb
                   src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
                   alt={tour.name}
-                  fill
+                  crop={tour.thumbnail ? tour.crop : null}
                   sizes="(max-width: 767px) 100vw, (max-width: 1080px) 50vw, 33vw"
-                  style={{ objectFit: "cover" }}
                 />
               </div>
               <div className="t-body">
