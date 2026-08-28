@@ -21,7 +21,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import DeleteTourButton from "./DeleteTourButton";
 import TourPreviewModal from "./TourPreviewModal";
+import CroppedPreview from "@/components/admin/CroppedPreview";
 import FloatingToast from "@/components/admin/FloatingToast";
+import type { ThumbCrop } from "@/lib/crop";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
@@ -31,6 +33,7 @@ type TourRow = {
   slug: string;
   name: string;
   thumbnail: string | null;
+  crop?: ThumbCrop | null;
   price: number;
   published: boolean;
   sortOrder: number;
@@ -98,18 +101,25 @@ function TourMobileCard({
             className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#D12351]"
           />
         )}
-        <div
-          className={`relative h-10 overflow-hidden bg-gray-100 rounded w-14 shrink-0${tour.thumbnail ? " cursor-zoom-in" : ""}`}
-          onClick={tour.thumbnail ? () => onImageClick(tour.thumbnail!) : undefined}
-        >
-          <Image
-            src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
+        {tour.thumbnail ? (
+          <CroppedPreview
+            src={tour.thumbnail}
             alt={tour.name}
-            fill
-            className="object-cover"
-            unoptimized
+            crop={tour.crop}
+            className="aspect-[4/3] w-14 shrink-0 cursor-zoom-in rounded bg-gray-100"
+            onClick={() => onImageClick(tour.thumbnail!)}
           />
-        </div>
+        ) : (
+          <div className="relative aspect-[4/3] w-14 shrink-0 overflow-hidden rounded bg-gray-100">
+            <Image
+              src="/images/tour-placeholder.svg"
+              alt={tour.name}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <p className="text-sm font-medium leading-snug text-gray-800">
@@ -234,18 +244,25 @@ function SortableTourRow({
         )}
       </td>
       <td className="px-4 py-3">
-        <div
-          className={`relative h-10 overflow-hidden bg-gray-100 rounded w-14${tour.thumbnail ? " cursor-zoom-in" : ""}`}
-          onClick={tour.thumbnail ? () => onImageClick(tour.thumbnail!) : undefined}
-        >
-          <Image
-            src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
+        {tour.thumbnail ? (
+          <CroppedPreview
+            src={tour.thumbnail}
             alt={tour.name}
-            fill
-            className="object-cover"
-            unoptimized
+            crop={tour.crop}
+            className="aspect-[4/3] w-14 cursor-zoom-in rounded bg-gray-100"
+            onClick={() => onImageClick(tour.thumbnail!)}
           />
-        </div>
+        ) : (
+          <div className="relative aspect-[4/3] w-14 overflow-hidden rounded bg-gray-100">
+            <Image
+              src="/images/tour-placeholder.svg"
+              alt={tour.name}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+        )}
       </td>
       <td className="px-4 py-3 font-medium text-gray-800">{tour.name}</td>
       <td className="px-4 py-3 text-gray-500">
