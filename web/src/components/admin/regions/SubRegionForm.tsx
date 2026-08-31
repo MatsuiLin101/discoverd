@@ -4,9 +4,12 @@ import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ImageLightbox from "./ImageLightbox";
+import ImageCropper from "@/components/admin/ImageCropper";
+import CroppedPreview from "@/components/admin/CroppedPreview";
 import { uploadFile } from "@/lib/upload-client";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
 import CharCountField from "@/components/admin/CharCountField";
+import type { ThumbCrop } from "@/lib/crop";
 
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
@@ -24,6 +27,7 @@ interface Props {
   initialName?: string;
   initialSlug?: string;
   initialThumbnail?: string | null;
+  initialThumbnailCrop?: ThumbCrop | null;
   initialSeoTitle?: string | null;
   initialSeoDescription?: string | null;
   initialOgImage?: string | null;
@@ -36,6 +40,7 @@ export default function SubRegionForm({
   initialName = "",
   initialSlug = "",
   initialThumbnail,
+  initialThumbnailCrop,
   initialSeoTitle,
   initialSeoDescription,
   initialOgImage,
@@ -49,6 +54,8 @@ export default function SubRegionForm({
   const [slugManual, setSlugManual] = useState(isEdit);
   const [preview, setPreview] = useState<string | null>(null);
   const [clearThumbnail, setClearThumbnail] = useState(false);
+  const [thumbnailCrop, setThumbnailCrop] = useState<ThumbCrop | null>(initialThumbnailCrop ?? null);
+  const [showCropper, setShowCropper] = useState(false);
   const [seoTitle, setSeoTitle] = useState(initialSeoTitle ?? "");
   const [seoDescription, setSeoDescription] = useState(initialSeoDescription ?? "");
   const [ogPreview, setOgPreview] = useState<string | null>(null);
@@ -74,11 +81,13 @@ export default function SubRegionForm({
     if (!file) return;
     setClearThumbnail(false);
     setPreview(URL.createObjectURL(file));
+    setThumbnailCrop(null); // a new image invalidates any previous crop coords
   }
 
   function handleClearThumbnail() {
     setClearThumbnail(true);
     setPreview(null);
+    setThumbnailCrop(null);
     if (fileRef.current) fileRef.current.value = "";
   }
 
@@ -118,6 +127,9 @@ export default function SubRegionForm({
         fd.append("thumbnailKey", up.key);
       } else if (clearThumbnail) {
         fd.append("clearThumbnail", "true");
+      }
+      if (thumbnailCrop && !clearThumbnail) {
+        fd.append("thumbnailCrop", JSON.stringify(thumbnailCrop));
       }
       if (ogFile) {
         const up = await uploadFile(ogFile, "seo-og/subregions");
@@ -182,20 +194,27 @@ export default function SubRegionForm({
       />
 
       <div>
-        <label className={labelClass}>縮圖</label>
+        <label className={labelClass}>縮圖<span className="ml-2 text-xs font-normal text-gray-400">前台以 16:9 顯示</span></label>
         <div className="flex items-start gap-4">
-          <div
-            className={`relative h-24 w-32 overflow-hidden rounded-lg border border-gray-200 bg-gray-50${currentThumb ? " cursor-zoom-in" : ""}`}
-            onClick={currentThumb ? () => setLightbox(displayThumbnail) : undefined}
-          >
-            <Image
-              src={displayThumbnail}
+          {currentThumb ? (
+            <CroppedPreview
+              src={currentThumb}
               alt="縮圖預覽"
-              fill
-              className="object-cover"
-              unoptimized
+              crop={thumbnailCrop}
+              className="aspect-video w-44 flex-shrink-0 rounded-lg border border-gray-200 bg-gray-50 cursor-zoom-in"
+              onClick={() => setLightbox(displayThumbnail)}
             />
-          </div>
+          ) : (
+            <div className="relative aspect-video w-44 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+              <Image
+                src={displayThumbnail}
+                alt="縮圖預覽"
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          )}
           <div className="flex-1">
             <input
               ref={fileRef}
@@ -204,12 +223,32 @@ export default function SubRegionForm({
               onChange={handleFileChange}
               className="block w-full text-sm text-gray-500 file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-gray-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-100"
             />
-            <p className="mt-1.5 text-xs text-gray-400">未上傳時使用預設縮圖</p>
+            <div className="mt-1.5 flex items-center gap-3">
+              {currentThumb && (
+                <button
+                  type="button"
+                  onClick={() => setShowCropper(true)}
+                  className="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                >
+                  {thumbnailCrop ? "重新裁切" : "調整裁切"}
+                </button>
+              )}
+              {thumbnailCrop && (
+                <button
+                  type="button"
+                  onClick={() => setThumbnailCrop(null)}
+                  className="cursor-pointer text-xs text-gray-400 hover:text-gray-600"
+                >
+                  取消裁切
+                </button>
+              )}
+            </div>
+            <p className="mt-1.5 text-xs text-gray-400">未上傳時使用預設縮圖；建議原圖至少 1280×720</p>
             {showClearButton && (
               <button
                 type="button"
                 onClick={handleClearThumbnail}
-                className="mt-1.5 cursor-pointer text-xs text-rose-500 hover:text-rose-700"
+                className="mt-1.5 block cursor-pointer text-xs text-rose-500 hover:text-rose-700"
               >
                 清除縮圖
               </button>
@@ -300,6 +339,18 @@ export default function SubRegionForm({
       </div>
     </form>
     {lightbox && <ImageLightbox src={lightbox} alt="預覽" onClose={() => setLightbox(null)} />}
+    {showCropper && currentThumb && (
+      <ImageCropper
+        src={currentThumb}
+        aspect={16 / 9}
+        value={thumbnailCrop}
+        onApply={(crop) => {
+          setThumbnailCrop(crop);
+          setShowCropper(false);
+        }}
+        onCancel={() => setShowCropper(false)}
+      />
+    )}
     </>
   );
 }

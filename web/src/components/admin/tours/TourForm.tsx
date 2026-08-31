@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TourFileList from "./TourFileList";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
+import ImageCropper from "@/components/admin/ImageCropper";
+import CroppedPreview from "@/components/admin/CroppedPreview";
 import { uploadFile } from "@/lib/upload-client";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
 import CharCountField from "@/components/admin/CharCountField";
+import type { ThumbCrop } from "@/lib/crop";
 
 interface SubRegion {
   id: string;
@@ -31,6 +34,7 @@ interface Tour {
   price: number;
   description: string | null;
   thumbnail: string | null;
+  thumbnailCrop?: ThumbCrop | null;
   published: boolean;
   subRegionId: string;
   tags: { id: string }[];
@@ -87,6 +91,8 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
   const [clearThumbnail, setClearThumbnail] = useState(false);
+  const [thumbnailCrop, setThumbnailCrop] = useState<ThumbCrop | null>(tour?.thumbnailCrop ?? null);
+  const [showCropper, setShowCropper] = useState(false);
   const [seoTitle, setSeoTitle] = useState(tour?.seoTitle ?? "");
   const [seoDescription, setSeoDescription] = useState(tour?.seoDescription ?? "");
   const [ogPreview, setOgPreview] = useState<string | null>(null);
@@ -109,6 +115,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     const file = e.target.files?.[0] ?? null;
     setThumbFile(file);
     setThumbPreview(file ? URL.createObjectURL(file) : null);
+    setThumbnailCrop(null); // a new image invalidates any previous crop coords
     if (file) setClearThumbnail(false);
   }
 
@@ -116,6 +123,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     setClearThumbnail(true);
     setThumbFile(null);
     setThumbPreview(null);
+    setThumbnailCrop(null);
   }
 
   function handleOgFileChange(e: ChangeEvent<HTMLInputElement>) {
@@ -176,6 +184,10 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       } else if (clearThumbnail) {
         fd.append("clearThumbnail", "true");
       }
+      // Crop only applies when a thumbnail remains; new upload / clear resets it.
+      if (thumbnailCrop && !clearThumbnail) {
+        fd.append("thumbnailCrop", JSON.stringify(thumbnailCrop));
+      }
       if (ogFile) {
         const up = await uploadFile(ogFile, "seo-og/tours");
         fd.append("ogImageKey", up.key);
@@ -209,7 +221,6 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
 
   const currentThumb = clearThumbnail ? null : (thumbPreview ?? tour?.thumbnail ?? null);
   const showClearButton = isEdit && (!!tour?.thumbnail || !!thumbFile) && !clearThumbnail;
-  const canOpenLightbox = !!currentThumb;
 
   return (
     <>
@@ -317,20 +328,27 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
 
         {/* 行程縮圖 */}
         <div>
-          <label className={labelClass}>行程縮圖</label>
+          <label className={labelClass}>行程縮圖<span className="ml-2 text-xs font-normal text-gray-400">前台以 4:3 顯示</span></label>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div
-              className={`relative h-24 w-36 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200${canOpenLightbox ? " cursor-zoom-in" : ""}`}
-              onClick={canOpenLightbox ? () => setLightbox(currentThumb!) : undefined}
-            >
-              <Image
-                src={currentThumb ?? "/images/tour-placeholder.svg"}
+            {currentThumb ? (
+              <CroppedPreview
+                src={currentThumb}
                 alt="縮圖預覽"
-                fill
-                className="object-cover"
-                unoptimized
+                crop={thumbnailCrop}
+                className="aspect-[4/3] w-40 flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 cursor-zoom-in"
+                onClick={() => setLightbox(currentThumb)}
               />
-            </div>
+            ) : (
+              <div className="relative aspect-[4/3] w-40 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+                <Image
+                  src="/images/tour-placeholder.svg"
+                  alt="縮圖預覽"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+            )}
             <div className="flex-1 space-y-2">
               <input
                 type="file"
@@ -338,11 +356,29 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
                 onChange={handleThumbChange}
                 className={fileInputClass}
               />
+              {currentThumb && (
+                <button
+                  type="button"
+                  onClick={() => setShowCropper(true)}
+                  className="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                >
+                  {thumbnailCrop ? "重新裁切" : "調整裁切"}
+                </button>
+              )}
+              {thumbnailCrop && (
+                <button
+                  type="button"
+                  onClick={() => setThumbnailCrop(null)}
+                  className="ml-2 cursor-pointer text-xs text-gray-400 hover:text-gray-600"
+                >
+                  取消裁切
+                </button>
+              )}
               {showClearButton && (
                 <button
                   type="button"
                   onClick={handleClearThumbnail}
-                  className="cursor-pointer text-xs text-rose-500 hover:text-rose-700"
+                  className="block cursor-pointer text-xs text-rose-500 hover:text-rose-700"
                 >
                   清除縮圖
                 </button>
@@ -351,8 +387,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
                 <p className="text-xs text-gray-400">縮圖將被清除，儲存後生效</p>
               )}
               <p className="text-xs text-gray-400">
-                支援 JPG、PNG、WebP；未上傳時顯示預設縮圖
-                {canOpenLightbox && "；點擊縮圖可放大預覽"}
+                支援 JPG、PNG、WebP；建議原圖至少 1200×900；未上傳時顯示預設縮圖
               </p>
             </div>
           </div>
@@ -507,6 +542,19 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
 
       {lightbox && (
         <ImageLightbox src={lightbox} alt="縮圖預覽" onClose={() => setLightbox(null)} />
+      )}
+
+      {showCropper && currentThumb && (
+        <ImageCropper
+          src={currentThumb}
+          aspect={4 / 3}
+          value={thumbnailCrop}
+          onApply={(crop) => {
+            setThumbnailCrop(crop);
+            setShowCropper(false);
+          }}
+          onCancel={() => setShowCropper(false)}
+        />
       )}
     </>
   );

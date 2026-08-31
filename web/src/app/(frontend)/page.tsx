@@ -36,6 +36,7 @@ export default async function HomePage() {
     name: r.name,
     count: r.tourCount,
     img: r.thumbnail ?? "",
+    crop: r.thumbnail ? r.crop : null,
   }));
 
   const totalTours = regions.reduce((sum, r) => sum + r.tourCount, 0);

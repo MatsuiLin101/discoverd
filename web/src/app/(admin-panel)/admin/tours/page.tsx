@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { normalizeCrop } from "@/lib/crop";
 import type { Prisma } from "@/generated/prisma/client";
 import TourFilterBar from "@/components/admin/tours/TourFilterBar";
 import TourListClient from "@/components/admin/tours/TourListClient";
@@ -95,6 +96,7 @@ export default async function ToursPage({
   const toursForClient = tours.map((t) => ({
     ...t,
     thumbnail: t.thumbnailKey ? storage.publicUrl(t.thumbnailKey) : null,
+    crop: normalizeCrop(t.thumbnailCrop),
   }));
 
   const sortModeSubRegion = isSortMode

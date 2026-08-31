@@ -1,3 +1,5 @@
+import type { ThumbCrop } from "@/lib/crop";
+
 export interface Tour {
   img: string;
   code: string;
@@ -451,6 +453,7 @@ export interface RegionListItem {
   slug: string;
   name: string;
   thumbnail: string | null;
+  crop: ThumbCrop | null;
   tourCount: number;
 }
 
@@ -459,6 +462,7 @@ export interface RegionDetail {
   slug: string;
   name: string;
   thumbnail: string | null;
+  crop: ThumbCrop | null;
   seoTitle: string | null;
   seoDescription: string | null;
   ogImage: string | null;
@@ -469,6 +473,7 @@ export interface SubRegionListItem {
   slug: string;
   name: string;
   thumbnail: string | null;
+  crop: ThumbCrop | null;
   tourCount: number;
 }
 
@@ -503,6 +508,7 @@ export interface TourItem {
   productId: string | null;
   name: string;
   thumbnail: string | null;
+  crop: ThumbCrop | null;
   price: number;
   description: string | null;
   tags: string[];

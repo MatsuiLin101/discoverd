@@ -46,6 +46,8 @@ model Region {
   // Frozen 3-digit business code (101+), assigned once; reordering never changes it.
   code              String?     @unique
   thumbnailKey      String?
+  // Crop rect over the original thumbnail, normalized 0..1: { x, y, w, h }. 16:9.
+  thumbnailCrop     Json?
   seoTitle          String?
   seoDescription    String?
   ogImageKey        String?
@@ -64,6 +66,8 @@ model SubRegion {
   // Frozen 2-digit business code (01+) within the parent region; reordering never changes it.
   code              String?
   thumbnailKey      String?
+  // Crop rect over the original thumbnail, normalized 0..1: { x, y, w, h }. 16:9.
+  thumbnailCrop     Json?
   seoTitle          String?
   seoDescription    String?
   ogImageKey        String?
@@ -93,6 +97,8 @@ model Tour {
   // Assigned once at creation; moving to another subRegion never recomputes it.
   productId         String?    @unique
   thumbnailKey      String?
+  // Crop rect over the original thumbnail, normalized 0..1: { x, y, w, h }. 4:3.
+  thumbnailCrop     Json?
   price             Int
   description       String?
   seoTitle          String?

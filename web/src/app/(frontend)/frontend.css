@@ -314,8 +314,24 @@
   overflow: hidden;
   background: #d8cfe0;
 }
-.fh-cat-row .cat-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
-.fh-cat-row:hover .cat-thumb img { transform: scale(1.08); }
+.fh-cat-row .cat-thumb > img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+.fh-cat-row:hover .cat-thumb > img { transform: scale(1.08); }
+.fh-cat-row:hover .cat-thumb .thumb-crop > img { transform: scale(1.08); }
+
+/* Shared crop reconstruction (#6): render a stored crop rect with pure CSS.
+   The parent element owns the fixed-ratio box; this fills it and offsets the
+   original image so the chosen rectangle exactly covers it — no re-compression. */
+.thumb-crop { position: absolute; inset: 0; overflow: hidden; }
+.thumb-crop > img {
+  position: absolute;
+  max-width: none;
+  width: calc(100% / var(--cw));
+  height: calc(100% / var(--ch));
+  left: calc(-100% * var(--cx) / var(--cw));
+  top: calc(-100% * var(--cy) / var(--ch));
+  transition: transform .7s ease;
+  transform-origin: calc((var(--cx) + var(--cw) / 2) * 100%) calc((var(--cy) + var(--ch) / 2) * 100%);
+}
 .fh-cat-row .cat-arrow {
   width: 44px; height: 44px;
   border-radius: 50%;
@@ -370,8 +386,9 @@
 }
 /* Fixed 4:3 preview frame (#4) — image never stretches with source ratio */
 .fh-trow .t-img { position: relative; overflow: hidden; background: #d8cfe0; aspect-ratio: 4 / 3; }
-.fh-trow .t-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; position: absolute; inset: 0; }
-.fh-trow:hover .t-img img { transform: scale(1.07); }
+.fh-trow .t-img > img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; position: absolute; inset: 0; }
+.fh-trow:hover .t-img > img { transform: scale(1.07); }
+.fh-trow:hover .t-img .thumb-crop > img { transform: scale(1.07); }
 .fh-trow .t-body { padding: 24px 24px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .fh-trow .t-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .fh-trow .t-tags span {

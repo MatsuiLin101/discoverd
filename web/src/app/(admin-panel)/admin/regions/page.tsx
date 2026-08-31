@@ -4,6 +4,7 @@ import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { normalizeCrop } from "@/lib/crop";
 import SortableRegionList from "@/components/admin/regions/SortableRegionList";
 import ImportExportPanel from "@/components/admin/ImportExportPanel";
 
@@ -17,14 +18,16 @@ export default async function RegionsPage() {
       name: true,
       slug: true,
       thumbnailKey: true,
+      thumbnailCrop: true,
       _count: { select: { subRegions: true } },
       subRegions: { select: { name: true, _count: { select: { tours: true } } } },
     },
     orderBy: { sortOrder: "asc" },
   });
-  const regions = regionsRaw.map(({ subRegions, thumbnailKey, ...r }) => ({
+  const regions = regionsRaw.map(({ subRegions, thumbnailKey, thumbnailCrop, ...r }) => ({
     ...r,
     thumbnail: thumbnailKey ? storage.publicUrl(thumbnailKey) : null,
+    crop: normalizeCrop(thumbnailCrop),
     tourCount: subRegions.reduce((sum, s) => sum + s._count.tours, 0),
     subRegionNames: subRegions.map(s => s.name),
   }));

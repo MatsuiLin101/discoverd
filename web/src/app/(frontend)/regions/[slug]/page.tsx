@@ -35,6 +35,7 @@ export default async function RegionPage({ params }: Props) {
     name: sr.name,
     count: sr.tourCount,
     img: sr.thumbnail ?? "",
+    crop: sr.thumbnail ? sr.crop : null,
   }));
 
   const totalTours = region.subRegions.reduce((sum, sr) => sum + sr.tourCount, 0);

@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { Prisma } from "@/generated/prisma/client";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { parseCropField } from "@/lib/crop";
 
 const updateSchema = z.object({
   name: z.string().min(1, "請輸入行程名稱"),
@@ -62,6 +64,10 @@ export async function PUT(
       thumbnailKey = newThumbnailKey;
     }
 
+    // Crop always mirrors the client's current state for the surviving thumbnail;
+    // when the thumbnail is cleared, the crop is dropped too.
+    const thumbnailCrop = thumbnailKey ? parseCropField(fd.get("thumbnailCrop")) : null;
+
     let ogImageKey: string | null = existing.ogImageKey;
     const newOgImageKey = (fd.get("ogImageKey") as string) || null;
     const clearOgImage = fd.get("clearOgImage") === "true";
@@ -83,6 +89,7 @@ export async function PUT(
         subRegionId,
         published,
         thumbnailKey,
+        thumbnailCrop: thumbnailCrop ?? Prisma.DbNull,
         seoTitle: seoTitle ?? null,
         seoDescription: seoDescription ?? null,
         ogImageKey,
