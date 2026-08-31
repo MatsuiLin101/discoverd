@@ -13,11 +13,12 @@ import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 
 interface Props {
   parent: { name: string };
+  regionSlug: string;
   regions: SubRegionWithTours[];
   initialSlug: string;
 }
 
-export default function TourSection({ parent, regions, initialSlug }: Props) {
+export default function TourSection({ parent, regionSlug, regions, initialSlug }: Props) {
   const [activeSlug, setActiveSlug] = useState(initialSlug);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTour, setModalTour] = useState<TourItem | null>(null);
@@ -30,6 +31,21 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
   const pathname = usePathname();
 
   const activeRegion = regions.find((r) => r.slug === activeSlug) ?? regions[0];
+
+  // Keep the active sub-category in sync with the URL so the breadcrumb (rendered
+  // by the server page from the URL) and this list always match — including on
+  // browser back/forward navigation between sub-categories.
+  useEffect(() => {
+    setActiveSlug(initialSlug);
+  }, [initialSlug]);
+
+  // Switch sub-category: update the list instantly (optimistic local state) and
+  // push the new URL so the breadcrumb and shareable address stay in sync.
+  function selectSub(slug: string) {
+    if (slug === activeSlug) return;
+    setActiveSlug(slug);
+    router.push(`/regions/${regionSlug}/${slug}`, { scroll: false });
+  }
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -108,7 +124,7 @@ export default function TourSection({ parent, regions, initialSlug }: Props) {
           <button
             key={r.slug}
             className={r.slug === activeSlug ? "active" : ""}
-            onClick={() => setActiveSlug(r.slug)}
+            onClick={() => selectSub(r.slug)}
           >
             {r.name}
           </button>
