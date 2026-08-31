@@ -59,6 +59,7 @@ export default async function ToursPage({ params }: Props) {
         <Suspense fallback={null}>
           <TourSection
             parent={{ name: data.region.name }}
+            regionSlug={slug}
             regions={data.subRegions}
             initialSlug={validSlug}
           />
