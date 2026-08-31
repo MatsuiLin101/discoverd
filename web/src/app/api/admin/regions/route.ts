@@ -6,7 +6,7 @@ import { writeLog } from "@/lib/log";
 import { parseCropField } from "@/lib/crop";
 
 const schema = z.object({
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/, "slug 只允許小寫英數字和連字號"),
   seoTitle: z.string().max(100).optional(),
   seoDescription: z.string().max(160).optional(),

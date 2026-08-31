@@ -241,6 +241,28 @@ async function uniqueSubSlug(tx: Prisma.TransactionClient, regionId: string): Pr
   throw new Error("無法產生唯一的次分類 slug");
 }
 
+/**
+ * Match an existing region/sub whose stored name only differs from `name` by
+ * surrounding whitespace. Fallback after an exact lookup misses, so legacy dirty
+ * rows are reused (and their names cleaned on update) rather than duplicated.
+ */
+async function findRegionRecordByTrimmedName(
+  tx: Prisma.TransactionClient,
+  name: string,
+): Promise<{ id: string; name: string; code: string | null } | null> {
+  const all = await tx.region.findMany({ select: { id: true, name: true, code: true } });
+  return all.find((r) => r.name.trim() === name) ?? null;
+}
+
+async function findSubRecordByTrimmedName(
+  tx: Prisma.TransactionClient,
+  regionId: string,
+  name: string,
+): Promise<{ id: string; name: string } | null> {
+  const all = await tx.subRegion.findMany({ where: { regionId }, select: { id: true, name: true } });
+  return all.find((s) => s.name.trim() === name) ?? null;
+}
+
 /** Apply the valid rows idempotently inside a transaction. */
 export async function commitRegions(rows: RegionRow[]): Promise<void> {
   await db.$transaction(async (tx) => {
@@ -256,7 +278,11 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
         regionRecord = await tx.region.findUnique({ where: { code: r.regionCode }, select: { id: true, name: true, code: true } });
       }
       if (!regionRecord && !r.regionCode && r.regionName) {
-        regionRecord = await tx.region.findUnique({ where: { name: r.regionName }, select: { id: true, name: true, code: true } });
+        // Exact match first; fall back to a whitespace-trimmed match so legacy
+        // dirty names (e.g. "日本 ") are reused instead of duplicated.
+        regionRecord =
+          (await tx.region.findUnique({ where: { name: r.regionName }, select: { id: true, name: true, code: true } })) ??
+          (await findRegionRecordByTrimmedName(tx, r.regionName));
       }
       const keyName = r.regionName ? `name:${r.regionName}` : "";
       if (!regionRecord && keyName && regionIdByKey.has(keyName)) {
@@ -304,7 +330,9 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
         sub = await tx.subRegion.findFirst({ where: { regionId: regionId!, code: r.subCode }, select: { id: true, name: true } });
       }
       if (!sub && r.subName) {
-        sub = await tx.subRegion.findFirst({ where: { regionId: regionId!, name: r.subName }, select: { id: true, name: true } });
+        sub =
+          (await tx.subRegion.findFirst({ where: { regionId: regionId!, name: r.subName }, select: { id: true, name: true } })) ??
+          (await findSubRecordByTrimmedName(tx, regionId!, r.subName));
       }
 
       if (sub) {

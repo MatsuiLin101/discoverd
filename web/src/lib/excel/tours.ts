@@ -222,6 +222,39 @@ async function uniqueTourSlug(tx: Prisma.TransactionClient): Promise<string> {
   throw new Error("無法產生唯一的行程 slug");
 }
 
+/**
+ * Match an existing region/sub/tag whose stored name only differs from `name`
+ * by surrounding whitespace. Used as a fallback after an exact lookup misses so
+ * legacy dirty rows are reused rather than duplicated. `name` is already trimmed.
+ */
+async function findRegionByTrimmedName(
+  tx: Prisma.TransactionClient,
+  name: string,
+): Promise<{ id: string } | null> {
+  const all = await tx.region.findMany({ select: { id: true, name: true } });
+  const match = all.find((r) => r.name.trim() === name);
+  return match ? { id: match.id } : null;
+}
+
+async function findSubByTrimmedName(
+  tx: Prisma.TransactionClient,
+  regionId: string,
+  name: string,
+): Promise<{ id: string } | null> {
+  const all = await tx.subRegion.findMany({ where: { regionId }, select: { id: true, name: true } });
+  const match = all.find((s) => s.name.trim() === name);
+  return match ? { id: match.id } : null;
+}
+
+async function findTagByTrimmedName(
+  tx: Prisma.TransactionClient,
+  name: string,
+): Promise<{ id: string } | null> {
+  const all = await tx.tag.findMany({ select: { id: true, name: true } });
+  const match = all.find((t) => t.name.trim() === name);
+  return match ? { id: match.id } : null;
+}
+
 /** Resolve (creating if needed) the subRegion id for a (regionName, subName). */
 async function ensureRegionSub(
   tx: Prisma.TransactionClient,
@@ -232,7 +265,11 @@ async function ensureRegionSub(
 ): Promise<string> {
   let regionId = regionCache.get(regionName);
   if (!regionId) {
-    const existing = await tx.region.findUnique({ where: { name: regionName }, select: { id: true } });
+    // Exact match first; fall back to a whitespace-trimmed match so legacy dirty
+    // names (e.g. "日本 ") are reused instead of spawning a duplicate region.
+    const existing =
+      (await tx.region.findUnique({ where: { name: regionName }, select: { id: true } })) ??
+      (await findRegionByTrimmedName(tx, regionName));
     if (existing) {
       regionId = existing.id;
     } else {
@@ -249,7 +286,9 @@ async function ensureRegionSub(
   const subKey = `${regionId}|${subName}`;
   let subId = subCache.get(subKey);
   if (!subId) {
-    const existing = await tx.subRegion.findFirst({ where: { regionId, name: subName }, select: { id: true } });
+    const existing =
+      (await tx.subRegion.findFirst({ where: { regionId, name: subName }, select: { id: true } })) ??
+      (await findSubByTrimmedName(tx, regionId, subName));
     if (existing) {
       subId = existing.id;
     } else {
@@ -273,7 +312,9 @@ async function ensureTag(
 ): Promise<string> {
   const cached = cache.get(name);
   if (cached) return cached;
-  const existing = await tx.tag.findUnique({ where: { name }, select: { id: true } });
+  const existing =
+    (await tx.tag.findUnique({ where: { name }, select: { id: true } })) ??
+    (await findTagByTrimmedName(tx, name));
   if (existing) {
     cache.set(name, existing.id);
     return existing.id;

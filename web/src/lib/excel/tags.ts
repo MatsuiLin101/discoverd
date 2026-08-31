@@ -24,8 +24,10 @@ export async function buildTagPreview(
   const toCreate: string[] = [];
   const seen = new Set<string>();
 
+  // Compare on trimmed names so a legacy dirty tag (e.g. "促銷 ") is treated as
+  // already existing rather than re-created (incoming names are already trimmed).
   const existing = new Set(
-    (await db.tag.findMany({ select: { name: true } })).map((t) => t.name),
+    (await db.tag.findMany({ select: { name: true } })).map((t) => t.name.trim()),
   );
 
   for (const { rowNumber, cells } of rows) {
@@ -65,13 +67,18 @@ export async function commitTagImport(
   let skipped = 0;
   const max = await db.tag.aggregate({ _max: { sortOrder: true } });
   let sortOrder = (max._max.sortOrder ?? -1) + 1;
+  // Trimmed set of existing names so legacy dirty tags are matched (and skipped)
+  // instead of spawning a near-duplicate.
+  const existingTrimmed = new Set(
+    (await db.tag.findMany({ select: { name: true } })).map((t) => t.name.trim()),
+  );
   for (const name of payload.names) {
-    const exists = await db.tag.findUnique({ where: { name } });
-    if (exists) {
+    if (existingTrimmed.has(name)) {
       skipped++;
       continue;
     }
     await db.tag.create({ data: { name, sortOrder: sortOrder++ } });
+    existingTrimmed.add(name);
     created++;
   }
   return { createdCount: created, updatedCount: 0, skippedCount: skipped };
