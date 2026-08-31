@@ -500,6 +500,7 @@ export interface TourMedia {
 export interface TourItem {
   id: string;
   slug: string;
+  productId: string | null;
   name: string;
   thumbnail: string | null;
   price: number;

@@ -15,6 +15,10 @@ fi
 # one-shot migration. `up -d` below omits the profile, so migrate never starts as
 # a long-running service.
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" --profile tools build
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm migrate
+# Apply migrations, then backfill Product IDs / region codes in the SAME one-shot
+# container (no extra container startup). The backfill is idempotent — after the
+# first run it is a near-instant no-op, since new rows get their ids at creation.
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm migrate \
+  sh -c "npx prisma migrate deploy && npx tsx scripts/backfill-product-ids.ts"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps

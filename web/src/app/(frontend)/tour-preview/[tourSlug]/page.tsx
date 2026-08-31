@@ -24,6 +24,7 @@ export default async function TourPreviewPage({
       name: true,
       price: true,
       description: true,
+      productId: true,
       thumbnailKey: true,
       tags: {
         select: { name: true },
@@ -48,6 +49,7 @@ export default async function TourPreviewPage({
     <TourPreviewFrame
       tour={{
         slug: tourSlug,
+        productId: tour.productId,
         name: tour.name,
         price: tour.price,
         description: tour.description,

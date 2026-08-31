@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { allocateTourProductId, DailyQuotaError } from "@/lib/excel/product-id";
 
 const createSchema = z.object({
   name: z.string().min(1, "請輸入行程名稱"),
@@ -55,31 +56,44 @@ export async function POST(req: NextRequest) {
     const subRegion = await db.subRegion.findUnique({ where: { id: subRegionId } });
     if (!subRegion) return NextResponse.json({ error: "找不到指定次分類" }, { status: 400 });
 
-    let slug = randomBytes(4).toString("hex");
-    for (let i = 0; i < 5; i++) {
-      const conflict = await db.tour.findUnique({ where: { slug } });
-      if (!conflict) break;
-      slug = randomBytes(4).toString("hex");
-    }
-
     const thumbnailKey = (fd.get("thumbnailKey") as string) || null;
     const ogImageKey = (fd.get("ogImageKey") as string) || null;
 
-    const tour = await db.tour.create({
-      data: {
-        name,
-        slug,
-        price,
-        description: description ?? null,
-        subRegionId,
-        published,
-        thumbnailKey,
-        seoTitle,
-        seoDescription,
-        ogImageKey,
-        tags: tagIds.length > 0 ? { connect: tagIds.map((id) => ({ id })) } : undefined,
-      },
-    });
+    // Allocate a frozen productId and create the tour in one transaction so the
+    // daily sequence stays consistent (same logic the Excel importer uses).
+    let tour;
+    try {
+      tour = await db.$transaction(async (tx) => {
+        let slug = randomBytes(4).toString("hex");
+        for (let i = 0; i < 5; i++) {
+          const conflict = await tx.tour.findUnique({ where: { slug } });
+          if (!conflict) break;
+          slug = randomBytes(4).toString("hex");
+        }
+        const productId = await allocateTourProductId(tx, subRegionId);
+        return tx.tour.create({
+          data: {
+            name,
+            slug,
+            productId,
+            price,
+            description: description ?? null,
+            subRegionId,
+            published,
+            thumbnailKey,
+            seoTitle,
+            seoDescription,
+            ogImageKey,
+            tags: tagIds.length > 0 ? { connect: tagIds.map((id) => ({ id })) } : undefined,
+          },
+        });
+      });
+    } catch (e) {
+      if (e instanceof DailyQuotaError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      throw e;
+    }
 
     const contentFiles = parseContentFiles(fd.get("contentFiles"));
     for (let i = 0; i < contentFiles.length; i++) {

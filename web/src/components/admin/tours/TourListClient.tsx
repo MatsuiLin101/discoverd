@@ -24,6 +24,7 @@ import TourPreviewModal from "./TourPreviewModal";
 import FloatingToast from "@/components/admin/FloatingToast";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
+import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 
 type TourRow = {
   id: string;
@@ -127,7 +128,9 @@ function TourMobileCard({
           <p className="mt-0.5 text-xs text-gray-500">
             {tour.subRegion.region.name} › {tour.subRegion.name}
           </p>
-          <p className="mt-1 text-sm text-gray-700">NT${tour.price.toLocaleString()}</p>
+          <p className="mt-1 text-sm text-gray-700">
+            {isCustomQuote(tour.price) ? CUSTOM_QUOTE_LABEL : `NT$${tour.price.toLocaleString()}`}
+          </p>
           {tour.tags.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
               {tour.tags.map((tag) => (
@@ -248,7 +251,9 @@ function SortableTourRow({
       <td className="px-4 py-3 text-gray-500">
         {tour.subRegion.region.name} › {tour.subRegion.name}
       </td>
-      <td className="px-4 py-3 text-gray-700">NT${tour.price.toLocaleString()}</td>
+      <td className="px-4 py-3 text-gray-700">
+        {isCustomQuote(tour.price) ? CUSTOM_QUOTE_LABEL : `NT$${tour.price.toLocaleString()}`}
+      </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
           {tour.tags.map((tag) => (

@@ -392,6 +392,7 @@
 .fh-trow .t-amt .cur { font-size: 13px; color: var(--accent); }
 .fh-trow .t-amt .num { font-size: 28px; letter-spacing: 0.01em; }
 .fh-trow .t-amt .unit { font-size: 16px; color: var(--accent); }
+.fh-trow .t-amt .custom-quote { font-size: 20px; font-weight: 600; }
 .fh-trow .t-cta {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   background: transparent; color: var(--accent); border: 1px solid var(--accent);
@@ -477,6 +478,7 @@
 .fh-modal-side .m-price .cur { font-size: 16px; }
 .fh-modal-side .m-price .num { font-size: 40px; letter-spacing: 0.01em; }
 .fh-modal-side .m-price .unit { font-size: 20px; }
+.fh-modal-side .m-price .custom-quote { font-size: 26px; font-weight: 600; }
 .fh-modal-side .m-note { font-size: 12px; line-height: 1.7; color: var(--ink-3); margin: 14px 0 0; }
 .fh-modal-side .m-actions { display: flex; flex-direction: column; gap: 12px; }
 .fh-modal-side .m-actions button,
@@ -725,6 +727,7 @@
 .fh-sr-price .cur { font-size: 11px; }
 .fh-sr-price .num { font-size: 21px; letter-spacing: 0.01em; }
 .fh-sr-price .unit { font-size: 13px; }
+.fh-sr-price .custom-quote { font-size: 15px; font-weight: 600; }
 .fh-sr-empty { padding: 22px 14px 26px; text-align: center; font-size: 13px; color: var(--ink-3); line-height: 1.7; }
 .fh-sr-empty .k { color: var(--ink); font-weight: 500; }
 

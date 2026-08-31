@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true,
         slug: true,
+        productId: true,
         name: true,
         thumbnailKey: true,
         price: true,
@@ -42,6 +43,7 @@ export async function GET(req: NextRequest) {
     const result = rows.map((t) => ({
       id: t.id,
       slug: t.slug,
+      productId: t.productId,
       name: t.name,
       thumbnail: t.thumbnailKey ? storage.publicUrl(t.thumbnailKey) : null,
       price: t.price,

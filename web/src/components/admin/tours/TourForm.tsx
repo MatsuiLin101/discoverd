@@ -236,6 +236,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             className={inputClass}
             placeholder="例如：29800"
           />
+          <p className="mt-1 text-xs text-gray-400">填 0 表示不定價，前台會顯示「客製化報價」。</p>
         </div>
 
         {/* 行程簡介 */}

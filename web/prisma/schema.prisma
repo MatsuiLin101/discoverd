@@ -23,6 +23,7 @@ model User {
   role        Role          @default(STAFF)
   sessions    Session[]
   logs        ActivityLog[]
+  importLogs  ImportLog[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -42,6 +43,8 @@ model Region {
   id                String      @id @default(cuid())
   name              String      @unique
   slug              String      @unique
+  // Frozen 3-digit business code (101+), assigned once; reordering never changes it.
+  code              String?     @unique
   thumbnailKey      String?
   seoTitle          String?
   seoDescription    String?
@@ -58,6 +61,8 @@ model SubRegion {
   region            Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
   name              String
   slug              String
+  // Frozen 2-digit business code (01+) within the parent region; reordering never changes it.
+  code              String?
   thumbnailKey      String?
   seoTitle          String?
   seoDescription    String?
@@ -68,6 +73,7 @@ model SubRegion {
   updatedAt         DateTime @updatedAt
 
   @@unique([regionId, slug])
+  @@unique([regionId, code])
 }
 
 model Tag {
@@ -83,6 +89,9 @@ model Tour {
   subRegion         SubRegion  @relation(fields: [subRegionId], references: [id], onDelete: Restrict)
   name              String
   slug              String     @unique
+  // Frozen 13-digit product id: regionCode(3)+subCode(2)+YYMMDD(6,UTC+8)+dailySeq(2).
+  // Assigned once at creation; moving to another subRegion never recomputes it.
+  productId         String?    @unique
   thumbnailKey      String?
   price             Int
   description       String?
@@ -153,6 +162,7 @@ enum LogResource {
   SITE_SETTING
   SALES_REGION
   SALES_AGENT
+  IMPORT
 }
 
 model HeroBanner {
@@ -184,4 +194,35 @@ model ActivityLog {
   resourceName String
   detail       Json?
   createdAt    DateTime    @default(now())
+}
+
+enum ImportModule {
+  TAG
+  REGION
+  TOUR
+}
+
+enum ImportStatus {
+  PENDING
+  COMMITTED
+}
+
+// Excel import staging + audit. A preview writes a PENDING row holding the
+// normalised rows (payload); committing applies them and flips to COMMITTED.
+// The md5 lets us warn on byte-identical re-uploads.
+model ImportLog {
+  id           String       @id @default(cuid())
+  module       ImportModule
+  filename     String
+  md5          String
+  status       ImportStatus @default(PENDING)
+  payload      Json         // normalised rows, used by the token-based commit
+  summary      Json         // preview summary: created/updated/skipped/errors/duplicates
+  createdCount Int          @default(0)
+  updatedCount Int          @default(0)
+  skippedCount Int          @default(0)
+  userId       String?
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
+  committedAt  DateTime?
 }
