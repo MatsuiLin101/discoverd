@@ -16,6 +16,19 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 const DEFAULT_RATIO = 1.414;
 
 /**
+ * How many times to silently re-fetch a PDF that fails to load before showing
+ * the fallback link. A just-uploaded file served through the Cloudflare-fronted
+ * R2 public domain can miss on the first cross-origin fetch (edge read-after-write
+ * propagation / a briefly negatively-cached response); retrying with a cache-busting
+ * query param past that window usually succeeds — which is exactly what a manual
+ * page refresh does today.
+ */
+const MAX_RETRIES = 3;
+
+/** Base backoff between retries; the nth retry waits n × this. */
+const RETRY_BASE_MS = 800;
+
+/**
  * One PDF page that only mounts <Page> when near the viewport. Off-screen pages
  * keep their place with an equal-height placeholder so scrolling stays stable.
  */
@@ -87,6 +100,42 @@ export default function TourPdfDoc({
   const [numPages, setNumPages] = useState(0);
   const [ratios, setRatios] = useState<Record<number, number>>({});
 
+  // Load-retry state: `attempt` counts failed loads (0 = original url), and
+  // `failed` gates the fallback once retries are exhausted.
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const [prevUrl, setPrevUrl] = useState(url);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reset retry state whenever the source url changes (e.g. switching tours).
+  // Adjusting state during render is React's recommended pattern for this.
+  if (prevUrl !== url) {
+    setPrevUrl(url);
+    setAttempt(0);
+    setFailed(false);
+  }
+
+  // What react-pdf actually fetches: the original url first, then a cache-busted
+  // variant on each retry so it bypasses any edge-cached error / negative response.
+  const fileUrl = attempt === 0 ? url : `${url}${url.includes("?") ? "&" : "?"}r=${attempt}`;
+
+  // Clear any pending retry timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, []);
+
+  const handleLoadError = useCallback(() => {
+    if (attempt >= MAX_RETRIES) {
+      setFailed(true);
+      return;
+    }
+    const next = attempt + 1;
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = setTimeout(() => setAttempt(next), RETRY_BASE_MS * next);
+  }, [attempt]);
+
   // Track the column width so each page renders at the right size (and reflows).
   useEffect(() => {
     const el = containerRef.current;
@@ -114,10 +163,13 @@ export default function TourPdfDoc({
   return (
     <div ref={containerRef} className="fh-pdf">
       <Document
-        file={url}
+        file={fileUrl}
         onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+        onLoadError={handleLoadError}
         loading={<div className="fh-pdf-loading">PDF 載入中…</div>}
-        error={fallback}
+        // While retries remain, keep showing the loading state instead of the
+        // fallback; only surface the fallback once retries are exhausted.
+        error={failed ? fallback : <div className="fh-pdf-loading">PDF 載入中…</div>}
       >
         {width > 0 &&
           Array.from({ length: numPages }, (_, i) => (
