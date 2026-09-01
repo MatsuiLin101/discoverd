@@ -279,10 +279,16 @@ export async function getSearchFilters(): Promise<SearchFilterData> {
       },
     }),
     db.tag.findMany({
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { name: true },
     }),
   ]);
+
+  // Advanced-search tags are sorted purely by text (Traditional Chinese
+  // collation) rather than the admin-defined sortOrder, so the chip list is
+  // easy to scan alphabetically.
+  const sortedTags = tags
+    .map((t) => t.name)
+    .sort((a, b) => a.localeCompare(b, "zh-Hant"));
 
   return {
     regions: regions.map((r) => ({
@@ -290,6 +296,6 @@ export async function getSearchFilters(): Promise<SearchFilterData> {
       name: r.name,
       subRegions: r.subRegions.map((sr) => ({ slug: sr.slug, name: sr.name })),
     })),
-    tags: tags.map((t) => t.name),
+    tags: sortedTags,
   };
 }
