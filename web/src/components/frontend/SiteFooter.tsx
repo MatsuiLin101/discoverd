@@ -1,10 +1,19 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { db } from "@/lib/db";
 import FooterContactActions from "./FooterContactActions";
 import LineIcon from "./LineIcon";
 import LineCommunityIcon from "./LineCommunityIcon";
 
 export default async function SiteFooter() {
+  // This footer reads site settings from the DB. Some routes that render it are
+  // not otherwise dynamic (notably the not-found boundaries → /_not-found), so
+  // without this they'd be prerendered at build where the DB is unreachable,
+  // failing the production image build. `connection()` defers rendering to
+  // request time, exactly like `export const dynamic = "force-dynamic"` does for
+  // the homepage — but it works from inside this shared component, including the
+  // special not-found file where route segment config isn't honored.
+  await connection();
   const setting = await db.siteSetting.findUnique({ where: { id: "singleton" } });
 
   return (
