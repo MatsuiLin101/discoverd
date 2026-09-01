@@ -516,3 +516,52 @@ export interface TourItem {
   media: TourMedia[];
 }
 
+// ─────────────────────────────────────────────────────────────
+// Search — used by GET /api/search, the header quick-search
+// dropdown, and the /search full-results / advanced-search page.
+// ─────────────────────────────────────────────────────────────
+
+/** A single tour in search results (both quick dropdown and full page). */
+export interface SearchResultItem {
+  id: string;
+  slug: string;
+  productId: string | null;
+  name: string;
+  thumbnail: string | null;
+  price: number;
+  description: string | null;
+  tags: string[];
+  regionName: string;
+  regionSlug: string;
+  subRegionName: string;
+  subRegionSlug: string;
+}
+
+/** Normalized search filters shared by the API route and the query layer. */
+export interface SearchFilters {
+  /** Free-text keyword (matched against name / description / tag / region names). */
+  q?: string;
+  /** Region slug (main category). */
+  region?: string;
+  /** SubRegion slug (sub category); only meaningful together with `region`. */
+  sub?: string;
+  /** Tag names (multi-select); a tour matches if it has ANY of them. */
+  tags?: string[];
+}
+
+/** Envelope returned by GET /api/search: total hit count + capped results. */
+export interface SearchResponse {
+  total: number;
+  results: SearchResultItem[];
+}
+
+/** Filter facets for the /search advanced-search controls. */
+export interface SearchFilterData {
+  regions: {
+    slug: string;
+    name: string;
+    subRegions: { slug: string; name: string }[];
+  }[];
+  tags: string[];
+}
+
