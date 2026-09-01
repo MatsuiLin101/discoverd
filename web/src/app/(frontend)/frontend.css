@@ -425,6 +425,84 @@
 }
 
 /* =====================================================
+   ADVANCED SEARCH — /search
+   ===================================================== */
+.fh-searchbox {
+  margin-top: 28px;
+  padding: clamp(20px, 2.4vw, 30px) clamp(20px, 2.4vw, 32px);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.fh-filter-group { display: flex; flex-direction: column; gap: 12px; }
+.fh-filter-label {
+  font-family: var(--fh-sans); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.fh-adv-input {
+  width: 100%;
+  font-family: var(--fh-sans); font-size: 15px; letter-spacing: 0.02em; color: var(--ink);
+  padding: 13px 18px;
+  border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel-solid);
+  transition: border-color .2s;
+}
+.fh-adv-input::placeholder { color: var(--ink-3); }
+.fh-adv-input:focus { outline: none; border-color: var(--accent); }
+/* Reuse .fh-subtabs for the category rows; no extra top margin inside a group */
+.fh-searchbox .fh-subtabs { margin: 0; }
+
+.fh-tag-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.fh-tag-chip {
+  font-family: var(--fh-sans); font-size: 13px; letter-spacing: 0.04em;
+  padding: 8px 16px; border-radius: 999px;
+  border: 1px solid var(--line-2); background: var(--panel-solid);
+  color: var(--ink-2); cursor: pointer; transition: all .2s; white-space: nowrap;
+}
+.fh-tag-chip:hover { border-color: var(--accent); color: var(--ink); }
+.fh-tag-chip.on {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+
+.fh-filter-actions { display: flex; justify-content: flex-end; }
+.fh-clear-btn {
+  font-family: var(--fh-sans); font-size: 12px; letter-spacing: 0.1em; color: var(--ink-3);
+  background: transparent; border: none; cursor: pointer; padding: 4px 2px;
+  transition: color .2s; text-decoration: underline; text-underline-offset: 3px;
+}
+.fh-clear-btn:hover { color: var(--accent); }
+
+.fh-result-note {
+  margin-top: 24px; font-family: var(--fh-sans); font-size: 13px; color: var(--ink-3);
+}
+
+/* Dim the grid while a fresh query is loading */
+.fh-tour-list.is-loading { opacity: 0.55; transition: opacity .2s; pointer-events: none; }
+/* Subtle feedback while a card's detail is being fetched for the modal */
+.fh-trow.is-opening { opacity: 0.6; cursor: progress; }
+
+/* Region/sub eyebrow inside a search result card */
+.fh-trow .t-tags .t-region {
+  color: var(--accent-2); border-color: var(--line-2);
+  text-transform: none; letter-spacing: 0.04em;
+}
+
+/* Quick-search dropdown footer / advanced link */
+.fh-sr-all {
+  display: block; width: 100%; margin-top: 4px;
+  padding: 12px; border-radius: 12px; border: none; background: transparent; cursor: pointer;
+  font-family: var(--fh-sans); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); transition: background .18s ease;
+}
+.fh-sr-all:hover { background: rgba(224, 80, 107, 0.09); }
+.fh-sr-adv {
+  margin-top: 12px; background: transparent; border: 1px solid var(--accent); cursor: pointer;
+  font-family: var(--fh-sans); font-size: 12px; letter-spacing: 0.1em; color: var(--accent);
+  padding: 8px 18px; border-radius: 999px; transition: background .2s, color .2s;
+}
+.fh-sr-adv:hover { background: var(--accent); color: #fff; }
+
+/* =====================================================
    MODAL — 行程詳情
    ===================================================== */
 .fh-modal-overlay {

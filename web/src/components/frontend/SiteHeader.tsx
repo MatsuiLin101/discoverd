@@ -1,24 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import type { SearchResultItem, SearchResponse } from "@/lib/frontend-data";
 import LineIcon from "./LineIcon";
 import LineCommunityIcon from "./LineCommunityIcon";
 
-interface SearchResult {
-  id: string;
-  slug: string;
-  productId: string | null;
-  name: string;
-  thumbnail: string | null;
-  price: number;
-  tags: string[];
-  regionName: string;
-  regionSlug: string;
-  subRegionSlug: string;
-}
+type SearchResult = SearchResultItem;
 
 function highlight(name: string, q: string): string {
   if (!q) return name;
@@ -34,17 +25,20 @@ function highlight(name: string, q: string): string {
 export default function SiteHeader() {
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<SearchResult[]>([]);
+  const [total, setTotal] = useState(0);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const socialLinks = useSocialLinks();
+  const router = useRouter();
 
   const search = useCallback((q: string) => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (!q.trim()) {
       setMatches([]);
+      setTotal(0);
       setOpen(false);
       return;
     }
@@ -52,17 +46,25 @@ export default function SiteHeader() {
       setLoading(true);
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
-        const data: SearchResult[] = await res.json();
-        setMatches(data);
+        const data: SearchResponse = await res.json();
+        setMatches(data.results ?? []);
+        setTotal(data.total ?? 0);
         setActiveIndex(-1);
         setOpen(true);
       } catch {
         setMatches([]);
+        setTotal(0);
       } finally {
         setLoading(false);
       }
     }, 300);
   }, []);
+
+  function goToSearchPage(q: string) {
+    const trimmed = q.trim();
+    setOpen(false);
+    router.push(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : "/search");
+  }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -114,7 +116,7 @@ export default function SiteHeader() {
             autoComplete="off"
             onSubmit={(e) => {
               e.preventDefault();
-              setOpen(false);
+              goToSearchPage(query);
             }}
           >
             <input
@@ -147,13 +149,22 @@ export default function SiteHeader() {
                   找不到符合「<span className="k">{query}</span>」的行程
                   <br />
                   試試「日本」「極光」「海島」等關鍵字
+                  <br />
+                  <button
+                    type="button"
+                    className="fh-sr-adv"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => goToSearchPage(query)}
+                  >
+                    前往進階搜尋 →
+                  </button>
                 </div>
               ) : (
                 <>
                   <div className="fh-sr-head">
                     <span>搜尋結果</span>
                     <span>
-                      <b>{matches.length}</b> 筆
+                      <b>{total}</b> 筆
                     </span>
                   </div>
                   {matches.map((m, i) => (
@@ -196,6 +207,15 @@ export default function SiteHeader() {
                       </div>
                     </Link>
                   ))}
+                  <button
+                    type="button"
+                    className="fh-sr-all"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => goToSearchPage(query)}
+                  >
+                    檢視所有結果
+                    {total > matches.length ? `（共 ${total} 筆）` : ""} →
+                  </button>
                 </>
               )}
             </div>
