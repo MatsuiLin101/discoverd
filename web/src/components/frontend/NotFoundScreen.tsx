@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
+import NotFoundRedirect from "./NotFoundRedirect";
 
 // Shared body for the branded 404 page. Used both by the (frontend) route
 // group's not-found boundary (already inside `.fh-root` via its layout) and by
@@ -22,6 +23,7 @@ export default function NotFoundScreen() {
               回到首頁
             </Link>
           </div>
+          <NotFoundRedirect seconds={5} href="/" />
         </div>
       </main>
 

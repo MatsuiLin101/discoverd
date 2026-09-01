@@ -956,3 +956,13 @@
   background: var(--accent-2);
   border-color: var(--accent-2);
 }
+.fh-error-countdown {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.fh-error-count {
+  font-weight: 600;
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
+}
