@@ -7,6 +7,7 @@ import type {
   RegionDetail,
   RegionTours,
   TourMedia,
+  TourModalData,
   SearchFilters,
   SearchResponse,
   SearchFilterData,
@@ -298,5 +299,54 @@ export async function getSearchFilters(): Promise<SearchFilterData> {
       subRegions: r.subRegions.map((sr) => ({ slug: sr.slug, name: sr.name })),
     })),
     tags: sortedTags,
+  };
+}
+
+// ── Function 6 ──────────────────────────────────────────────
+// Used by: GET /api/tours/[idOrSlug] — full detail for the shared tour modal
+// (opened on demand, e.g. from a /search result card). Matches by productId
+// first, then slug, mirroring the /tours/[tourSlug] page. Returns null when
+// not found / unpublished.
+export async function getTourModalData(idOrSlug: string): Promise<TourModalData | null> {
+  const tour = await db.tour.findFirst({
+    where: { published: true, OR: [{ productId: idOrSlug }, { slug: idOrSlug }] },
+    select: {
+      id: true,
+      slug: true,
+      productId: true,
+      name: true,
+      thumbnailKey: true,
+      price: true,
+      description: true,
+      tags: {
+        select: { name: true },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      },
+      files: {
+        orderBy: { sortOrder: "asc" },
+        select: { key: true, mimeType: true, filename: true },
+      },
+      subRegion: {
+        select: {
+          name: true,
+          region: { select: { name: true } },
+        },
+      },
+    },
+  });
+  if (!tour) return null;
+
+  return {
+    id: tour.id,
+    slug: tour.slug,
+    productId: tour.productId,
+    name: tour.name,
+    thumbnail: urlOf(tour.thumbnailKey),
+    price: tour.price,
+    description: tour.description,
+    tags: tour.tags.map((t) => t.name),
+    media: tour.files.map(toTourMedia),
+    regionName: tour.subRegion.region.name,
+    subRegionName: tour.subRegion.name,
   };
 }

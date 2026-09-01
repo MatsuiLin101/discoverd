@@ -478,6 +478,8 @@
 
 /* Dim the grid while a fresh query is loading */
 .fh-tour-list.is-loading { opacity: 0.55; transition: opacity .2s; pointer-events: none; }
+/* Subtle feedback while a card's detail is being fetched for the modal */
+.fh-trow.is-opening { opacity: 0.6; cursor: progress; }
 
 /* Region/sub eyebrow inside a search result card */
 .fh-trow .t-tags .t-region {

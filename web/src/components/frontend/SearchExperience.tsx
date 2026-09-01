@@ -5,8 +5,10 @@ import type {
   SearchFilterData,
   SearchResponse,
   SearchResultItem,
+  TourModalData,
 } from "@/lib/frontend-data";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import TourDetailModal from "./TourDetailModal";
 
 /** Must stay in sync with SEARCH_MAX_LIMIT in frontend-queries.ts. */
 const RESULT_LIMIT = 100;
@@ -41,6 +43,12 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
   const [tags, setTags] = useState<string[]>(initialFilters.tags);
   const [response, setResponse] = useState<SearchResponse>(initialResponse);
   const [loading, setLoading] = useState(false);
+
+  // Tour detail modal — opened in place from a result card via lazy fetch.
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState<TourModalData | null>(null);
+  const [loadingTourId, setLoadingTourId] = useState<string | null>(null);
+  const modalReqId = useRef(0);
 
   const skipFetch = useRef(true); // SSR already provided initialResponse
 
@@ -109,6 +117,34 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
     setRegion("");
     setSub("");
     setTags([]);
+  }, []);
+
+  // Open a result in place: fetch its full detail (media/gallery), then show
+  // the shared modal. Guards against out-of-order responses via a request id.
+  const openTour = useCallback(async (tour: SearchResultItem) => {
+    const reqId = ++modalReqId.current;
+    setLoadingTourId(tour.id);
+    try {
+      const res = await fetch(`/api/tours/${encodeURIComponent(tour.productId ?? tour.slug)}`);
+      if (!res.ok) throw new Error(String(res.status));
+      const data: TourModalData = await res.json();
+      if (reqId !== modalReqId.current) return; // superseded by a newer click
+      setModalData(data);
+      setModalOpen(true);
+    } catch {
+      if (reqId !== modalReqId.current) return;
+      // Fall back to the dedicated tour page if the detail fetch fails.
+      window.location.href = `/tours/${tour.productId ?? tour.slug}`;
+    } finally {
+      if (reqId === modalReqId.current) setLoadingTourId(null);
+    }
+  }, []);
+
+  const closeModal = useCallback(() => {
+    modalReqId.current++; // cancel any in-flight open
+    setModalOpen(false);
+    setModalData(null);
+    setLoadingTourId(null);
   }, []);
 
   const { total, results } = response;
@@ -242,17 +278,40 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
       ) : (
         <div className={`fh-tour-list${loading ? " is-loading" : ""}`}>
           {results.map((tour) => (
-            <ResultCard key={tour.id} tour={tour} />
+            <ResultCard
+              key={tour.id}
+              tour={tour}
+              loading={loadingTourId === tour.id}
+              onOpen={openTour}
+            />
           ))}
         </div>
       )}
+
+      <TourDetailModal tour={modalData} isOpen={modalOpen} onClose={closeModal} />
     </>
   );
 }
 
-function ResultCard({ tour }: { tour: SearchResultItem }) {
+function ResultCard({
+  tour,
+  loading,
+  onOpen,
+}: {
+  tour: SearchResultItem;
+  loading: boolean;
+  onOpen: (tour: SearchResultItem) => void;
+}) {
   return (
-    <a href={`/tours/${tour.productId ?? tour.slug}`} className="fh-trow">
+    <a
+      href={`/tours/${tour.productId ?? tour.slug}`}
+      className={`fh-trow${loading ? " is-opening" : ""}`}
+      aria-busy={loading}
+      onClick={(e) => {
+        e.preventDefault();
+        onOpen(tour);
+      }}
+    >
       <div className="t-img">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={tour.thumbnail ?? "/images/tour-placeholder.svg"} alt={tour.name} />

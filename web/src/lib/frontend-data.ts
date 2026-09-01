@@ -516,6 +516,24 @@ export interface TourItem {
   media: TourMedia[];
 }
 
+/**
+ * Everything the shared tour detail modal needs, fetched on demand via
+ * GET /api/tours/[idOrSlug] (e.g. when a search result card is opened).
+ */
+export interface TourModalData {
+  id: string;
+  slug: string;
+  productId: string | null;
+  name: string;
+  thumbnail: string | null;
+  price: number;
+  description: string | null;
+  tags: string[];
+  media: TourMedia[];
+  regionName: string;
+  subRegionName: string;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Search — used by GET /api/search, the header quick-search
 // dropdown, and the /search full-results / advanced-search page.
