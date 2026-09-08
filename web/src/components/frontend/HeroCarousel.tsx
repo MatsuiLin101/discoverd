@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
 import Image from "next/image";
 
 interface Slide {
@@ -8,7 +8,21 @@ interface Slide {
   alt: string;
 }
 
-export default function HeroCarousel({ slides }: { slides: Slide[] }) {
+export default function HeroCarousel({
+  slides,
+  mobileRatio = "cover",
+}: {
+  slides: Slide[];
+  mobileRatio?: string;
+}) {
+  // On mobile, "cover" keeps the current full-bleed crop; any aspect-ratio
+  // value switches to a fixed-ratio container that shows the whole image.
+  // Desktop is unaffected (see .fh-carousel in frontend.css). The ratio is fed
+  // to the mobile media query as a CSS variable so it can stay data-driven.
+  const contain = mobileRatio !== "cover";
+  const carouselStyle = contain
+    ? ({ "--m-ratio": mobileRatio.replace("/", " / ") } as CSSProperties)
+    : undefined;
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -50,7 +64,7 @@ export default function HeroCarousel({ slides }: { slides: Slide[] }) {
 
   return (
     <section className="fh-hero">
-      <div className="fh-carousel">
+      <div className="fh-carousel" data-fit={contain ? "contain" : "cover"} style={carouselStyle}>
         {slides.map((slide, i) => (
           <div key={i} className={`fh-slide${i === current ? " active" : ""}`}>
             <Image
@@ -60,7 +74,6 @@ export default function HeroCarousel({ slides }: { slides: Slide[] }) {
               fill
               priority={i === 0}
               sizes="100vw"
-              style={{ objectFit: "cover" }}
             />
           </div>
         ))}

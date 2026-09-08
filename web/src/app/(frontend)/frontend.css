@@ -915,6 +915,12 @@
   .brand-logo { width: 40px; height: 40px; }
   .fh-social a { width: 36px; height: 36px; }
   .fh-carousel { height: calc(100svh - 144px); min-height: 420px; }
+  .fh-carousel[data-fit="contain"] {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: var(--m-ratio, 2 / 1);
+  }
+  .fh-carousel[data-fit="contain"] .slide-img { object-fit: contain; }
   .fh-cat-list { margin-top: 18px; }
   .fh-cat-row {
     position: relative; display: block; height: 190px; padding: 0;

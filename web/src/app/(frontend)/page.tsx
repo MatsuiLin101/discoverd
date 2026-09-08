@@ -21,15 +21,21 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [regions, dbBanners] = await Promise.all([
+  const [regions, dbBanners, siteSetting] = await Promise.all([
     getRegionList(),
     db.heroBanner.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.siteSetting.findUnique({
+      where: { id: "singleton" },
+      select: { mobileHeroRatio: true },
+    }),
   ]);
 
   const heroSlides =
     dbBanners.length > 0
       ? dbBanners.map((b) => ({ img: storage.publicUrl(b.imageKey), alt: b.title }))
       : HERO_FALLBACK_SLIDES;
+
+  const mobileHeroRatio = siteSetting?.mobileHeroRatio ?? "cover";
 
   const HOME_CATEGORIES = regions.map((r) => ({
     href: `/regions/${r.slug}`,
@@ -45,7 +51,7 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      <HeroCarousel slides={heroSlides} />
+      <HeroCarousel slides={heroSlides} mobileRatio={mobileHeroRatio} />
 
       <nav className="fh-page-bar">
         <div className="fh-page-bar-inner">
