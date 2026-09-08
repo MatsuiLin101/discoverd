@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import SortableHeroBannerList from "@/components/admin/hero-banners/SortableHeroBannerList";
-import MobileHeroRatioSetting from "@/components/admin/hero-banners/MobileHeroRatioSetting";
+import HeroDisplaySetting from "@/components/admin/hero-banners/HeroDisplaySetting";
 
 export default async function HeroBannersPage() {
   const session = await getSession();
@@ -19,7 +19,7 @@ export default async function HeroBannersPage() {
     }),
     db.siteSetting.findUnique({
       where: { id: "singleton" },
-      select: { mobileHeroRatio: true },
+      select: { heroDisplayMode: true, heroMaxHeight: true, mobileHeroRatio: true },
     }),
   ]);
   const banners = bannersRaw.map(({ imageKey, ...b }) => ({
@@ -42,7 +42,11 @@ export default async function HeroBannersPage() {
           新增輪播圖
         </Link>
       </div>
-      <MobileHeroRatioSetting initialRatio={siteSetting?.mobileHeroRatio ?? "cover"} />
+      <HeroDisplaySetting
+        initialMode={siteSetting?.heroDisplayMode ?? "original"}
+        initialMaxHeight={siteSetting?.heroMaxHeight ?? 720}
+        initialRatio={siteSetting?.mobileHeroRatio ?? "cover"}
+      />
       <SortableHeroBannerList banners={banners} />
     </div>
   );

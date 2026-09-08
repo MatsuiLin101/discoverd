@@ -11,20 +11,41 @@ interface Slide {
 export default function HeroCarousel({
   slides,
   mobileRatio = "cover",
+  displayMode = "original",
+  maxHeight = 720,
 }: {
   slides: Slide[];
   mobileRatio?: string;
+  displayMode?: string;
+  maxHeight?: number;
 }) {
-  // On mobile, "cover" keeps the current full-bleed crop; any aspect-ratio
-  // value switches to a fixed-ratio container that shows the whole image.
-  // Desktop is unaffected (see .fh-carousel in frontend.css). The ratio is fed
-  // to the mobile media query as a CSS variable so it can stay data-driven.
-  const contain = mobileRatio !== "cover";
-  const carouselStyle = contain
-    ? ({ "--m-ratio": mobileRatio.replace("/", " / ") } as CSSProperties)
-    : undefined;
   const [current, setCurrent] = useState(0);
+  // In "fit" mode the container sizes to the image's natural aspect ratio
+  // (measured from the first slide once it loads) so the whole image shows at
+  // full width, capped at maxHeight. Until measured we fall back to 2:1.
+  const [fitRatio, setFitRatio] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const isFit = displayMode === "fit";
+  // On mobile (original mode), "cover" keeps the full-bleed crop; any
+  // aspect-ratio value switches to a fixed-ratio container that shows the whole
+  // image. Desktop is unaffected (see .fh-carousel in frontend.css). The ratio
+  // is fed to the mobile media query as a CSS variable so it stays data-driven.
+  const contain = mobileRatio !== "cover";
+
+  let carouselStyle: CSSProperties | undefined;
+  if (isFit) {
+    carouselStyle = {
+      width: "100%",
+      aspectRatio: fitRatio ? String(fitRatio) : "2 / 1",
+      maxHeight: `${maxHeight}px`,
+      height: "auto",
+      minHeight: 0,
+    };
+  } else if (contain) {
+    carouselStyle = { "--m-ratio": mobileRatio.replace("/", " / ") } as CSSProperties;
+  }
+  const dataFit = isFit ? undefined : contain ? "contain" : "cover";
 
   const go = useCallback(
     (n: number) => {
@@ -47,6 +68,23 @@ export default function HeroCarousel({
     };
   }, [resetTimer]);
 
+  // In "fit" mode, measure the first slide's natural aspect ratio so the
+  // container can size to it. A dedicated Image() loader is used (instead of
+  // onLoad) so it also resolves for an already-cached image.
+  const firstSrc = slides[0]?.img;
+  useEffect(() => {
+    if (!isFit || !firstSrc) return;
+    const probe = new window.Image();
+    const apply = () => {
+      if (probe.naturalWidth && probe.naturalHeight) {
+        setFitRatio(probe.naturalWidth / probe.naturalHeight);
+      }
+    };
+    probe.onload = apply;
+    probe.src = firstSrc;
+    if (probe.complete) apply();
+  }, [isFit, firstSrc]);
+
   function handlePrev() {
     go(current - 1);
     resetTimer();
@@ -64,7 +102,12 @@ export default function HeroCarousel({
 
   return (
     <section className="fh-hero">
-      <div className="fh-carousel" data-fit={contain ? "contain" : "cover"} style={carouselStyle}>
+      <div
+        className="fh-carousel"
+        data-fit={dataFit}
+        data-mode={isFit ? "fit" : undefined}
+        style={carouselStyle}
+      >
         {slides.map((slide, i) => (
           <div key={i} className={`fh-slide${i === current ? " active" : ""}`}>
             <Image

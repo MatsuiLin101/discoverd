@@ -26,7 +26,7 @@ export default async function HomePage() {
     db.heroBanner.findMany({ orderBy: { sortOrder: "asc" } }),
     db.siteSetting.findUnique({
       where: { id: "singleton" },
-      select: { mobileHeroRatio: true },
+      select: { heroDisplayMode: true, heroMaxHeight: true, mobileHeroRatio: true },
     }),
   ]);
 
@@ -35,6 +35,8 @@ export default async function HomePage() {
       ? dbBanners.map((b) => ({ img: storage.publicUrl(b.imageKey), alt: b.title }))
       : HERO_FALLBACK_SLIDES;
 
+  const heroDisplayMode = siteSetting?.heroDisplayMode ?? "original";
+  const heroMaxHeight = siteSetting?.heroMaxHeight ?? 720;
   const mobileHeroRatio = siteSetting?.mobileHeroRatio ?? "cover";
 
   const HOME_CATEGORIES = regions.map((r) => ({
@@ -51,7 +53,12 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      <HeroCarousel slides={heroSlides} mobileRatio={mobileHeroRatio} />
+      <HeroCarousel
+        slides={heroSlides}
+        mobileRatio={mobileHeroRatio}
+        displayMode={heroDisplayMode}
+        maxHeight={heroMaxHeight}
+      />
 
       <nav className="fh-page-bar">
         <div className="fh-page-bar-inner">

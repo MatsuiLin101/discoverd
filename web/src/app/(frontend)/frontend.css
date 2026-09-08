@@ -154,6 +154,10 @@
   position: absolute; inset: 0;
 }
 .fh-slide.active .slide-img { transform: scale(1); }
+/* "fit" display mode (all viewports): full-width image, natural aspect ratio,
+   capped height via inline max-height. Contain so nothing is cropped, and drop
+   the Ken Burns zoom so the aspect ratio is preserved exactly. */
+.fh-carousel[data-mode="fit"] .slide-img { object-fit: contain; transform: none; }
 .fh-car-nav {
   position: absolute;
   top: 50%;
