@@ -899,6 +899,17 @@
     flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; letter-spacing: 0; gap: 0;
   }
 }
+@media (max-width: 768px) {
+  /* Mobile hero: switch to the admin-selected fixed aspect-ratio container
+     that shows the whole image (contain). "cover" keeps the full-bleed crop
+     handled by the rules above. Desktop (>768) is unaffected. */
+  .fh-carousel[data-fit="contain"] {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: var(--m-ratio, 2 / 1);
+  }
+  .fh-carousel[data-fit="contain"] .slide-img { object-fit: contain; }
+}
 @media (max-width: 767px) {
   /* Mobile (<768): 1 card per row (#2) */
   .fh-tour-list { grid-template-columns: 1fr; gap: 22px; }
@@ -915,12 +926,6 @@
   .brand-logo { width: 40px; height: 40px; }
   .fh-social a { width: 36px; height: 36px; }
   .fh-carousel { height: calc(100svh - 144px); min-height: 420px; }
-  .fh-carousel[data-fit="contain"] {
-    height: auto;
-    min-height: 0;
-    aspect-ratio: var(--m-ratio, 2 / 1);
-  }
-  .fh-carousel[data-fit="contain"] .slide-img { object-fit: contain; }
   .fh-cat-list { margin-top: 18px; }
   .fh-cat-row {
     position: relative; display: block; height: 190px; padding: 0;
