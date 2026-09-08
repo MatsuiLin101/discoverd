@@ -5,16 +5,23 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import SortableHeroBannerList from "@/components/admin/hero-banners/SortableHeroBannerList";
+import MobileHeroRatioSetting from "@/components/admin/hero-banners/MobileHeroRatioSetting";
 
 export default async function HeroBannersPage() {
   const session = await getSession();
   if (!session) redirect(adminUrl("/login"));
   if (session.role !== "ADMIN") redirect(adminUrl());
 
-  const bannersRaw = await db.heroBanner.findMany({
-    select: { id: true, title: true, imageKey: true, createdAt: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  const [bannersRaw, siteSetting] = await Promise.all([
+    db.heroBanner.findMany({
+      select: { id: true, title: true, imageKey: true, createdAt: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+    db.siteSetting.findUnique({
+      where: { id: "singleton" },
+      select: { mobileHeroRatio: true },
+    }),
+  ]);
   const banners = bannersRaw.map(({ imageKey, ...b }) => ({
     ...b,
     image: storage.publicUrl(imageKey),
@@ -35,6 +42,7 @@ export default async function HeroBannersPage() {
           新增輪播圖
         </Link>
       </div>
+      <MobileHeroRatioSetting initialRatio={siteSetting?.mobileHeroRatio ?? "cover"} />
       <SortableHeroBannerList banners={banners} />
     </div>
   );
