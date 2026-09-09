@@ -70,7 +70,7 @@ export default function LayoutSetting({
     setSuccess(false);
 
     const h = Number(maxHeight);
-    if (mode === "fit" && (!Number.isInteger(h) || h < 200 || h > 2000)) {
+    if ((mode === "fit" || mode === "boxed") && (!Number.isInteger(h) || h < 200 || h > 2000)) {
       setError("最大高度請輸入 200 ～ 2000 之間的整數");
       return;
     }
@@ -206,6 +206,31 @@ export default function LayoutSetting({
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
                 整站內容（header、內容、footer）置中限制在此寬度內；輪播圖在盒內依原始比例縮放。
+              </p>
+            </div>
+            <div>
+              <label
+                htmlFor="boxedHeroMaxHeight"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
+                輪播圖最大高度（px）
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="boxedHeroMaxHeight"
+                  type="number"
+                  min={200}
+                  max={2000}
+                  step={1}
+                  value={maxHeight}
+                  onChange={(e) => setMaxHeight(e.target.value)}
+                  className={numberClass}
+                  style={ringStyle}
+                />
+                <span className="text-sm text-gray-500">px</span>
+              </div>
+              <p className="mt-1.5 text-xs text-gray-500">
+                輪播圖在盒內的高度上限；超過時以深色底完整顯示、不裁切。
               </p>
             </div>
             <div>

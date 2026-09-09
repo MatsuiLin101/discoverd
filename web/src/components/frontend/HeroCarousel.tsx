@@ -37,12 +37,14 @@ export default function HeroCarousel({
 
   let carouselStyle: CSSProperties | undefined;
   if (isRatio) {
+    // Both "fit" and "boxed" cap the carousel height at maxHeight; beyond the
+    // cap the image is contained (letterboxed) on the dark background.
     carouselStyle = {
       width: "100%",
       aspectRatio: fitRatio ? String(fitRatio) : "2 / 1",
       height: "auto",
       minHeight: 0,
-      ...(layoutMode === "fit" ? { maxHeight: `${maxHeight}px` } : null),
+      maxHeight: `${maxHeight}px`,
     };
   } else if (contain) {
     carouselStyle = { "--m-ratio": mobileRatio.replace("/", " / ") } as CSSProperties;
