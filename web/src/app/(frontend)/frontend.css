@@ -169,6 +169,12 @@
    capped height via inline max-height. Contain so nothing is cropped, and drop
    the Ken Burns zoom so the aspect ratio is preserved exactly. */
 .fh-carousel[data-mode="fit"] .slide-img { object-fit: contain; transform: none; }
+/* Respect reduced-motion: no crossfade, no Ken Burns zoom (JS also stops the
+   auto-advance). Slides still switch, just instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .fh-slide { transition: none; }
+  .fh-slide .slide-img { transition: none; transform: none; }
+}
 .fh-car-nav {
   position: absolute;
   top: 50%;

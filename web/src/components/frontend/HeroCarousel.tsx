@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, type CSSProperties } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import Image from "next/image";
 
 interface Slide {
@@ -26,7 +26,22 @@ export default function HeroCarousel({
   // carousel aspect ratio: a fixed heroRatio when set, otherwise the first
   // image's natural ratio (measured once it loads; 2:1 fallback until then).
   const [fitRatio, setFitRatio] = useState<number | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Auto-advance pauses while the carousel is hovered/focused, and is disabled
+  // entirely when the viewer prefers reduced motion.
+  const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+  const multiple = slides.length > 1;
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => setReducedMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   // "fit" and "boxed" both scale the carousel by ratio and cap the height.
   const isRatio = layoutMode === "fit" || layoutMode === "boxed";
@@ -54,26 +69,21 @@ export default function HeroCarousel({
   }
   const dataFit = isRatio ? undefined : contain ? "contain" : "cover";
 
-  const go = useCallback(
-    (n: number) => {
-      setCurrent((n + slides.length) % slides.length);
-    },
-    [slides.length]
-  );
+  function go(n: number) {
+    setCurrent((n + slides.length) % slides.length);
+  }
 
-  const resetTimer = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
+  // Auto-advance every 6s. Depending on `current` restarts the timer whenever
+  // the slide changes, so manual navigation also resets the countdown. Off for
+  // a single slide, while paused (hover/focus), or under reduced motion.
+  const autoplay = multiple && !paused && !reducedMotion;
+  useEffect(() => {
+    if (!autoplay) return;
+    const id = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
     }, 6000);
-  }, [slides.length]);
-
-  useEffect(() => {
-    resetTimer();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [resetTimer]);
+    return () => clearInterval(id);
+  }, [autoplay, current, slides.length]);
 
   // When the ratio is "auto", measure the first slide's natural aspect ratio so
   // the container can size to it. A dedicated Image() loader is used (instead of
@@ -95,17 +105,14 @@ export default function HeroCarousel({
 
   function handlePrev() {
     go(current - 1);
-    resetTimer();
   }
 
   function handleNext() {
     go(current + 1);
-    resetTimer();
   }
 
   function handleDot(i: number) {
     go(i);
-    resetTimer();
   }
 
   return (
@@ -115,6 +122,12 @@ export default function HeroCarousel({
         data-fit={dataFit}
         data-mode={isRatio ? "fit" : undefined}
         style={carouselStyle}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPaused(false);
+        }}
       >
         {slides.map((slide, i) => (
           <div key={i} className={`fh-slide${i === current ? " active" : ""}`}>
@@ -129,27 +142,31 @@ export default function HeroCarousel({
           </div>
         ))}
 
-        <button className="fh-car-nav fh-car-prev" onClick={handlePrev} aria-label="上一張">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <button className="fh-car-nav fh-car-next" onClick={handleNext} aria-label="下一張">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+        {multiple && (
+          <>
+            <button className="fh-car-nav fh-car-prev" onClick={handlePrev} aria-label="上一張">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button className="fh-car-nav fh-car-next" onClick={handleNext} aria-label="下一張">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
 
-        <div className="fh-car-dots">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              className={i === current ? "active" : ""}
-              onClick={() => handleDot(i)}
-              aria-label={`第 ${i + 1} 張`}
-            />
-          ))}
-        </div>
+            <div className="fh-car-dots">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  className={i === current ? "active" : ""}
+                  onClick={() => handleDot(i)}
+                  aria-label={`第 ${i + 1} 張`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
