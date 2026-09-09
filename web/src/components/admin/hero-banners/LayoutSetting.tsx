@@ -15,6 +15,15 @@ const RATIO_OPTIONS = [
   { value: "1/1", label: "1 : 1（完整顯示，上下留白）" },
 ];
 
+const HERO_RATIO_OPTIONS = [
+  { value: "auto", label: "依原圖比例（量測第一張圖）" },
+  { value: "2/1", label: "2 : 1（寬幅）" },
+  { value: "16/9", label: "16 : 9（寬螢幕）" },
+  { value: "3/2", label: "3 : 2" },
+  { value: "4/3", label: "4 : 3" },
+  { value: "1/1", label: "1 : 1（方形）" },
+];
+
 const OUTER_BG_OPTIONS = [
   { value: "neutral", label: "中性淡色（近白灰底）" },
   { value: "gradient", label: "延伸盒內漸層（粉→紫）" },
@@ -30,18 +39,21 @@ const ringStyle = { ["--tw-ring-color" as string]: "#D12351" };
 export default function LayoutSetting({
   initialMode,
   initialMaxHeight,
+  initialHeroRatio,
   initialBoxWidth,
   initialOuterBg,
   initialRatio,
 }: {
   initialMode: string;
   initialMaxHeight: number;
+  initialHeroRatio: string;
   initialBoxWidth: number;
   initialOuterBg: string;
   initialRatio: string;
 }) {
   const [mode, setMode] = useState(initialMode);
   const [maxHeight, setMaxHeight] = useState(String(initialMaxHeight));
+  const [heroRatio, setHeroRatio] = useState(initialHeroRatio);
   const [boxWidth, setBoxWidth] = useState(String(initialBoxWidth));
   const [outerBg, setOuterBg] = useState(initialOuterBg);
   const [ratio, setRatio] = useState(initialRatio);
@@ -49,6 +61,7 @@ export default function LayoutSetting({
   const [saved, setSaved] = useState({
     mode: initialMode,
     maxHeight: String(initialMaxHeight),
+    heroRatio: initialHeroRatio,
     boxWidth: String(initialBoxWidth),
     outerBg: initialOuterBg,
     ratio: initialRatio,
@@ -60,6 +73,7 @@ export default function LayoutSetting({
   const dirty =
     mode !== saved.mode ||
     maxHeight !== saved.maxHeight ||
+    heroRatio !== saved.heroRatio ||
     boxWidth !== saved.boxWidth ||
     outerBg !== saved.outerBg ||
     ratio !== saved.ratio;
@@ -88,6 +102,7 @@ export default function LayoutSetting({
         body: JSON.stringify({
           layoutMode: mode,
           heroMaxHeight: h,
+          heroRatio,
           boxMaxWidth: w,
           boxOuterBackground: outerBg,
           mobileHeroRatio: ratio,
@@ -95,7 +110,7 @@ export default function LayoutSetting({
       });
       const data = await res.json();
       if (data.data) {
-        setSaved({ mode, maxHeight, boxWidth, outerBg, ratio });
+        setSaved({ mode, maxHeight, heroRatio, boxWidth, outerBg, ratio });
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } else {
@@ -107,6 +122,31 @@ export default function LayoutSetting({
       setIsPending(false);
     }
   }
+
+  // Shared by the "fit" and "boxed" branches: the carousel aspect ratio.
+  const heroRatioField = (
+    <div>
+      <label htmlFor="heroRatio" className="mb-1 block text-sm font-medium text-gray-700">
+        輪播圖比例
+      </label>
+      <select
+        id="heroRatio"
+        value={heroRatio}
+        onChange={(e) => setHeroRatio(e.target.value)}
+        className={controlClass}
+        style={ringStyle}
+      >
+        {HERO_RATIO_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <p className="mt-1.5 text-xs text-gray-500">
+        「依原圖比例」用第一張圖的原始比例縮放；選固定比例時，輪播圖以該比例呈現，圖片在框內完整置中、不足處以深色留白。
+      </p>
+    </div>
+  );
 
   return (
     <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
@@ -160,28 +200,31 @@ export default function LayoutSetting({
         )}
 
         {mode === "fit" && (
-          <div>
-            <label htmlFor="heroMaxHeight" className="mb-1 block text-sm font-medium text-gray-700">
-              輪播圖最大高度（px）
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                id="heroMaxHeight"
-                type="number"
-                min={200}
-                max={2000}
-                step={1}
-                value={maxHeight}
-                onChange={(e) => setMaxHeight(e.target.value)}
-                className={numberClass}
-                style={ringStyle}
-              />
-              <span className="text-sm text-gray-500">px</span>
+          <>
+            {heroRatioField}
+            <div>
+              <label htmlFor="heroMaxHeight" className="mb-1 block text-sm font-medium text-gray-700">
+                輪播圖最大高度（px）
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="heroMaxHeight"
+                  type="number"
+                  min={200}
+                  max={2000}
+                  step={1}
+                  value={maxHeight}
+                  onChange={(e) => setMaxHeight(e.target.value)}
+                  className={numberClass}
+                  style={ringStyle}
+                />
+                <span className="text-sm text-gray-500">px</span>
+              </div>
+              <p className="mt-1.5 text-xs text-gray-500">
+                桌機與手機一致：輪播圖以滿寬呈現並維持原始比例，高度不超過此上限；超過時以深色底完整顯示、不裁切。建議原圖 2560 × 1280（2:1）、重點置中。
+              </p>
             </div>
-            <p className="mt-1.5 text-xs text-gray-500">
-              桌機與手機一致：輪播圖以滿寬呈現並維持原始比例，高度不超過此上限；超過時以深色底完整顯示、不裁切。建議原圖 2560 × 1280（2:1）、重點置中。
-            </p>
-          </div>
+          </>
         )}
 
         {mode === "boxed" && (
@@ -205,9 +248,10 @@ export default function LayoutSetting({
                 <span className="text-sm text-gray-500">px</span>
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
-                整站內容（header、內容、footer）置中限制在此寬度內；輪播圖在盒內依原始比例縮放。
+                整站內容（header、內容、footer）置中限制在此寬度內；輪播圖在盒內依下方比例縮放。
               </p>
             </div>
+            {heroRatioField}
             <div>
               <label
                 htmlFor="boxedHeroMaxHeight"

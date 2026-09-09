@@ -26,7 +26,7 @@ export default async function HomePage() {
     db.heroBanner.findMany({ orderBy: { sortOrder: "asc" } }),
     db.siteSetting.findUnique({
       where: { id: "singleton" },
-      select: { layoutMode: true, heroMaxHeight: true, mobileHeroRatio: true },
+      select: { layoutMode: true, heroMaxHeight: true, heroRatio: true, mobileHeroRatio: true },
     }),
   ]);
 
@@ -37,6 +37,7 @@ export default async function HomePage() {
 
   const layoutMode = siteSetting?.layoutMode ?? "original";
   const heroMaxHeight = siteSetting?.heroMaxHeight ?? 720;
+  const heroRatio = siteSetting?.heroRatio ?? "auto";
   const mobileHeroRatio = siteSetting?.mobileHeroRatio ?? "cover";
 
   const HOME_CATEGORIES = regions.map((r) => ({
@@ -58,6 +59,7 @@ export default async function HomePage() {
         mobileRatio={mobileHeroRatio}
         layoutMode={layoutMode}
         maxHeight={heroMaxHeight}
+        heroRatio={heroRatio}
       />
 
       <nav className="fh-page-bar">

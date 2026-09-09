@@ -13,22 +13,25 @@ export default function HeroCarousel({
   mobileRatio = "cover",
   layoutMode = "original",
   maxHeight = 720,
+  heroRatio = "auto",
 }: {
   slides: Slide[];
   mobileRatio?: string;
   layoutMode?: string;
   maxHeight?: number;
+  heroRatio?: string;
 }) {
   const [current, setCurrent] = useState(0);
   // In the ratio-scaled modes ("fit" and "boxed") the container sizes to the
-  // image's natural aspect ratio (measured from the first slide once it loads)
-  // so the whole image shows at full width. Until measured we fall back to 2:1.
+  // carousel aspect ratio: a fixed heroRatio when set, otherwise the first
+  // image's natural ratio (measured once it loads; 2:1 fallback until then).
   const [fitRatio, setFitRatio] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // "fit" and "boxed" both scale the carousel by the image ratio; only "fit"
-  // caps the height (boxed is already bounded by the box width).
+  // "fit" and "boxed" both scale the carousel by ratio and cap the height.
   const isRatio = layoutMode === "fit" || layoutMode === "boxed";
+  // A fixed heroRatio ("16/9" etc.) overrides the measured image ratio.
+  const fixedRatio = heroRatio !== "auto" ? heroRatio.replace("/", " / ") : null;
   // On mobile (original mode), "cover" keeps the full-bleed crop; any
   // aspect-ratio value switches to a fixed-ratio container that shows the whole
   // image. Desktop is unaffected (see .fh-carousel in frontend.css). The ratio
@@ -37,11 +40,11 @@ export default function HeroCarousel({
 
   let carouselStyle: CSSProperties | undefined;
   if (isRatio) {
-    // Both "fit" and "boxed" cap the carousel height at maxHeight; beyond the
-    // cap the image is contained (letterboxed) on the dark background.
+    // Cap the carousel height at maxHeight; beyond the cap the image is
+    // contained (letterboxed) on the dark background.
     carouselStyle = {
       width: "100%",
-      aspectRatio: fitRatio ? String(fitRatio) : "2 / 1",
+      aspectRatio: fixedRatio ?? (fitRatio ? String(fitRatio) : "2 / 1"),
       height: "auto",
       minHeight: 0,
       maxHeight: `${maxHeight}px`,
@@ -72,12 +75,13 @@ export default function HeroCarousel({
     };
   }, [resetTimer]);
 
-  // In "fit" mode, measure the first slide's natural aspect ratio so the
-  // container can size to it. A dedicated Image() loader is used (instead of
-  // onLoad) so it also resolves for an already-cached image.
+  // When the ratio is "auto", measure the first slide's natural aspect ratio so
+  // the container can size to it. A dedicated Image() loader is used (instead of
+  // onLoad) so it also resolves for an already-cached image. Skipped when a
+  // fixed heroRatio is set.
   const firstSrc = slides[0]?.img;
   useEffect(() => {
-    if (!isRatio || !firstSrc) return;
+    if (!isRatio || fixedRatio || !firstSrc) return;
     const probe = new window.Image();
     const apply = () => {
       if (probe.naturalWidth && probe.naturalHeight) {
@@ -87,7 +91,7 @@ export default function HeroCarousel({
     probe.onload = apply;
     probe.src = firstSrc;
     if (probe.complete) apply();
-  }, [isRatio, firstSrc]);
+  }, [isRatio, fixedRatio, firstSrc]);
 
   function handlePrev() {
     go(current - 1);

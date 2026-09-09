@@ -195,8 +195,12 @@ model SiteSetting {
   //                boxMaxWidth px; the carousel scales by ratio inside the box
   //                and boxOuterBackground fills the area beside the box.
   layoutMode         String   @default("original")
-  // Max carousel height (px), used only by the "fit" layout mode.
+  // Max carousel height (px), used by the ratio modes ("fit" and "boxed").
   heroMaxHeight      Int      @default(720)
+  // Carousel aspect ratio for the ratio modes ("fit" and "boxed"). "auto"
+  // uses the first image's natural ratio; "2/1" | "16/9" | "3/2" | "4/3" |
+  // "1/1" force a fixed ratio (the image is contained within it).
+  heroRatio          String   @default("auto")
   // Box width (px) and the background beside it, used only by "boxed".
   boxMaxWidth        Int      @default(1320)
   boxOuterBackground String   @default("neutral") // "neutral" | "gradient" | "dark"

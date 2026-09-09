@@ -22,6 +22,7 @@ export default async function HeroBannersPage() {
       select: {
         layoutMode: true,
         heroMaxHeight: true,
+        heroRatio: true,
         boxMaxWidth: true,
         boxOuterBackground: true,
         mobileHeroRatio: true,
@@ -43,6 +44,7 @@ export default async function HeroBannersPage() {
       <LayoutSetting
         initialMode={siteSetting?.layoutMode ?? "original"}
         initialMaxHeight={siteSetting?.heroMaxHeight ?? 720}
+        initialHeroRatio={siteSetting?.heroRatio ?? "auto"}
         initialBoxWidth={siteSetting?.boxMaxWidth ?? 1320}
         initialOuterBg={siteSetting?.boxOuterBackground ?? "neutral"}
         initialRatio={siteSetting?.mobileHeroRatio ?? "cover"}

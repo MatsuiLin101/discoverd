@@ -9,6 +9,7 @@ const SINGLETON_ID = "singleton";
 const schema = z.object({
   layoutMode: z.enum(["original", "fit", "boxed"], "請選擇有效的版面模式"),
   heroMaxHeight: z.coerce.number().int("請輸入整數").min(200, "高度至少 200px").max(2000, "高度最多 2000px"),
+  heroRatio: z.enum(["auto", "2/1", "16/9", "3/2", "4/3", "1/1"], "請選擇有效的輪播圖比例"),
   boxMaxWidth: z.coerce.number().int("請輸入整數").min(768, "盒寬至少 768px").max(2560, "盒寬最多 2560px"),
   boxOuterBackground: z.enum(["neutral", "gradient", "dark"], "請選擇有效的盒外背景"),
   mobileHeroRatio: z.enum(["cover", "2/1", "4/3", "1/1"], "請選擇有效的手機輪播比例"),
@@ -26,9 +27,16 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
 
-  const { layoutMode, heroMaxHeight, boxMaxWidth, boxOuterBackground, mobileHeroRatio } =
+  const { layoutMode, heroMaxHeight, heroRatio, boxMaxWidth, boxOuterBackground, mobileHeroRatio } =
     parsed.data;
-  const data = { layoutMode, heroMaxHeight, boxMaxWidth, boxOuterBackground, mobileHeroRatio };
+  const data = {
+    layoutMode,
+    heroMaxHeight,
+    heroRatio,
+    boxMaxWidth,
+    boxOuterBackground,
+    mobileHeroRatio,
+  };
 
   const setting = await db.siteSetting.upsert({
     where: { id: SINGLETON_ID },
@@ -37,6 +45,7 @@ export async function PUT(req: NextRequest) {
     select: {
       layoutMode: true,
       heroMaxHeight: true,
+      heroRatio: true,
       boxMaxWidth: true,
       boxOuterBackground: true,
       mobileHeroRatio: true,
