@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import { Noto_Sans, Noto_Sans_TC } from "next/font/google";
+import { db } from "@/lib/db";
 import "./frontend.css";
 
 const notoSans = Noto_Sans({
@@ -27,14 +29,37 @@ export const metadata: Metadata = {
   },
 };
 
-export default function FrontendLayout({
+// Read at request time so the boxed layout reflects the current setting. All
+// (frontend) routes are already rendered on demand, so this adds no build-time
+// DB access.
+export const dynamic = "force-dynamic";
+
+export default async function FrontendLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const setting = await db.siteSetting.findUnique({
+    where: { id: "singleton" },
+    select: { layoutMode: true, boxMaxWidth: true, boxOuterBackground: true },
+  });
+  const boxed = setting?.layoutMode === "boxed";
+  const boxWidth = setting?.boxMaxWidth ?? 1320;
+  const outerBg = setting?.boxOuterBackground ?? "neutral";
+
+  const rootStyle = boxed
+    ? ({ "--box": `${boxWidth}px`, "--max": `${boxWidth}px` } as CSSProperties)
+    : undefined;
+
   return (
-    <div className={`${notoSans.variable} ${notoSansTC.variable} fh-root`}>
-      {children}
+    <div className="fh-outer" data-bg={boxed ? outerBg : undefined}>
+      <div
+        className={`${notoSans.variable} ${notoSansTC.variable} fh-root`}
+        data-layout={boxed ? "boxed" : undefined}
+        style={rootStyle}
+      >
+        {children}
+      </div>
     </div>
   );
 }

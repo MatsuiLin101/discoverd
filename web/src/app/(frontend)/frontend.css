@@ -32,6 +32,17 @@
 .fh-root a { color: inherit; text-decoration: none; }
 .fh-root ::selection { background: var(--accent); color: #fff; }
 
+/* Boxed layout: the whole site (header, body, footer) is centered within
+   --box; .fh-outer paints the area beside the box on wide screens. All rules
+   are inert unless layoutMode is "boxed" (no data-bg / data-layout otherwise). */
+.fh-outer[data-bg] { min-height: 100vh; }
+.fh-outer[data-bg="neutral"] { background: #EAE7F0; }
+.fh-outer[data-bg="dark"] { background: #1F1A24; }
+.fh-outer[data-bg="gradient"] {
+  background: linear-gradient(180deg, #FFECEF 0%, #F2E8F4 46%, #E0E0FF 100%);
+}
+.fh-root[data-layout="boxed"] { max-width: var(--box); margin-left: auto; margin-right: auto; }
+
 /* =====================================================
    HEADER
    ===================================================== */
