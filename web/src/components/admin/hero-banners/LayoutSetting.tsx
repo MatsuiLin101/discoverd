@@ -30,6 +30,17 @@ const OUTER_BG_OPTIONS = [
   { value: "dark", label: "深色底" },
 ];
 
+// Suggested source image size per carousel ratio (long edge ~2560px so it
+// stays sharp on wide / retina screens).
+const HERO_RATIO_RECOMMEND: Record<string, string> = {
+  auto: "長邊 ≥ 2560px、比例接近你的圖片，重點置中",
+  "2/1": "2560 × 1280 px",
+  "16/9": "2560 × 1440 px",
+  "3/2": "2400 × 1600 px",
+  "4/3": "2400 × 1800 px",
+  "1/1": "2000 × 2000 px",
+};
+
 // Schema defaults, surfaced as a hint next to each editable px field.
 const DEFAULT_MAX_HEIGHT = 720;
 const DEFAULT_BOX_WIDTH = 1320;
@@ -149,6 +160,9 @@ export default function LayoutSetting({
       <p className="mt-1.5 text-xs text-gray-500">
         「依原圖比例」用第一張圖的原始比例縮放；選固定比例時，輪播圖以該比例呈現，圖片在框內完整置中、不足處以深色留白。
       </p>
+      <p className="mt-1 text-xs text-gray-400">
+        建議原圖尺寸：{HERO_RATIO_RECOMMEND[heroRatio] ?? HERO_RATIO_RECOMMEND.auto}
+      </p>
     </div>
   );
 
@@ -200,6 +214,9 @@ export default function LayoutSetting({
             <p className="mt-1.5 text-xs text-gray-500">
               桌機維持滿版。此設定只作用於手機版（螢幕寬度 768px 以下）。「滿版」會裁切邊緣；其他比例完整顯示整張圖，不足處以深色留白補滿。
             </p>
+            <p className="mt-1 text-xs text-gray-400">
+              建議原圖：2560 × 1280 px（2:1）以上的橫幅、重點置中（桌機滿版會裁切邊緣）。
+            </p>
           </div>
         )}
 
@@ -226,7 +243,7 @@ export default function LayoutSetting({
                 <span className="text-xs text-gray-400">預設 {DEFAULT_MAX_HEIGHT}</span>
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
-                桌機與手機一致：輪播圖以滿寬呈現並維持原始比例，高度不超過此上限；超過時以深色底完整顯示、不裁切。建議原圖 2560 × 1280（2:1）、重點置中。
+                桌機與手機一致：輪播圖以滿寬呈現，高度不超過此上限；超過時以深色底完整顯示、不裁切。建議原圖尺寸見上方「輪播圖比例」。
               </p>
             </div>
           </>
