@@ -30,6 +30,10 @@ const OUTER_BG_OPTIONS = [
   { value: "dark", label: "深色底" },
 ];
 
+// Schema defaults, surfaced as a hint next to each editable px field.
+const DEFAULT_MAX_HEIGHT = 720;
+const DEFAULT_BOX_WIDTH = 1320;
+
 const controlClass =
   "block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 sm:max-w-md";
 const numberClass =
@@ -219,6 +223,7 @@ export default function LayoutSetting({
                   style={ringStyle}
                 />
                 <span className="text-sm text-gray-500">px</span>
+                <span className="text-xs text-gray-400">預設 {DEFAULT_MAX_HEIGHT}</span>
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
                 桌機與手機一致：輪播圖以滿寬呈現並維持原始比例，高度不超過此上限；超過時以深色底完整顯示、不裁切。建議原圖 2560 × 1280（2:1）、重點置中。
@@ -246,6 +251,7 @@ export default function LayoutSetting({
                   style={ringStyle}
                 />
                 <span className="text-sm text-gray-500">px</span>
+                <span className="text-xs text-gray-400">預設 {DEFAULT_BOX_WIDTH}</span>
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
                 整站內容（header、內容、footer）置中限制在此寬度內；輪播圖在盒內依下方比例縮放。
@@ -272,6 +278,7 @@ export default function LayoutSetting({
                   style={ringStyle}
                 />
                 <span className="text-sm text-gray-500">px</span>
+                <span className="text-xs text-gray-400">預設 {DEFAULT_MAX_HEIGHT}</span>
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
                 輪播圖在盒內的高度上限；超過時以深色底完整顯示、不裁切。
