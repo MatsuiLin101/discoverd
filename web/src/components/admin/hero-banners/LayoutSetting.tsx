@@ -244,6 +244,8 @@ export default function LayoutSetting({
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
                 桌機與手機一致：輪播圖以滿寬呈現，高度不超過此上限；超過時以深色底完整顯示、不裁切。建議原圖尺寸見上方「輪播圖比例」。
+                <br />
+                實際高度為「寬度 ÷ 比例」與此上限的較小者：比例較高時，寬螢幕會以此上限為準（輪播圖變扁、圖片左右留白）。
               </p>
             </div>
           </>
@@ -299,6 +301,8 @@ export default function LayoutSetting({
               </div>
               <p className="mt-1.5 text-xs text-gray-500">
                 輪播圖在盒內的高度上限；超過時以深色底完整顯示、不裁切。
+                <br />
+                實際高度為「盒寬 ÷ 比例」與此上限的較小者：比例較高時會以此上限為準（輪播圖變扁、圖片左右留白）。
               </p>
             </div>
             <div>
