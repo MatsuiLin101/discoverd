@@ -26,7 +26,7 @@ const navGroups: NavGroup[] = [
   {
     title: "前台管理",
     items: [
-      { label: "輪播圖管理", href: "/hero-banners", adminOnly: true },
+      { label: "全站版面", href: "/hero-banners", adminOnly: true },
       { label: "地區管理", href: "/regions" },
       { label: "標籤管理", href: "/tags" },
       { label: "旅遊方案", href: "/tours" },

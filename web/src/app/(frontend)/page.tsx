@@ -26,7 +26,7 @@ export default async function HomePage() {
     db.heroBanner.findMany({ orderBy: { sortOrder: "asc" } }),
     db.siteSetting.findUnique({
       where: { id: "singleton" },
-      select: { heroDisplayMode: true, heroMaxHeight: true, mobileHeroRatio: true },
+      select: { layoutMode: true, heroMaxHeight: true, mobileHeroRatio: true },
     }),
   ]);
 
@@ -35,7 +35,7 @@ export default async function HomePage() {
       ? dbBanners.map((b) => ({ img: storage.publicUrl(b.imageKey), alt: b.title }))
       : HERO_FALLBACK_SLIDES;
 
-  const heroDisplayMode = siteSetting?.heroDisplayMode ?? "original";
+  const layoutMode = siteSetting?.layoutMode ?? "original";
   const heroMaxHeight = siteSetting?.heroMaxHeight ?? 720;
   const mobileHeroRatio = siteSetting?.mobileHeroRatio ?? "cover";
 
@@ -56,7 +56,7 @@ export default async function HomePage() {
       <HeroCarousel
         slides={heroSlides}
         mobileRatio={mobileHeroRatio}
-        displayMode={heroDisplayMode}
+        layoutMode={layoutMode}
         maxHeight={heroMaxHeight}
       />
 

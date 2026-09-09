@@ -186,17 +186,25 @@ model SiteSetting {
   instagramUrl     String?
   lineUrl          String?
   lineCommunityUrl String?
-  // Hero carousel display mode. "original": desktop stays full-bleed cover
-  // and mobile follows mobileHeroRatio. "fit": every viewport shows the image
-  // at full width keeping its natural aspect ratio, capped at heroMaxHeight px.
-  heroDisplayMode  String   @default("original")
-  // Max carousel height (px) used only in the "fit" display mode.
-  heroMaxHeight    Int      @default(720)
+  // Site-wide layout mode:
+  //   "original" — full-bleed site; carousel is desktop full-bleed cover and
+  //                mobile follows mobileHeroRatio.
+  //   "fit"      — full-bleed site; carousel shows the whole image at full
+  //                width keeping its natural ratio, capped at heroMaxHeight px.
+  //   "boxed"    — the whole site (header, body, footer) is centered within
+  //                boxMaxWidth px; the carousel scales by ratio inside the box
+  //                and boxOuterBackground fills the area beside the box.
+  layoutMode         String   @default("original")
+  // Max carousel height (px), used only by the "fit" layout mode.
+  heroMaxHeight      Int      @default(720)
+  // Box width (px) and the background beside it, used only by "boxed".
+  boxMaxWidth        Int      @default(1320)
+  boxOuterBackground String   @default("neutral") // "neutral" | "gradient" | "dark"
   // Mobile hero fit for the "original" mode: "cover" keeps the full-bleed
   // crop; "2/1", "4/3", "1/1" switch to a fixed aspect-ratio container that
   // contains the whole image. Desktop always stays full-bleed cover.
-  mobileHeroRatio  String   @default("cover")
-  updatedAt        DateTime @updatedAt
+  mobileHeroRatio    String   @default("cover")
+  updatedAt          DateTime @updatedAt
 }
 
 model ActivityLog {
