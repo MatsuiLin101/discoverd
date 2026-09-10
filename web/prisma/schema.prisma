@@ -205,7 +205,7 @@ model SiteSetting {
   // "1/1" force a fixed ratio (the image is contained within it).
   heroRatio          String   @default("auto")
   // Box width (px) and the background beside it, used only by "boxed".
-  boxMaxWidth        Int      @default(1320)
+  boxMaxWidth        Int      @default(1280)
   boxOuterBackground String   @default("neutral") // "neutral" | "gradient" | "dark"
   // Mobile hero fit for the "original" mode: "cover" keeps the full-bleed
   // crop; "2/1", "4/3", "1/1" switch to a fixed aspect-ratio container that

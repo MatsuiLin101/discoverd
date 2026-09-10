@@ -15,7 +15,7 @@
   --panel: rgba(255, 255, 255, 0.58);
   --panel-solid: rgba(255, 255, 255, 0.78);
   --fh-sans: var(--font-noto-sans, "Noto Sans"), var(--font-noto-sans-tc, "Noto Sans TC"), sans-serif;
-  --max: 1320px;
+  --max: 1280px;
   --gutter: 48px;
 
   min-height: 100vh;

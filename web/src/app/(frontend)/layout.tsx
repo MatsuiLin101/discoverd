@@ -44,7 +44,7 @@ export default async function FrontendLayout({
     select: { layoutMode: true, boxMaxWidth: true, boxOuterBackground: true },
   });
   const boxed = setting?.layoutMode === "boxed";
-  const boxWidth = setting?.boxMaxWidth ?? 1320;
+  const boxWidth = setting?.boxMaxWidth ?? 1280;
   const outerBg = setting?.boxOuterBackground ?? "neutral";
 
   const rootStyle = boxed

@@ -44,7 +44,7 @@ const HERO_RATIO_RECOMMEND: Record<string, string> = {
 
 // Schema defaults, surfaced as a hint next to each editable px field.
 const DEFAULT_MAX_HEIGHT = 720;
-const DEFAULT_BOX_WIDTH = 1320;
+const DEFAULT_BOX_WIDTH = 1280;
 
 const controlClass =
   "block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 sm:max-w-md";

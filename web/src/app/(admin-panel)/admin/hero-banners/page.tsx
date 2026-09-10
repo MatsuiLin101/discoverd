@@ -47,7 +47,7 @@ export default async function HeroBannersPage() {
         initialPauseOnHover={siteSetting?.heroPauseOnHover ?? true}
         initialMaxHeight={siteSetting?.heroMaxHeight ?? 720}
         initialHeroRatio={siteSetting?.heroRatio ?? "auto"}
-        initialBoxWidth={siteSetting?.boxMaxWidth ?? 1320}
+        initialBoxWidth={siteSetting?.boxMaxWidth ?? 1280}
         initialOuterBg={siteSetting?.boxOuterBackground ?? "neutral"}
         initialRatio={siteSetting?.mobileHeroRatio ?? "cover"}
       />
