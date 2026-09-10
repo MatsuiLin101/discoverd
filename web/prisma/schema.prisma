@@ -195,6 +195,9 @@ model SiteSetting {
   //                boxMaxWidth px; the carousel scales by ratio inside the box
   //                and boxOuterBackground fills the area beside the box.
   layoutMode         String   @default("original")
+  // Whether auto-advance pauses while the pointer hovers the carousel.
+  // (Keyboard-focus pause always stays on for accessibility.)
+  heroPauseOnHover   Boolean  @default(true)
   // Max carousel height (px), used by the ratio modes ("fit" and "boxed").
   heroMaxHeight      Int      @default(720)
   // Carousel aspect ratio for the ratio modes ("fit" and "boxed"). "auto"

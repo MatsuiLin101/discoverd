@@ -14,12 +14,14 @@ export default function HeroCarousel({
   layoutMode = "original",
   maxHeight = 720,
   heroRatio = "auto",
+  pauseOnHover = true,
 }: {
   slides: Slide[];
   mobileRatio?: string;
   layoutMode?: string;
   maxHeight?: number;
   heroRatio?: string;
+  pauseOnHover?: boolean;
 }) {
   const [current, setCurrent] = useState(0);
   // In the ratio-scaled modes ("fit" and "boxed") the container sizes to the
@@ -122,8 +124,8 @@ export default function HeroCarousel({
         data-fit={dataFit}
         data-mode={isRatio ? "fit" : undefined}
         style={carouselStyle}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
+        onMouseEnter={pauseOnHover ? () => setPaused(true) : undefined}
+        onMouseLeave={pauseOnHover ? () => setPaused(false) : undefined}
         onFocus={() => setPaused(true)}
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPaused(false);

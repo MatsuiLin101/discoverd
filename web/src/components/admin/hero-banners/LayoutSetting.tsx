@@ -53,6 +53,7 @@ const ringStyle = { ["--tw-ring-color" as string]: "#D12351" };
 
 export default function LayoutSetting({
   initialMode,
+  initialPauseOnHover,
   initialMaxHeight,
   initialHeroRatio,
   initialBoxWidth,
@@ -60,6 +61,7 @@ export default function LayoutSetting({
   initialRatio,
 }: {
   initialMode: string;
+  initialPauseOnHover: boolean;
   initialMaxHeight: number;
   initialHeroRatio: string;
   initialBoxWidth: number;
@@ -67,6 +69,7 @@ export default function LayoutSetting({
   initialRatio: string;
 }) {
   const [mode, setMode] = useState(initialMode);
+  const [pauseOnHover, setPauseOnHover] = useState(initialPauseOnHover);
   const [maxHeight, setMaxHeight] = useState(String(initialMaxHeight));
   const [heroRatio, setHeroRatio] = useState(initialHeroRatio);
   const [boxWidth, setBoxWidth] = useState(String(initialBoxWidth));
@@ -75,6 +78,7 @@ export default function LayoutSetting({
 
   const [saved, setSaved] = useState({
     mode: initialMode,
+    pauseOnHover: initialPauseOnHover,
     maxHeight: String(initialMaxHeight),
     heroRatio: initialHeroRatio,
     boxWidth: String(initialBoxWidth),
@@ -87,6 +91,7 @@ export default function LayoutSetting({
 
   const dirty =
     mode !== saved.mode ||
+    pauseOnHover !== saved.pauseOnHover ||
     maxHeight !== saved.maxHeight ||
     heroRatio !== saved.heroRatio ||
     boxWidth !== saved.boxWidth ||
@@ -116,6 +121,7 @@ export default function LayoutSetting({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           layoutMode: mode,
+          heroPauseOnHover: pauseOnHover,
           heroMaxHeight: h,
           heroRatio,
           boxMaxWidth: w,
@@ -125,7 +131,7 @@ export default function LayoutSetting({
       });
       const data = await res.json();
       if (data.data) {
-        setSaved({ mode, maxHeight, heroRatio, boxWidth, outerBg, ratio });
+        setSaved({ mode, pauseOnHover, maxHeight, heroRatio, boxWidth, outerBg, ratio });
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } else {
@@ -331,6 +337,23 @@ export default function LayoutSetting({
             </div>
           </>
         )}
+
+        <div>
+          <label htmlFor="heroPauseOnHover" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <input
+              id="heroPauseOnHover"
+              type="checkbox"
+              checked={pauseOnHover}
+              onChange={(e) => setPauseOnHover(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+              style={{ accentColor: "#D12351" }}
+            />
+            滑鼠懸浮時暫停自動輪播
+          </label>
+          <p className="mt-1.5 text-xs text-gray-500">
+            開啟時，滑鼠移到輪播圖上會暫停自動切換、移開後恢復。關閉則懸浮時仍持續自動輪播。（鍵盤 focus 為維持無障礙一律會暫停。）
+          </p>
+        </div>
 
         <div className="flex items-center gap-3">
           <button

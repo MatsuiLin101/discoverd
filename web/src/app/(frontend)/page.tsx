@@ -26,7 +26,13 @@ export default async function HomePage() {
     db.heroBanner.findMany({ orderBy: { sortOrder: "asc" } }),
     db.siteSetting.findUnique({
       where: { id: "singleton" },
-      select: { layoutMode: true, heroMaxHeight: true, heroRatio: true, mobileHeroRatio: true },
+      select: {
+        layoutMode: true,
+        heroPauseOnHover: true,
+        heroMaxHeight: true,
+        heroRatio: true,
+        mobileHeroRatio: true,
+      },
     }),
   ]);
 
@@ -36,6 +42,7 @@ export default async function HomePage() {
       : HERO_FALLBACK_SLIDES;
 
   const layoutMode = siteSetting?.layoutMode ?? "original";
+  const heroPauseOnHover = siteSetting?.heroPauseOnHover ?? true;
   const heroMaxHeight = siteSetting?.heroMaxHeight ?? 720;
   const heroRatio = siteSetting?.heroRatio ?? "auto";
   const mobileHeroRatio = siteSetting?.mobileHeroRatio ?? "cover";
@@ -60,6 +67,7 @@ export default async function HomePage() {
         layoutMode={layoutMode}
         maxHeight={heroMaxHeight}
         heroRatio={heroRatio}
+        pauseOnHover={heroPauseOnHover}
       />
 
       <nav className="fh-page-bar">

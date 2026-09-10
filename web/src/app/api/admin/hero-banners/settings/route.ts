@@ -8,6 +8,7 @@ const SINGLETON_ID = "singleton";
 
 const schema = z.object({
   layoutMode: z.enum(["original", "fit", "boxed"], "請選擇有效的版面模式"),
+  heroPauseOnHover: z.boolean(),
   heroMaxHeight: z.coerce.number().int("請輸入整數").min(200, "高度至少 200px").max(2000, "高度最多 2000px"),
   heroRatio: z.enum(["auto", "2/1", "16/9", "3/2", "4/3", "1/1"], "請選擇有效的輪播圖比例"),
   boxMaxWidth: z.coerce.number().int("請輸入整數").min(768, "盒寬至少 768px").max(2560, "盒寬最多 2560px"),
@@ -27,10 +28,18 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
 
-  const { layoutMode, heroMaxHeight, heroRatio, boxMaxWidth, boxOuterBackground, mobileHeroRatio } =
-    parsed.data;
+  const {
+    layoutMode,
+    heroPauseOnHover,
+    heroMaxHeight,
+    heroRatio,
+    boxMaxWidth,
+    boxOuterBackground,
+    mobileHeroRatio,
+  } = parsed.data;
   const data = {
     layoutMode,
+    heroPauseOnHover,
     heroMaxHeight,
     heroRatio,
     boxMaxWidth,
@@ -44,6 +53,7 @@ export async function PUT(req: NextRequest) {
     update: data,
     select: {
       layoutMode: true,
+      heroPauseOnHover: true,
       heroMaxHeight: true,
       heroRatio: true,
       boxMaxWidth: true,

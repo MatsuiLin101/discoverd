@@ -21,6 +21,7 @@ export default async function HeroBannersPage() {
       where: { id: "singleton" },
       select: {
         layoutMode: true,
+        heroPauseOnHover: true,
         heroMaxHeight: true,
         heroRatio: true,
         boxMaxWidth: true,
@@ -43,6 +44,7 @@ export default async function HeroBannersPage() {
 
       <LayoutSetting
         initialMode={siteSetting?.layoutMode ?? "original"}
+        initialPauseOnHover={siteSetting?.heroPauseOnHover ?? true}
         initialMaxHeight={siteSetting?.heroMaxHeight ?? 720}
         initialHeroRatio={siteSetting?.heroRatio ?? "auto"}
         initialBoxWidth={siteSetting?.boxMaxWidth ?? 1320}
