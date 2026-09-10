@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import LayoutPreview from "@/components/admin/hero-banners/LayoutPreview";
 
 const MODE_OPTIONS = [
   { value: "original", label: "原顯示方式（滿版・桌機輪播滿版、手機依比例）" },
@@ -179,7 +180,8 @@ export default function LayoutSetting({
         控制整站（header、內容、footer）與首頁輪播圖的呈現方式。
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-4 space-y-5">
+      <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-start">
+      <form onSubmit={handleSubmit} className="space-y-5 lg:flex-1">
         <div>
           <label htmlFor="layoutMode" className="mb-1 block text-sm font-medium text-gray-700">
             版面模式
@@ -368,6 +370,18 @@ export default function LayoutSetting({
           {success && <p className="text-sm text-emerald-600">已成功儲存</p>}
         </div>
       </form>
+
+        <div className="lg:w-[360px] lg:shrink-0">
+          <LayoutPreview
+            mode={mode}
+            heroRatio={heroRatio}
+            maxHeight={Number(maxHeight) || DEFAULT_MAX_HEIGHT}
+            boxWidth={Number(boxWidth) || DEFAULT_BOX_WIDTH}
+            outerBg={outerBg}
+            mobileRatio={ratio}
+          />
+        </div>
+      </div>
     </div>
   );
 }
