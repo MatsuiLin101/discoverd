@@ -15,7 +15,7 @@
   --panel: rgba(255, 255, 255, 0.58);
   --panel-solid: rgba(255, 255, 255, 0.78);
   --fh-sans: var(--font-noto-sans, "Noto Sans"), var(--font-noto-sans-tc, "Noto Sans TC"), sans-serif;
-  --max: 1320px;
+  --max: 1280px;
   --gutter: 48px;
 
   min-height: 100vh;
@@ -31,6 +31,17 @@
 .fh-root img { max-width: 100%; display: block; }
 .fh-root a { color: inherit; text-decoration: none; }
 .fh-root ::selection { background: var(--accent); color: #fff; }
+
+/* Boxed layout: the whole site (header, body, footer) is centered within
+   --box; .fh-outer paints the area beside the box on wide screens. All rules
+   are inert unless layoutMode is "boxed" (no data-bg / data-layout otherwise). */
+.fh-outer[data-bg] { min-height: 100vh; }
+.fh-outer[data-bg="neutral"] { background: #EAE7F0; }
+.fh-outer[data-bg="dark"] { background: #1F1A24; }
+.fh-outer[data-bg="gradient"] {
+  background: linear-gradient(180deg, #FFECEF 0%, #F2E8F4 46%, #E0E0FF 100%);
+}
+.fh-root[data-layout="boxed"] { max-width: var(--box); margin-left: auto; margin-right: auto; }
 
 /* =====================================================
    HEADER
@@ -154,6 +165,16 @@
   position: absolute; inset: 0;
 }
 .fh-slide.active .slide-img { transform: scale(1); }
+/* "fit" display mode (all viewports): full-width image, natural aspect ratio,
+   capped height via inline max-height. Contain so nothing is cropped, and drop
+   the Ken Burns zoom so the aspect ratio is preserved exactly. */
+.fh-carousel[data-mode="fit"] .slide-img { object-fit: contain; transform: none; }
+/* Respect reduced-motion: no crossfade, no Ken Burns zoom (JS also stops the
+   auto-advance). Slides still switch, just instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .fh-slide { transition: none; }
+  .fh-slide .slide-img { transition: none; transform: none; }
+}
 .fh-car-nav {
   position: absolute;
   top: 50%;
@@ -898,6 +919,17 @@
   .fh-modal-side.collapsed .m-actions a {
     flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; letter-spacing: 0; gap: 0;
   }
+}
+@media (max-width: 768px) {
+  /* Mobile hero: switch to the admin-selected fixed aspect-ratio container
+     that shows the whole image (contain). "cover" keeps the full-bleed crop
+     handled by the rules above. Desktop (>768) is unaffected. */
+  .fh-carousel[data-fit="contain"] {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: var(--m-ratio, 2 / 1);
+  }
+  .fh-carousel[data-fit="contain"] .slide-img { object-fit: contain; }
 }
 @media (max-width: 767px) {
   /* Mobile (<768): 1 card per row (#2) */
