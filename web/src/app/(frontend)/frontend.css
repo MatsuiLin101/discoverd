@@ -996,7 +996,11 @@
   padding: clamp(24px, 4vw, 56px) var(--gutter) clamp(48px, 8vw, 96px);
 }
 .fh-tour-detail .fh-modal {
+  /* Match the modal card's proportions; the page just frames it with the
+     header / breadcrumb / footer instead of a dark overlay. */
   height: min(860px, 82vh);
+  /* The pop-in entrance belongs to the overlay modal, not a full page load. */
+  animation: none;
 }
 
 /* =====================================================

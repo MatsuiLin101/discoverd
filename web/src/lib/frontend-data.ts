@@ -517,10 +517,12 @@ export interface TourItem {
 }
 
 /**
- * Everything the shared tour detail modal needs, fetched on demand via
- * GET /api/tours/[idOrSlug] (e.g. when a search result card is opened).
+ * Everything the shared tour detail card needs. The same payload drives both
+ * the standalone tour page (`/tours/[tourSlug]`) and the intercepted modal
+ * (`@modal/(.)tours/[tourSlug]`), so the two stay visually identical. Region /
+ * sub-region slugs are included for the standalone page's breadcrumb.
  */
-export interface TourModalData {
+export interface TourDetailData {
   id: string;
   slug: string;
   productId: string | null;
@@ -531,7 +533,9 @@ export interface TourModalData {
   tags: string[];
   media: TourMedia[];
   regionName: string;
+  regionSlug: string;
   subRegionName: string;
+  subSlug: string;
 }
 
 // ─────────────────────────────────────────────────────────────

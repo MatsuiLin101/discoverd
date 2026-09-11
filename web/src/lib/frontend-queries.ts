@@ -7,7 +7,7 @@ import type {
   RegionDetail,
   RegionTours,
   TourMedia,
-  TourModalData,
+  TourDetailData,
   SearchFilters,
   SearchResponse,
   SearchFilterData,
@@ -303,11 +303,12 @@ export async function getSearchFilters(): Promise<SearchFilterData> {
 }
 
 // ── Function 6 ──────────────────────────────────────────────
-// Used by: GET /api/tours/[idOrSlug] — full detail for the shared tour modal
-// (opened on demand, e.g. from a /search result card). Matches by productId
-// first, then slug, mirroring the /tours/[tourSlug] page. Returns null when
-// not found / unpublished.
-export async function getTourModalData(idOrSlug: string): Promise<TourModalData | null> {
+// Used by: app/(frontend)/tours/[tourSlug]/page.tsx (standalone tour page)
+//          and app/(frontend)/@modal/(.)tours/[tourSlug]/page.tsx (intercepted
+//          modal). Both render the shared <TourDetailCard> from this payload so
+//          they stay visually identical. Matches by productId first, then slug.
+// Returns null when not found / unpublished (caller calls notFound()).
+export async function getTourDetail(idOrSlug: string): Promise<TourDetailData | null> {
   const tour = await db.tour.findFirst({
     where: { published: true, OR: [{ productId: idOrSlug }, { slug: idOrSlug }] },
     select: {
@@ -329,7 +330,8 @@ export async function getTourModalData(idOrSlug: string): Promise<TourModalData 
       subRegion: {
         select: {
           name: true,
-          region: { select: { name: true } },
+          slug: true,
+          region: { select: { name: true, slug: true } },
         },
       },
     },
@@ -347,6 +349,8 @@ export async function getTourModalData(idOrSlug: string): Promise<TourModalData 
     tags: tour.tags.map((t) => t.name),
     media: tour.files.map(toTourMedia),
     regionName: tour.subRegion.region.name,
+    regionSlug: tour.subRegion.region.slug,
     subRegionName: tour.subRegion.name,
+    subSlug: tour.subRegion.slug,
   };
 }
