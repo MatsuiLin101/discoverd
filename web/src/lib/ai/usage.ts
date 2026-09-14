@@ -41,14 +41,22 @@ export async function logAiUsage(data: AiUsageCreate) {
   }
 }
 
-/** Update an existing usage row (used when an async thumbnail task finishes). */
-export async function updateAiUsageByTaskId(
+/**
+ * Finalise the PENDING usage row for an async thumbnail task (found by taskId),
+ * filling in latency from when the row was created. No-op if the row is missing.
+ */
+export async function finishAiUsageByTaskId(
   taskId: string,
-  data: Partial<Pick<AiUsageCreate, "status" | "latencyMs" | "resultRef" | "error">>,
+  data: { status: AiUsageStatus; resultRef?: string | null; error?: string | null },
 ) {
   try {
-    await db.aiUsageLog.updateMany({ where: { taskId }, data });
+    const row = await db.aiUsageLog.findFirst({ where: { taskId } });
+    if (!row) return;
+    await db.aiUsageLog.update({
+      where: { id: row.id },
+      data: { ...data, latencyMs: Date.now() - row.createdAt.getTime() },
+    });
   } catch (e) {
-    console.error("[updateAiUsageByTaskId]", e);
+    console.error("[finishAiUsageByTaskId]", e);
   }
 }

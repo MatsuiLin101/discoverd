@@ -35,12 +35,24 @@ export async function testGeminiKey(apiKey: string): Promise<{ ok: boolean; mess
  * Generate a tour description. `prompt` is the full assembled text prompt
  * (persona template + tour data + hint); `pdfs` are attached content files.
  */
+export interface GeminiUsage {
+  inputTokens?: number;
+  outputTokens?: number;
+  thoughtsTokens?: number;
+  totalTokens?: number;
+}
+
+export interface GeminiResult {
+  text: string;
+  usage: GeminiUsage;
+}
+
 export async function generateDescription(opts: {
   apiKey: string;
   model: string;
   prompt: string;
   pdfs?: GeminiPdfPart[];
-}): Promise<string> {
+}): Promise<GeminiResult> {
   const { apiKey, model, prompt, pdfs = [] } = opts;
 
   const parts: Record<string, unknown>[] = [{ text: prompt }];
@@ -72,5 +84,13 @@ export async function generateDescription(opts: {
     .join("")
     .trim();
   if (!text) throw new Error("Gemini 沒有回傳內容，請調整提示詞後再試");
-  return text;
+
+  const m = data?.usageMetadata ?? {};
+  const usage: GeminiUsage = {
+    inputTokens: m.promptTokenCount,
+    outputTokens: m.candidatesTokenCount,
+    thoughtsTokens: m.thoughtsTokenCount,
+    totalTokens: m.totalTokenCount,
+  };
+  return { text, usage };
 }

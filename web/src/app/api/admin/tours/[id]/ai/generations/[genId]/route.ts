@@ -5,6 +5,7 @@ import { storage, buildKey, MIME_TO_EXT } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 import { getAiKeys } from "@/lib/ai/config";
 import { getTaskResult } from "@/lib/ai/manus";
+import { finishAiUsageByTaskId } from "@/lib/ai/usage";
 import { serializeGeneration } from "@/lib/ai/serialize";
 
 /**
@@ -44,6 +45,7 @@ export async function GET(
         where: { id: genId },
         data: { status: "FAILED", error: result.message },
       });
+      void finishAiUsageByTaskId(gen.taskId, { status: "FAILED", error: result.message });
       return NextResponse.json({ data: serializeGeneration(updated) });
     }
 
@@ -54,6 +56,7 @@ export async function GET(
         where: { id: genId },
         data: { status: "FAILED", error: "下載 Manus 產生的圖片失敗" },
       });
+      void finishAiUsageByTaskId(gen.taskId, { status: "FAILED", error: "下載 Manus 產生的圖片失敗" });
       return NextResponse.json({ data: serializeGeneration(updated) });
     }
     const contentType = res.headers.get("content-type") ?? "image/png";
@@ -66,6 +69,7 @@ export async function GET(
       where: { id: genId },
       data: { status: "READY", imageKey: key, error: null },
     });
+    void finishAiUsageByTaskId(gen.taskId, { status: "SUCCESS", resultRef: key });
     return NextResponse.json({ data: serializeGeneration(updated) });
   } catch (e) {
     console.error("[GET /api/admin/tours/[id]/ai/generations/[genId]]", e);

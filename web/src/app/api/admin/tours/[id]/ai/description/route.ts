@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { writeLog } from "@/lib/log";
 import { getAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
 import { generateDescription } from "@/lib/ai/gemini";
 import { buildDescriptionPrompt } from "@/lib/ai/prompts";
+import { logAiUsage } from "@/lib/ai/usage";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
 
 export async function POST(
@@ -44,14 +44,37 @@ export async function POST(
     // A previewed/edited prompt is used verbatim; otherwise assemble it now.
     const prompt = promptOverride ?? buildDescriptionPrompt(descriptionPrompt, ctx.contextText, hint);
 
-    const text = await generateDescription({
-      apiKey: keys.gemini,
+    // Base usage record shared by the success and failure paths.
+    const usageBase = {
+      userId: session.userId,
+      userAccount: session.username,
+      tourId: id,
+      tourName: ctx.tour.name,
+      kind: "DESCRIPTION" as const,
+      provider: "gemini" as const,
       model: descriptionModel,
-      prompt,
-      pdfs: ctx.pdfs,
-    });
+      hint,
+      promptOverridden: !!promptOverride,
+      promptText: prompt,
+      pdfCount: ctx.pdfs.length,
+    };
+
+    const startedAt = Date.now();
+    let result;
+    try {
+      result = await generateDescription({ apiKey: keys.gemini, model: descriptionModel, prompt, pdfs: ctx.pdfs });
+    } catch (genErr) {
+      void logAiUsage({
+        ...usageBase,
+        status: "FAILED",
+        latencyMs: Date.now() - startedAt,
+        error: genErr instanceof Error ? genErr.message : String(genErr),
+      });
+      throw genErr;
+    }
+
     // Keep within the description column limit (500) used across the app.
-    const trimmed = text.length > 500 ? text.slice(0, 500) : text;
+    const trimmed = result.text.length > 500 ? result.text.slice(0, 500) : result.text;
 
     const candidate = await db.aiGeneration.create({
       data: {
@@ -65,14 +88,16 @@ export async function POST(
       },
     });
 
-    void writeLog({
-      userId: session.userId,
-      userAccount: session.username,
-      action: "CREATE",
-      resource: "AI_GENERATION",
-      resourceId: candidate.id,
-      resourceName: `AI 簡介：${ctx.tour.name}`,
-      detail: { tourId: id, kind: "DESCRIPTION", model: descriptionModel, usedPdf: ctx.pdfs.length },
+    void logAiUsage({
+      ...usageBase,
+      status: "SUCCESS",
+      latencyMs: Date.now() - startedAt,
+      inputTokens: result.usage.inputTokens,
+      outputTokens: result.usage.outputTokens,
+      thoughtsTokens: result.usage.thoughtsTokens,
+      totalTokens: result.usage.totalTokens,
+      resultRef: candidate.id,
+      outputChars: trimmed.length,
     });
 
     return NextResponse.json({ data: candidate }, { status: 201 });

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { writeLog } from "@/lib/log";
 import { getAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
 import { createThumbnailTask } from "@/lib/ai/manus";
 import { buildThumbnailPrompt } from "@/lib/ai/prompts";
+import { logAiUsage } from "@/lib/ai/usage";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
+
+const AGENT_PROFILE = "standard";
 
 export async function POST(
   req: NextRequest,
@@ -47,7 +49,31 @@ export async function POST(
     // A previewed/edited prompt is used verbatim; otherwise assemble it now.
     const fullPrompt = promptOverride ?? buildThumbnailPrompt(thumbnailPrompt, ctx.contextText, hint);
 
-    const taskId = await createThumbnailTask({ apiKey: keys.manus, prompt: fullPrompt });
+    const usageBase = {
+      userId: session.userId,
+      userAccount: session.username,
+      tourId: id,
+      tourName: ctx.tour.name,
+      kind: "THUMBNAIL" as const,
+      provider: "manus" as const,
+      model: "manus",
+      agentProfile: AGENT_PROFILE,
+      hint,
+      promptOverridden: !!promptOverride,
+      promptText: fullPrompt,
+    };
+
+    let taskId: string;
+    try {
+      taskId = await createThumbnailTask({ apiKey: keys.manus, prompt: fullPrompt });
+    } catch (genErr) {
+      void logAiUsage({
+        ...usageBase,
+        status: "FAILED",
+        error: genErr instanceof Error ? genErr.message : String(genErr),
+      });
+      throw genErr;
+    }
 
     const candidate = await db.aiGeneration.create({
       data: {
@@ -61,15 +87,8 @@ export async function POST(
       },
     });
 
-    void writeLog({
-      userId: session.userId,
-      userAccount: session.username,
-      action: "CREATE",
-      resource: "AI_GENERATION",
-      resourceId: candidate.id,
-      resourceName: `AI 縮圖：${ctx.tour.name}`,
-      detail: { tourId: id, kind: "THUMBNAIL", taskId },
-    });
+    // PENDING usage row; the poll route updates it (by taskId) on completion.
+    void logAiUsage({ ...usageBase, status: "PENDING", taskId });
 
     return NextResponse.json({ data: candidate }, { status: 201 });
   } catch (e) {
