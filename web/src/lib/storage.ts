@@ -2,9 +2,10 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { mkdir, unlink, writeFile } from "fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "fs/promises";
 import { dirname, extname, join } from "path";
 import { randomBytes } from "crypto";
 
@@ -36,6 +37,8 @@ export interface StorageDriver {
   createUploadAuth(key: string, contentType: string): Promise<UploadAuth>;
   /** Server-side upload (used by local driver, or small server-side writes). */
   put(key: string, body: Buffer, contentType: string): Promise<void>;
+  /** Server-side read of an object's bytes (used to feed PDFs to the AI). */
+  get(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;
   /** Build the public URL from a stored key + configured base URL. */
   publicUrl(key: string): string;
@@ -112,6 +115,12 @@ class R2Driver implements StorageDriver {
     await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType }));
   }
 
+  async get(key: string): Promise<Buffer> {
+    const res = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+    const bytes = await res.Body!.transformToByteArray();
+    return Buffer.from(bytes);
+  }
+
   async delete(key: string): Promise<void> {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
@@ -150,6 +159,10 @@ class LocalDriver implements StorageDriver {
     const abs = join(this.dir, key);
     await mkdir(dirname(abs), { recursive: true });
     await writeFile(abs, body);
+  }
+
+  async get(key: string): Promise<Buffer> {
+    return readFile(join(this.dir, key));
   }
 
   async delete(key: string): Promise<void> {

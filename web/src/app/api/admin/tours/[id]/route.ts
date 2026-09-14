@@ -7,6 +7,19 @@ import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 import { parseCropField } from "@/lib/crop";
 
+/**
+ * Delete a stored image, unless it is still referenced by an AI candidate
+ * (AiGeneration.imageKey) for this tour — selecting a candidate as the
+ * thumbnail shares its stored object, so we must not remove it here.
+ */
+async function deleteThumbIfUnreferenced(tourId: string, key: string): Promise<void> {
+  const referenced = await db.aiGeneration.findFirst({
+    where: { tourId, imageKey: key },
+    select: { id: true },
+  });
+  if (!referenced) await storage.delete(key).catch(() => {});
+}
+
 const updateSchema = z.object({
   name: z.string().min(1, "請輸入行程名稱"),
   price: z.coerce.number().int().min(0, "價格不可為負數"),
@@ -57,10 +70,10 @@ export async function PUT(
     const clearThumbnail = fd.get("clearThumbnail") === "true";
 
     if (clearThumbnail && !newThumbnailKey) {
-      if (existing.thumbnailKey) await storage.delete(existing.thumbnailKey).catch(() => {});
+      if (existing.thumbnailKey) await deleteThumbIfUnreferenced(id, existing.thumbnailKey);
       thumbnailKey = null;
-    } else if (newThumbnailKey) {
-      if (existing.thumbnailKey) await storage.delete(existing.thumbnailKey).catch(() => {});
+    } else if (newThumbnailKey && newThumbnailKey !== existing.thumbnailKey) {
+      if (existing.thumbnailKey) await deleteThumbIfUnreferenced(id, existing.thumbnailKey);
       thumbnailKey = newThumbnailKey;
     }
 
@@ -125,17 +138,21 @@ export async function DELETE(
     const { id } = await params;
     const tour = await db.tour.findUnique({
       where: { id },
-      include: { files: { select: { key: true } } },
+      include: {
+        files: { select: { key: true } },
+        aiGenerations: { where: { imageKey: { not: null } }, select: { imageKey: true } },
+      },
     });
     if (!tour) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
 
-    const deleteJobs: Promise<unknown>[] = [];
-    if (tour.thumbnailKey) deleteJobs.push(storage.delete(tour.thumbnailKey).catch(() => {}));
-    if (tour.ogImageKey) deleteJobs.push(storage.delete(tour.ogImageKey).catch(() => {}));
-    for (const file of tour.files) {
-      deleteJobs.push(storage.delete(file.key).catch(() => {}));
-    }
-    await Promise.all(deleteJobs);
+    // Collect every stored object to remove; a shared key (thumbnail selected
+    // from a candidate) is de-duplicated so we don't delete it twice.
+    const keys = new Set<string>();
+    if (tour.thumbnailKey) keys.add(tour.thumbnailKey);
+    if (tour.ogImageKey) keys.add(tour.ogImageKey);
+    for (const file of tour.files) keys.add(file.key);
+    for (const g of tour.aiGenerations) if (g.imageKey) keys.add(g.imageKey);
+    await Promise.all([...keys].map((key) => storage.delete(key).catch(() => {})));
 
     await db.tour.delete({ where: { id } });
     void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR", resourceId: id, resourceName: tour.name, detail: { id, name: tour.name, hadThumbnail: !!tour.thumbnailKey } });
