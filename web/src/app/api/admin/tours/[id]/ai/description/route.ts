@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
 import { getAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
 import { generateDescription } from "@/lib/ai/gemini";
+import { buildDescriptionPrompt } from "@/lib/ai/prompts";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
 
 export async function POST(
@@ -33,17 +34,20 @@ export async function POST(
 
     const body = await req.json().catch(() => ({}));
     const hint = typeof body?.hint === "string" && body.hint.trim() ? body.hint.trim() : null;
+    const promptOverride =
+      typeof body?.promptOverride === "string" && body.promptOverride.trim() ? body.promptOverride : null;
 
     // Use the editor's current (possibly unsaved) form values when provided.
     const ctx = await loadTourAiContext(id, parseContextOverride(body?.context));
     if (!ctx) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
-    const contextText = hint ? `${ctx.contextText}\n重點提示：${hint}` : ctx.contextText;
+
+    // A previewed/edited prompt is used verbatim; otherwise assemble it now.
+    const prompt = promptOverride ?? buildDescriptionPrompt(descriptionPrompt, ctx.contextText, hint);
 
     const text = await generateDescription({
       apiKey: keys.gemini,
       model: descriptionModel,
-      systemPrompt: descriptionPrompt,
-      contextText,
+      prompt,
       pdfs: ctx.pdfs,
     });
     // Keep within the description column limit (500) used across the app.

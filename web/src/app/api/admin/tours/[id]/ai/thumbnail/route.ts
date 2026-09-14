@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
 import { getAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
 import { createThumbnailTask } from "@/lib/ai/manus";
+import { buildThumbnailPrompt } from "@/lib/ai/prompts";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
 
 export async function POST(
@@ -36,12 +37,15 @@ export async function POST(
 
     const body = await req.json().catch(() => ({}));
     const hint = typeof body?.hint === "string" && body.hint.trim() ? body.hint.trim() : null;
+    const promptOverride =
+      typeof body?.promptOverride === "string" && body.promptOverride.trim() ? body.promptOverride : null;
 
     // Use the editor's current (possibly unsaved) form values when provided.
     const ctx = await loadTourAiContext(id, parseContextOverride(body?.context));
     if (!ctx) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
 
-    const fullPrompt = `${thumbnailPrompt}\n${ctx.contextText}${hint ? `\n重點提示：${hint}` : ""}`;
+    // A previewed/edited prompt is used verbatim; otherwise assemble it now.
+    const fullPrompt = promptOverride ?? buildThumbnailPrompt(thumbnailPrompt, ctx.contextText, hint);
 
     const taskId = await createThumbnailTask({ apiKey: keys.manus, prompt: fullPrompt });
 

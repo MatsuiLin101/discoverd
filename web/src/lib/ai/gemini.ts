@@ -32,21 +32,18 @@ export async function testGeminiKey(apiKey: string): Promise<{ ok: boolean; mess
 }
 
 /**
- * Generate a tour description. `systemPrompt` is the persona/style template;
- * `contextText` is the structured tour data; `pdfs` are attached content files.
+ * Generate a tour description. `prompt` is the full assembled text prompt
+ * (persona template + tour data + hint); `pdfs` are attached content files.
  */
 export async function generateDescription(opts: {
   apiKey: string;
   model: string;
-  systemPrompt: string;
-  contextText: string;
+  prompt: string;
   pdfs?: GeminiPdfPart[];
 }): Promise<string> {
-  const { apiKey, model, systemPrompt, contextText, pdfs = [] } = opts;
+  const { apiKey, model, prompt, pdfs = [] } = opts;
 
-  const parts: Record<string, unknown>[] = [
-    { text: `${systemPrompt}\n\n=== 行程資訊 ===\n${contextText}` },
-  ];
+  const parts: Record<string, unknown>[] = [{ text: prompt }];
   for (const pdf of pdfs) {
     parts.push({ inline_data: { mime_type: pdf.mimeType ?? "application/pdf", data: pdf.data } });
   }

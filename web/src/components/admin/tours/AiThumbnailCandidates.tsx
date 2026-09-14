@@ -30,6 +30,9 @@ export default function AiThumbnailCandidates({
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewPrompt, setPreviewPrompt] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Candidates that still count toward the cap (pending + ready).
@@ -70,7 +73,7 @@ export default function AiThumbnailCandidates({
     };
   }, [candidates, pollPending]);
 
-  async function generate() {
+  async function generate(promptOverride?: string) {
     if (atLimit || generating) return;
     setGenerating(true);
     setError(null);
@@ -78,11 +81,12 @@ export default function AiThumbnailCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/thumbnail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.() }),
+        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {
         setCandidates((prev) => [data, ...prev]);
+        setPreviewOpen(false);
       } else {
         setError(error ?? "生成失敗");
       }
@@ -90,6 +94,30 @@ export default function AiThumbnailCandidates({
       setError("網路錯誤，請稍後再試");
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function openPreview() {
+    if (atLimit || previewLoading) return;
+    setPreviewLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/tours/${tourId}/ai/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "THUMBNAIL", hint: hint.trim() || undefined, context: getContext?.() }),
+      });
+      const { data, error } = await res.json();
+      if (res.ok && data) {
+        setPreviewPrompt(data.prompt);
+        setPreviewOpen(true);
+      } else {
+        setError(error ?? "預覽失敗");
+      }
+    } catch {
+      setError("網路錯誤，請稍後再試");
+    } finally {
+      setPreviewLoading(false);
     }
   }
 
@@ -110,7 +138,15 @@ export default function AiThumbnailCandidates({
         />
         <button
           type="button"
-          onClick={generate}
+          onClick={openPreview}
+          disabled={atLimit || previewLoading || generating}
+          className="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {previewLoading ? "載入中…" : "預覽提示詞"}
+        </button>
+        <button
+          type="button"
+          onClick={() => generate()}
           disabled={atLimit || generating}
           className="cursor-pointer rounded-lg bg-[#D12351] px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -122,6 +158,35 @@ export default function AiThumbnailCandidates({
         由 Manus 產生，需稍候（可離開後再回來查看）。可多次生成挑選（{activeCount}/{MAX}）。
         {atLimit && <span className="text-rose-500">　已達上限，請先刪除舊版本。</span>}
       </p>
+
+      {previewOpen && (
+        <div className="mt-3 rounded-lg border border-[#D12351]/40 bg-white p-3">
+          <p className="mb-1.5 text-xs font-medium text-gray-700">送出前可檢視並修改提示詞：</p>
+          <textarea
+            rows={8}
+            value={previewPrompt}
+            onChange={(e) => setPreviewPrompt(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[#D12351]"
+          />
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => generate(previewPrompt)}
+              disabled={generating || !previewPrompt.trim()}
+              className="cursor-pointer rounded-lg bg-[#D12351] px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {generating ? "送出中…" : "以此提示詞生成"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(false)}
+              className="cursor-pointer text-xs text-gray-500 hover:text-gray-700"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && <p className="mt-2 text-xs text-rose-600">{error}</p>}
 

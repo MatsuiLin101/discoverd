@@ -27,3 +27,16 @@ export const DEFAULT_THUMBNAIL_PROMPT = `為以下旅遊行程產生一張吸引
 - 畫面中不要出現任何文字、浮水印或人物臉部特寫。
 
 行程資訊：`;
+
+/**
+ * Assemble the exact text prompt sent to the model. Both the preview endpoint
+ * and the generators call these so what the user previews is what gets sent.
+ */
+export function buildDescriptionPrompt(systemPrompt: string, contextText: string, hint?: string | null): string {
+  const ctx = hint ? `${contextText}\n重點提示：${hint}` : contextText;
+  return `${systemPrompt}\n\n=== 行程資訊 ===\n${ctx}`;
+}
+
+export function buildThumbnailPrompt(thumbnailPrompt: string, contextText: string, hint?: string | null): string {
+  return `${thumbnailPrompt}\n${contextText}${hint ? `\n重點提示：${hint}` : ""}`;
+}
