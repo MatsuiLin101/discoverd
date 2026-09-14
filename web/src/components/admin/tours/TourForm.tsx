@@ -105,6 +105,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [contentFiles, setContentFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [isDraftPending, setIsDraftPending] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const ogFileRef = useRef<HTMLInputElement>(null);
 
@@ -173,13 +174,35 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     setContentFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    void save(false);
+  }
+
+  /**
+   * Create/update the tour. When `asDraft` is true (new tours only) we stay on
+   * the form by navigating in-place to the edit URL, so the AI generators become
+   * usable immediately without a trip out to the list.
+   */
+  async function save(asDraft: boolean) {
     if (!subRegionId) {
       setError("請選擇次分類");
       return;
     }
-    setIsPending(true);
+    // The draft button is type="button", so the browser's `required` checks
+    // don't run — validate the API-required fields ourselves for a clean error.
+    if (asDraft) {
+      if (!name.trim()) {
+        setError("請先輸入行程名稱");
+        return;
+      }
+      if (price === "" || Number.isNaN(Number(price)) || Number(price) < 0) {
+        setError("請先輸入有效的價格");
+        return;
+      }
+    }
+    const setPending = asDraft ? setIsDraftPending : setIsPending;
+    setPending(true);
     setError(null);
 
     const fd = new FormData();
@@ -223,6 +246,13 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       const res = await fetch(url, { method: isEdit ? "PUT" : "POST", body: fd });
       const data = await res.json();
       if (res.ok && data.data) {
+        if (asDraft && data.data.id) {
+          // Stay on the form: land on this tour's edit page (AI panels appear).
+          const query = returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : "";
+          router.replace(`${adminPath}/tours/${data.data.id}${query}`);
+          router.refresh();
+          return;
+        }
         sessionStorage.setItem(
           "adminSaveMsg",
           isEdit ? `已更新旅遊方案「${name}」` : `已新增旅遊方案「${name}」`
@@ -235,7 +265,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     } catch (err) {
       setError(err instanceof Error ? err.message : "網路錯誤，請稍後再試");
     } finally {
-      setIsPending(false);
+      setPending(false);
     }
   }
 
@@ -284,7 +314,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
           {isEdit && tourId ? (
             <AiDescriptionCandidates tourId={tourId} onSelect={setDescription} />
           ) : (
-            <p className="mt-1.5 text-xs text-gray-400">💡 儲存後即可使用 AI 生成行程簡介。</p>
+            <p className="mt-1.5 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程簡介。</p>
           )}
         </div>
 
@@ -421,7 +451,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
           {isEdit && tourId ? (
             <AiThumbnailCandidates tourId={tourId} onSelect={handleSelectAiThumb} />
           ) : (
-            <p className="mt-3 text-xs text-gray-400">💡 儲存後即可使用 AI 生成行程縮圖。</p>
+            <p className="mt-3 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程縮圖。</p>
           )}
         </div>
 
@@ -562,6 +592,16 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
                 ? "儲存變更"
                 : "新增旅遊方案"}
           </button>
+          {!isEdit && (
+            <button
+              type="button"
+              onClick={() => void save(true)}
+              disabled={isDraftPending || isPending}
+              className="cursor-pointer rounded-lg border border-[#D12351] bg-white px-5 py-2 text-sm font-medium text-[#D12351] transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isDraftPending ? "儲存草稿中…" : "儲存草稿並使用 AI"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => router.push(backUrl)}
