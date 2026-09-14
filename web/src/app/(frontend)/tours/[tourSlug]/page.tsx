@@ -1,12 +1,11 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import Link from "next/link";
-import SiteHeader from "@/components/frontend/SiteHeader";
-import SiteFooter from "@/components/frontend/SiteFooter";
+import SubRegionListing from "@/components/frontend/SubRegionListing";
+import TourModalShell from "@/components/frontend/TourModalShell";
 import TourDetailCard from "@/components/frontend/TourDetailCard";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
-import { getTourDetail } from "@/lib/frontend-queries";
+import { getTourDetail, getRegionTours } from "@/lib/frontend-queries";
 
 interface Props {
   params: Promise<{ tourSlug: string }>;
@@ -51,37 +50,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+// A shared tour link (or a page refresh) lands here directly. Instead of a
+// standalone page, we render the tour's sub-region listing with the tour modal
+// open over it — identical to opening the tour from an in-site card. On soft
+// navigation this route is intercepted by @modal/(.)tours/[tourSlug] instead.
 export default async function TourPage({ params }: Props) {
   const { tourSlug } = await params;
 
   const tour = await getTourDetail(tourSlug);
   if (!tour) notFound();
 
+  // The listing that sits behind the modal.
+  const data = await getRegionTours(tour.regionSlug);
+  if (!data) notFound();
+
+  const hasSub = data.subRegions.some((sr) => sr.slug === tour.subSlug);
+  const activeSlug = hasSub ? tour.subSlug : data.subRegions[0]?.slug ?? "";
+  const listingUrl = `/regions/${tour.regionSlug}/${tour.subSlug}`;
+
   return (
     <>
-      <SiteHeader />
-
-      <nav className="fh-page-bar">
-        <div className="fh-page-bar-inner">
-          <span className="crumb">
-            <Link href="/">首頁</Link>
-            <span className="sep">／</span>
-            <Link href={`/regions/${tour.regionSlug}`}>{tour.regionName}</Link>
-            <span className="sep">／</span>
-            <Link href={`/regions/${tour.regionSlug}/${tour.subSlug}`}>{tour.subRegionName}</Link>
-            <span className="sep">／</span>
-            <span className="cur">{tour.name}</span>
-          </span>
-        </div>
-      </nav>
-
-      <section className="fh-tour-detail">
-        <div className="fh-modal">
-          <TourDetailCard tour={tour} headingTag="h1" />
-        </div>
-      </section>
-
-      <SiteFooter />
+      <SubRegionListing
+        data={data}
+        regionSlug={tour.regionSlug}
+        activeSlug={activeSlug}
+        activeName={tour.subRegionName}
+      />
+      <TourModalShell closeHref={listingUrl}>
+        <TourDetailCard tour={tour} headingTag="h1" />
+      </TourModalShell>
     </>
   );
 }
