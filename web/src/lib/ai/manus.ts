@@ -26,7 +26,7 @@ export async function testManusKey(
     const body = await res.json().catch(() => null);
     if (res.ok && body?.ok !== false) {
       const credits: number | undefined =
-        body?.available_credits ?? body?.credits ?? body?.balance;
+        body?.total_credits ?? body?.available_credits ?? body?.free_credits ?? body?.credits ?? body?.balance;
       return {
         ok: true,
         message:
@@ -114,11 +114,16 @@ export async function getTaskResult(opts: {
     }
   }
 
+  // Return the image as soon as one exists — the Manus agent often keeps
+  // "running" (writing a summary) for minutes after the picture is ready, so
+  // waiting for "stopped" would make the user wait needlessly.
+  if (imageUrls.length > 0) {
+    return { status: "done", imageUrl: imageUrls[imageUrls.length - 1] };
+  }
   if (agentStatus === "error") {
     return { status: "error", message: "Manus 任務執行失敗" };
   }
   if (agentStatus === "stopped") {
-    if (imageUrls.length > 0) return { status: "done", imageUrl: imageUrls[imageUrls.length - 1] };
     return { status: "error", message: "Manus 任務完成但沒有產生圖片" };
   }
   return { status: "pending" };
