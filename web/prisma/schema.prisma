@@ -26,6 +26,7 @@ model User {
   importLogs  ImportLog[]
   aiPreference   UserAiPreference?
   aiGenerations  AiGeneration[]
+  aiUsageLogs    AiUsageLog[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -226,6 +227,12 @@ model SiteSetting {
   aiDescriptionModel  String   @default("gemini-3.6-flash")
   aiDescriptionPrompt String?
   aiThumbnailPrompt   String?
+  // Optional unit prices for the AI usage cost estimate (in NT$). Null = don't
+  // show a cost. Gemini bills input and output tokens (thinking counts as
+  // output) at different rates, per 1,000,000 tokens.
+  aiGeminiInputPricePerM  Float?
+  aiGeminiOutputPricePerM Float?
+  aiManusPricePerCredit   Float?
 
   updatedAt          DateTime @updatedAt
 }
@@ -318,4 +325,49 @@ model AiGeneration {
   createdAt   DateTime           @default(now())
 
   @@index([tourId, kind])
+}
+
+enum AiUsageStatus {
+  PENDING // thumbnail task started, awaiting the async result
+  SUCCESS // generation completed
+  FAILED  // generation errored; `error` holds the reason
+}
+
+// Durable, write-once record of every AI generation attempt (success or fail).
+// Independent of AiGeneration candidates (which are capped and user-deletable),
+// so it survives as the usage/cost audit trail.
+model AiUsageLog {
+  id               String           @id @default(cuid())
+  createdAt        DateTime         @default(now())
+  userId           String?
+  user             User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userAccount      String           // denormalised: survives user deletion
+  tourId           String?
+  tourName         String           // denormalised: survives tour rename/delete
+  kind             AiGenerationKind
+  provider         String           // "gemini" | "manus"
+  model            String?
+  status           AiUsageStatus    @default(PENDING)
+  hint             String?
+  promptOverridden Boolean          @default(false)
+  promptText       String?          // full prompt actually sent
+  pdfCount         Int              @default(0)
+  // Gemini token usage (thinking billed as output).
+  inputTokens      Int?
+  outputTokens     Int?
+  thoughtsTokens   Int?
+  totalTokens      Int?
+  // Manus fields.
+  taskId           String?
+  agentProfile     String?
+  creditsUsed      Int?             // not attributable per-task yet; reserved
+  latencyMs        Int?
+  resultRef        String?          // candidate id / image key
+  outputChars      Int?             // DESCRIPTION output length
+  error            String?
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([kind])
+  @@index([taskId])
 }
