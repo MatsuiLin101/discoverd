@@ -90,7 +90,7 @@ export default function AiPreferencesForm() {
               value={descriptionModel}
               onChange={(e) => setDescriptionModel(e.target.value)}
               className={inputClass}
-              placeholder={`系統預設：${defaults?.descriptionModel ?? "gemini-2.5-flash"}`}
+              placeholder={`系統預設：${defaults?.descriptionModel ?? "gemini-3.6-flash"}`}
             />
           </div>
 

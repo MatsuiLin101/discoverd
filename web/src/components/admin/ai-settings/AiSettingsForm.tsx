@@ -207,10 +207,10 @@ export default function AiSettingsForm() {
               value={aiDescriptionModel}
               onChange={(e) => setAiDescriptionModel(e.target.value)}
               className={inputClass}
-              placeholder={defaults?.descriptionModel ?? "gemini-2.5-flash"}
+              placeholder={defaults?.descriptionModel ?? "gemini-3.6-flash"}
             />
             <p className="mt-1 text-xs text-gray-400">
-              需為支援多模態（可讀 PDF）的 Gemini 模型；建議 {defaults?.descriptionModel ?? "gemini-2.5-flash"}。
+              需為支援多模態（可讀 PDF）的 Gemini 模型；建議 {defaults?.descriptionModel ?? "gemini-3.6-flash"}。
             </p>
           </div>
 

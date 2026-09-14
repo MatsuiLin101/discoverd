@@ -223,7 +223,7 @@ model SiteSetting {
   manusApiKeyEnc      String?
   // 系統預設模型與提示詞範本；個人偏好（UserAiPreference）可覆蓋。
   // 範本為 null 時改用程式內建的預設字串（見 src/lib/ai/prompts.ts）。
-  aiDescriptionModel  String   @default("gemini-2.5-flash")
+  aiDescriptionModel  String   @default("gemini-3.6-flash")
   aiDescriptionPrompt String?
   aiThumbnailPrompt   String?
 

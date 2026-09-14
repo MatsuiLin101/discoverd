@@ -9,7 +9,7 @@
  * the generation code, so editors can tweak tone without breaking the data feed.
  */
 
-export const DEFAULT_DESCRIPTION_MODEL = "gemini-2.5-flash";
+export const DEFAULT_DESCRIPTION_MODEL = "gemini-3.6-flash";
 
 export const DEFAULT_DESCRIPTION_PROMPT = `你是一位專業的旅遊文案編輯。請根據提供的行程資訊（可能包含行程 PDF 內容），撰寫一段吸引人的繁體中文「行程簡介」。
 
