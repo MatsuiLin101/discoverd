@@ -4,6 +4,8 @@ import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TourFileList from "./TourFileList";
+import AiDescriptionCandidates from "./AiDescriptionCandidates";
+import AiThumbnailCandidates from "./AiThumbnailCandidates";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import ImageCropper from "@/components/admin/ImageCropper";
 import CroppedPreview from "@/components/admin/CroppedPreview";
@@ -91,6 +93,9 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
   const [clearThumbnail, setClearThumbnail] = useState(false);
+  // An AI-generated thumbnail chosen from the candidate list: it already lives
+  // in storage, so on submit we send its key directly (no re-upload).
+  const [aiThumb, setAiThumb] = useState<{ key: string; url: string } | null>(null);
   const [thumbnailCrop, setThumbnailCrop] = useState<ThumbCrop | null>(tour?.thumbnailCrop ?? null);
   const [showCropper, setShowCropper] = useState(false);
   const [seoTitle, setSeoTitle] = useState(tour?.seoTitle ?? "");
@@ -116,13 +121,25 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     setThumbFile(file);
     setThumbPreview(file ? URL.createObjectURL(file) : null);
     setThumbnailCrop(null); // a new image invalidates any previous crop coords
-    if (file) setClearThumbnail(false);
+    if (file) {
+      setClearThumbnail(false);
+      setAiThumb(null);
+    }
   }
 
   function handleClearThumbnail() {
     setClearThumbnail(true);
     setThumbFile(null);
     setThumbPreview(null);
+    setThumbnailCrop(null);
+    setAiThumb(null);
+  }
+
+  function handleSelectAiThumb(choice: { key: string; url: string }) {
+    setAiThumb(choice);
+    setThumbFile(null);
+    setThumbPreview(null);
+    setClearThumbnail(false);
     setThumbnailCrop(null);
   }
 
@@ -181,6 +198,9 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       if (thumbFile) {
         const up = await uploadFile(thumbFile, "tours");
         fd.append("thumbnailKey", up.key);
+      } else if (aiThumb) {
+        // AI thumbnail already stored — send its key directly.
+        fd.append("thumbnailKey", aiThumb.key);
       } else if (clearThumbnail) {
         fd.append("clearThumbnail", "true");
       }
@@ -219,8 +239,8 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     }
   }
 
-  const currentThumb = clearThumbnail ? null : (thumbPreview ?? tour?.thumbnail ?? null);
-  const showClearButton = isEdit && (!!tour?.thumbnail || !!thumbFile) && !clearThumbnail;
+  const currentThumb = clearThumbnail ? null : (thumbPreview ?? aiThumb?.url ?? tour?.thumbnail ?? null);
+  const showClearButton = isEdit && (!!tour?.thumbnail || !!thumbFile || !!aiThumb) && !clearThumbnail;
 
   return (
     <>
@@ -251,15 +271,22 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
         </div>
 
         {/* 行程簡介 */}
-        <CharCountField
-          label="行程簡介"
-          multiline
-          rows={4}
-          value={description}
-          onChange={setDescription}
-          maxLength={500}
-          placeholder="簡短描述此行程的特色（選填）"
-        />
+        <div>
+          <CharCountField
+            label="行程簡介"
+            multiline
+            rows={4}
+            value={description}
+            onChange={setDescription}
+            maxLength={500}
+            placeholder="簡短描述此行程的特色（選填）"
+          />
+          {isEdit && tourId ? (
+            <AiDescriptionCandidates tourId={tourId} onSelect={setDescription} />
+          ) : (
+            <p className="mt-1.5 text-xs text-gray-400">💡 儲存後即可使用 AI 生成行程簡介。</p>
+          )}
+        </div>
 
         {/* 主分類 / 次分類 */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -391,6 +418,11 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
               </p>
             </div>
           </div>
+          {isEdit && tourId ? (
+            <AiThumbnailCandidates tourId={tourId} onSelect={handleSelectAiThumb} />
+          ) : (
+            <p className="mt-3 text-xs text-gray-400">💡 儲存後即可使用 AI 生成行程縮圖。</p>
+          )}
         </div>
 
         {/* 新增時的行程內容 */}
