@@ -1,0 +1,143 @@
+"use client";
+
+import { useState, useEffect, FormEvent } from "react";
+
+const inputClass =
+  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:ring-2 focus:ring-[#D12351] focus:border-transparent";
+const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
+
+interface Defaults {
+  descriptionModel: string;
+  descriptionPrompt: string;
+  thumbnailPrompt: string;
+}
+
+export default function AiPreferencesForm() {
+  const [descriptionModel, setDescriptionModel] = useState("");
+  const [descriptionPrompt, setDescriptionPrompt] = useState("");
+  const [thumbnailPrompt, setThumbnailPrompt] = useState("");
+  const [defaults, setDefaults] = useState<Defaults | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/ai/preferences")
+      .then((r) => r.json())
+      .then(({ data, systemDefaults }) => {
+        if (data) {
+          setDescriptionModel(data.descriptionModel ?? "");
+          setDescriptionPrompt(data.descriptionPrompt ?? "");
+          setThumbnailPrompt(data.thumbnailPrompt ?? "");
+        }
+        if (systemDefaults) setDefaults(systemDefaults);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setIsPending(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const res = await fetch("/api/admin/ai/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ descriptionModel, descriptionPrompt, thumbnailPrompt }),
+      });
+      const { data, error } = await res.json();
+      if (data) {
+        setSuccess(true);
+        setDescriptionModel(data.descriptionModel ?? "");
+        setDescriptionPrompt(data.descriptionPrompt ?? "");
+        setThumbnailPrompt(data.thumbnailPrompt ?? "");
+      } else {
+        setError(error ?? "儲存失敗");
+      }
+    } catch {
+      setError("網路錯誤，請稍後再試");
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  function resetAll() {
+    setDescriptionModel("");
+    setDescriptionPrompt("");
+    setThumbnailPrompt("");
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">AI 偏好</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          設定你個人慣用的模型與提示詞；留空的欄位會沿用系統預設。此設定僅套用於你自己的帳號。
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-gray-400">載入中…</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+          <div>
+            <label className={labelClass}>簡介生成模型</label>
+            <input
+              type="text"
+              value={descriptionModel}
+              onChange={(e) => setDescriptionModel(e.target.value)}
+              className={inputClass}
+              placeholder={`系統預設：${defaults?.descriptionModel ?? "gemini-2.5-flash"}`}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>簡介提示詞</label>
+            <textarea
+              rows={6}
+              value={descriptionPrompt}
+              onChange={(e) => setDescriptionPrompt(e.target.value)}
+              className={inputClass}
+              placeholder={defaults?.descriptionPrompt}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass}>縮圖提示詞</label>
+            <textarea
+              rows={5}
+              value={thumbnailPrompt}
+              onChange={(e) => setThumbnailPrompt(e.target.value)}
+              className={inputClass}
+              placeholder={defaults?.thumbnailPrompt}
+            />
+          </div>
+
+          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {success && <p className="text-sm text-emerald-600">已成功儲存</p>}
+
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="cursor-pointer rounded-lg px-5 py-2 text-sm font-medium text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: "#D12351" }}
+            >
+              {isPending ? "儲存中…" : "儲存"}
+            </button>
+            <button
+              type="button"
+              onClick={resetAll}
+              className="cursor-pointer rounded-lg border border-gray-300 bg-white px-5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              全部還原為系統預設
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}

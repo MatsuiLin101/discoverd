@@ -43,6 +43,10 @@ const navGroups: NavGroup[] = [
       { label: "使用者管理", href: "/users" },
     ],
   },
+  {
+    title: "個人設定",
+    items: [{ label: "AI 偏好", href: "/ai-preferences" }],
+  },
 ];
 
 export default function AdminSidebar({
