@@ -24,6 +24,8 @@ model User {
   sessions    Session[]
   logs        ActivityLog[]
   importLogs  ImportLog[]
+  aiPreference   UserAiPreference?
+  aiGenerations  AiGeneration[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -106,6 +108,7 @@ model Tour {
   ogImageKey        String?
   tags              Tag[]      @relation("TourTags")
   files             TourFile[]
+  aiGenerations     AiGeneration[]
   published         Boolean    @default(true)
   sortOrder         Int        @default(0)
   createdAt         DateTime   @default(now())
@@ -169,6 +172,8 @@ enum LogResource {
   SALES_REGION
   SALES_AGENT
   IMPORT
+  AI_SETTING
+  AI_GENERATION
 }
 
 model HeroBanner {
@@ -211,6 +216,17 @@ model SiteSetting {
   // crop; "2/1", "4/3", "1/1" switch to a fixed aspect-ratio container that
   // contains the whole image. Desktop always stays full-bleed cover.
   mobileHeroRatio    String   @default("cover")
+
+  // --- AI 生成設定（全站共用）---------------------------------------------
+  // API 金鑰以 AES-256-GCM 加密後存放，永不回傳明文給前端。
+  geminiApiKeyEnc     String?
+  manusApiKeyEnc      String?
+  // 系統預設模型與提示詞範本；個人偏好（UserAiPreference）可覆蓋。
+  // 範本為 null 時改用程式內建的預設字串（見 src/lib/ai/prompts.ts）。
+  aiDescriptionModel  String   @default("gemini-2.5-flash")
+  aiDescriptionPrompt String?
+  aiThumbnailPrompt   String?
+
   updatedAt          DateTime @updatedAt
 }
 
@@ -256,4 +272,50 @@ model ImportLog {
   user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt    DateTime     @default(now())
   committedAt  DateTime?
+}
+
+// Per-user overrides for AI generation. Any field left null falls back to the
+// system default stored on SiteSetting (and then to the built-in default).
+model UserAiPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  descriptionModel  String?
+  descriptionPrompt String?
+  thumbnailPrompt   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+enum AiGenerationKind {
+  DESCRIPTION
+  THUMBNAIL
+}
+
+enum AiGenerationStatus {
+  PENDING // Manus thumbnail task in flight; poll for the result
+  READY   // usable candidate (description text, or a stored thumbnail image)
+  FAILED  // generation errored; `error` holds the reason
+}
+
+// Saved AI candidates per tour so editors can regenerate several times and pick
+// their favourite. Capped at 5 per (tour, kind) in the API; never auto-pruned.
+model AiGeneration {
+  id          String             @id @default(cuid())
+  tourId      String
+  tour        Tour               @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  kind        AiGenerationKind
+  status      AiGenerationStatus @default(READY)
+  text        String?            // DESCRIPTION: generated intro text
+  imageKey    String?            // THUMBNAIL: stored image key (R2 / local)
+  taskId      String?            // THUMBNAIL: Manus task id while PENDING
+  error       String?            // FAILED: reason
+  model       String?            // model / agent profile actually used
+  prompt      String?            // the prompt actually sent, for reference
+  isSelected  Boolean            @default(false)
+  createdById String?
+  createdBy   User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+
+  @@index([tourId, kind])
 }
