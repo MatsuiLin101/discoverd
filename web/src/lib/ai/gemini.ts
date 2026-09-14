@@ -56,7 +56,10 @@ export async function generateDescription(opts: {
     headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ role: "user", parts }],
-      generationConfig: { temperature: 0.9, maxOutputTokens: 1024 },
+      // gemini-3.x flash is a thinking model: "thoughts" consume the output
+      // budget (~1k tokens), so keep this well above the description length or
+      // the text gets truncated (finishReason: MAX_TOKENS).
+      generationConfig: { temperature: 0.9, maxOutputTokens: 4096 },
     }),
   });
 
