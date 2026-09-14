@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import type { SubRegionWithTours, TourItem, TourModalData } from "@/lib/frontend-data";
-import TourDetailModal from "./TourDetailModal";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import type { SubRegionWithTours } from "@/lib/frontend-data";
 import CroppedThumb from "./CroppedThumb";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 
@@ -16,31 +16,9 @@ interface Props {
 
 export default function TourSection({ parent, regionSlug, regions, initialSlug }: Props) {
   const [activeSlug, setActiveSlug] = useState(initialSlug);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalData, setModalData] = useState<TourModalData | null>(null);
-
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const pathname = usePathname();
 
   const activeRegion = regions.find((r) => r.slug === activeSlug) ?? regions[0];
-
-  // Build the shared-modal payload from a listing tour + its sub-region name.
-  function toModalData(tour: TourItem, subRegionName: string): TourModalData {
-    return {
-      id: tour.id,
-      slug: tour.slug,
-      productId: tour.productId,
-      name: tour.name,
-      thumbnail: tour.thumbnail,
-      price: tour.price,
-      description: tour.description,
-      tags: tour.tags,
-      media: tour.media,
-      regionName: parent.name,
-      subRegionName,
-    };
-  }
 
   // Keep the active sub-category in sync with the URL so the breadcrumb (rendered
   // by the server page from the URL) and this list always match — including on
@@ -55,33 +33,6 @@ export default function TourSection({ parent, regionSlug, regions, initialSlug }
     if (slug === activeSlug) return;
     setActiveSlug(slug);
     router.push(`/regions/${regionSlug}/${slug}`, { scroll: false });
-  }
-
-  // Open modal when ?tour= query param is present (e.g. navigated from the
-  // header quick-search dropdown).
-  useEffect(() => {
-    const tourSlug = searchParams.get("tour");
-    if (!tourSlug) return;
-    for (const region of regions) {
-      const tour = region.tours.find((t) => t.productId === tourSlug || t.slug === tourSlug);
-      if (tour) {
-        setModalData(toModalData(tour, region.name));
-        setModalOpen(true);
-        router.replace(pathname, { scroll: false });
-        return;
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, regions, pathname, router]);
-
-  function openModal(tour: TourItem) {
-    setModalData(toModalData(tour, activeRegion.name));
-    setModalOpen(true);
-  }
-
-  function closeModal() {
-    setModalOpen(false);
-    setModalData(null);
   }
 
   return (
@@ -122,11 +73,10 @@ export default function TourSection({ parent, regionSlug, regions, initialSlug }
           <div className="fh-empty">這個分類的行程正在籌備中，敬請期待。</div>
         ) : (
           activeRegion.tours.map((tour, i) => (
-            <a
+            <Link
               key={i}
               href={`/tours/${tour.productId ?? tour.slug}`}
               className="fh-trow"
-              onClick={(e) => { e.preventDefault(); openModal(tour); }}
             >
               <div className="t-img">
                 <CroppedThumb
@@ -163,13 +113,10 @@ export default function TourSection({ parent, regionSlug, regions, initialSlug }
                   <span className="t-cta">查看行程 →</span>
                 </div>
               </div>
-            </a>
+            </Link>
           ))
         )}
       </div>
-
-      {/* Tour detail modal */}
-      <TourDetailModal tour={modalData} isOpen={modalOpen} onClose={closeModal} />
     </>
   );
 }

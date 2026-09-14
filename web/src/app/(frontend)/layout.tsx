@@ -36,8 +36,10 @@ export const dynamic = "force-dynamic";
 
 export default async function FrontendLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const setting = await db.siteSetting.findUnique({
     where: { id: "singleton" },
@@ -59,6 +61,7 @@ export default async function FrontendLayout({
         style={rootStyle}
       >
         {children}
+        {modal}
       </div>
     </div>
   );

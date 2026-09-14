@@ -989,17 +989,6 @@
 }
 
 /* =====================================================
-   TOUR DETAIL PAGE — standalone /tours/[slug]
-   ===================================================== */
-.fh-tour-detail {
-  display: flex; justify-content: center; align-items: flex-start;
-  padding: clamp(24px, 4vw, 56px) var(--gutter) clamp(48px, 8vw, 96px);
-}
-.fh-tour-detail .fh-modal {
-  height: min(860px, 82vh);
-}
-
-/* =====================================================
    ERROR PAGES — not-found (404) / error (500)
    ===================================================== */
 .fh-error {
