@@ -22,6 +22,10 @@ const schema = z.object({
   aiDescriptionModel: z.string().min(1, "請輸入簡介模型名稱").max(100),
   aiDescriptionPrompt: z.string().max(4000).optional(),
   aiThumbnailPrompt: z.string().max(4000).optional(),
+  // Cost estimate unit prices (NT$); null/undefined clears.
+  aiGeminiInputPricePerM: z.number().min(0).nullable().optional(),
+  aiGeminiOutputPricePerM: z.number().min(0).nullable().optional(),
+  aiManusPricePerCredit: z.number().min(0).nullable().optional(),
 });
 
 export async function GET() {
@@ -38,6 +42,9 @@ export async function GET() {
       aiDescriptionModel: s.aiDescriptionModel,
       aiDescriptionPrompt: s.aiDescriptionPrompt ?? "",
       aiThumbnailPrompt: s.aiThumbnailPrompt ?? "",
+      aiGeminiInputPricePerM: s.aiGeminiInputPricePerM,
+      aiGeminiOutputPricePerM: s.aiGeminiOutputPricePerM,
+      aiManusPricePerCredit: s.aiManusPricePerCredit,
       encryptionConfigured: isEncryptionConfigured(),
     },
     defaults: {
@@ -67,6 +74,9 @@ export async function PUT(req: NextRequest) {
     aiDescriptionModel,
     aiDescriptionPrompt,
     aiThumbnailPrompt,
+    aiGeminiInputPricePerM,
+    aiGeminiOutputPricePerM,
+    aiManusPricePerCredit,
   } = parsed.data;
 
   const settingNewKey = (geminiApiKey && geminiApiKey.trim()) || (manusApiKey && manusApiKey.trim());
@@ -82,6 +92,9 @@ export async function PUT(req: NextRequest) {
     aiDescriptionModel,
     aiDescriptionPrompt: aiDescriptionPrompt?.trim() ? aiDescriptionPrompt : null,
     aiThumbnailPrompt: aiThumbnailPrompt?.trim() ? aiThumbnailPrompt : null,
+    aiGeminiInputPricePerM: aiGeminiInputPricePerM ?? null,
+    aiGeminiOutputPricePerM: aiGeminiOutputPricePerM ?? null,
+    aiManusPricePerCredit: aiManusPricePerCredit ?? null,
   };
   if (clearGeminiKey) data.geminiApiKeyEnc = null;
   else if (geminiApiKey && geminiApiKey.trim()) data.geminiApiKeyEnc = encryptSecret(geminiApiKey.trim());

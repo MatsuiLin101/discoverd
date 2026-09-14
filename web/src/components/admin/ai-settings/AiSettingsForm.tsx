@@ -24,6 +24,9 @@ export default function AiSettingsForm() {
   const [aiDescriptionModel, setAiDescriptionModel] = useState("");
   const [aiDescriptionPrompt, setAiDescriptionPrompt] = useState("");
   const [aiThumbnailPrompt, setAiThumbnailPrompt] = useState("");
+  const [geminiInputPrice, setGeminiInputPrice] = useState("");
+  const [geminiOutputPrice, setGeminiOutputPrice] = useState("");
+  const [manusPrice, setManusPrice] = useState("");
   const [defaults, setDefaults] = useState<Defaults | null>(null);
   const [encryptionConfigured, setEncryptionConfigured] = useState(true);
 
@@ -44,6 +47,9 @@ export default function AiSettingsForm() {
           setAiDescriptionModel(data.aiDescriptionModel ?? "");
           setAiDescriptionPrompt(data.aiDescriptionPrompt ?? "");
           setAiThumbnailPrompt(data.aiThumbnailPrompt ?? "");
+          setGeminiInputPrice(data.aiGeminiInputPricePerM != null ? String(data.aiGeminiInputPricePerM) : "");
+          setGeminiOutputPrice(data.aiGeminiOutputPricePerM != null ? String(data.aiGeminiOutputPricePerM) : "");
+          setManusPrice(data.aiManusPricePerCredit != null ? String(data.aiManusPricePerCredit) : "");
           setEncryptionConfigured(data.encryptionConfigured ?? true);
         }
         if (defaults) setDefaults(defaults);
@@ -86,6 +92,9 @@ export default function AiSettingsForm() {
           aiDescriptionModel,
           aiDescriptionPrompt,
           aiThumbnailPrompt,
+          aiGeminiInputPricePerM: geminiInputPrice.trim() ? Number(geminiInputPrice) : null,
+          aiGeminiOutputPricePerM: geminiOutputPrice.trim() ? Number(geminiOutputPrice) : null,
+          aiManusPricePerCredit: manusPrice.trim() ? Number(manusPrice) : null,
         }),
       });
       const { data, error } = await res.json();
@@ -236,6 +245,52 @@ export default function AiSettingsForm() {
               placeholder={defaults?.thumbnailPrompt}
             />
             <p className="mt-1 text-xs text-gray-400">留空則使用內建預設；使用者可於「AI 偏好」自行覆蓋。</p>
+          </div>
+
+          <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <p className="text-sm font-medium text-gray-700">
+              成本估算單價（選填）
+              <span className="ml-2 text-xs font-normal text-gray-400">用於「AI 使用紀錄」的成本估算，留空則不顯示金額</span>
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label className={labelClass}>Gemini 輸入</label>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={geminiInputPrice}
+                  onChange={(e) => setGeminiInputPrice(e.target.value)}
+                  className={inputClass}
+                  placeholder="NT$ / 每百萬 tokens"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Gemini 輸出</label>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={geminiOutputPrice}
+                  onChange={(e) => setGeminiOutputPrice(e.target.value)}
+                  className={inputClass}
+                  placeholder="NT$ / 每百萬 tokens"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Manus</label>
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={manusPrice}
+                  onChange={(e) => setManusPrice(e.target.value)}
+                  className={inputClass}
+                  placeholder="NT$ / 每 credit"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-400">Gemini 的「思考」tokens 以輸出計價；Manus 目前無法精準歸屬單筆 credit，暫作保留。</p>
           </div>
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
