@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import type { AiContext } from "./AiDescriptionCandidates";
 
 const MAX = 5;
 const POLL_INTERVAL = 4000;
@@ -18,9 +19,11 @@ interface Candidate {
 export default function AiThumbnailCandidates({
   tourId,
   onSelect,
+  getContext,
 }: {
   tourId: string;
   onSelect: (choice: { key: string; url: string }) => void;
+  getContext?: () => AiContext;
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
@@ -75,7 +78,7 @@ export default function AiThumbnailCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/thumbnail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hint: hint.trim() || undefined }),
+        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.() }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {

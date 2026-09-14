@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
 import { getAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
 import { generateDescription } from "@/lib/ai/gemini";
-import { loadTourAiContext, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
+import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
 
 export async function POST(
   req: NextRequest,
@@ -29,13 +29,14 @@ export async function POST(
       return NextResponse.json({ error: "尚未設定 Gemini API 金鑰，請先於「AI 設定」填寫" }, { status: 400 });
     }
 
-    const ctx = await loadTourAiContext(id);
-    if (!ctx) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
-
     const { descriptionModel, descriptionPrompt } = await getEffectiveAiSettings(session.userId);
 
     const body = await req.json().catch(() => ({}));
     const hint = typeof body?.hint === "string" && body.hint.trim() ? body.hint.trim() : null;
+
+    // Use the editor's current (possibly unsaved) form values when provided.
+    const ctx = await loadTourAiContext(id, parseContextOverride(body?.context));
+    if (!ctx) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
     const contextText = hint ? `${ctx.contextText}\n重點提示：${hint}` : ctx.contextText;
 
     const text = await generateDescription({

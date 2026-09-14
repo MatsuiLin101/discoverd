@@ -11,12 +11,22 @@ interface Candidate {
   createdAt: string;
 }
 
+export interface AiContext {
+  name?: string;
+  price?: number;
+  regionName?: string;
+  subRegionName?: string;
+  tagNames?: string[];
+}
+
 export default function AiDescriptionCandidates({
   tourId,
   onSelect,
+  getContext,
 }: {
   tourId: string;
   onSelect: (text: string) => void;
+  getContext?: () => AiContext;
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
@@ -42,7 +52,7 @@ export default function AiDescriptionCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/description`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hint: hint.trim() || undefined }),
+        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.() }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {

@@ -18,11 +18,47 @@ export interface TourAiContext {
 }
 
 /**
+ * Current (possibly unsaved) form values the editor wants the AI to use instead
+ * of what's stored in the DB. Any field left undefined falls back to the DB.
+ * PDFs always come from the DB (they are uploaded immediately, even in edit).
+ */
+export interface TourContextOverride {
+  name?: string;
+  price?: number;
+  regionName?: string;
+  subRegionName?: string;
+  tagNames?: string[];
+}
+
+/** Parse/sanitise an untrusted `context` object from a request body. */
+export function parseContextOverride(raw: unknown): TourContextOverride | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const c = raw as Record<string, unknown>;
+  const priceNum = typeof c.price === "number" ? c.price : Number(c.price);
+  return {
+    name: typeof c.name === "string" && c.name.trim() ? c.name.trim() : undefined,
+    price: Number.isFinite(priceNum) && priceNum >= 0 ? priceNum : undefined,
+    regionName: typeof c.regionName === "string" && c.regionName.trim() ? c.regionName.trim() : undefined,
+    subRegionName:
+      typeof c.subRegionName === "string" && c.subRegionName.trim() ? c.subRegionName.trim() : undefined,
+    tagNames: Array.isArray(c.tagNames)
+      ? c.tagNames.filter((t): t is string => typeof t === "string" && t.trim().length > 0)
+      : undefined,
+  };
+}
+
+/**
  * Load a tour and assemble the context used for AI generation: a structured
  * text block (name / region / tags / price) plus any attached PDF content
  * files (Gemini reads them natively). Returns null if the tour is missing.
+ *
+ * `overrides` lets the caller substitute the editor's current unsaved form
+ * values so generation reflects what's on screen without saving first.
  */
-export async function loadTourAiContext(tourId: string): Promise<TourAiContext | null> {
+export async function loadTourAiContext(
+  tourId: string,
+  overrides?: TourContextOverride,
+): Promise<TourAiContext | null> {
   const tour = await db.tour.findUnique({
     where: { id: tourId },
     select: {
@@ -37,15 +73,17 @@ export async function loadTourAiContext(tourId: string): Promise<TourAiContext |
   });
   if (!tour) return null;
 
-  const regionName = tour.subRegion?.region?.name ?? "";
-  const subRegionName = tour.subRegion?.name ?? "";
-  const tagNames = tour.tags.map((t) => t.name);
+  const name = overrides?.name ?? tour.name;
+  const price = overrides?.price ?? tour.price;
+  const regionName = overrides?.regionName ?? (tour.subRegion?.region?.name ?? "");
+  const subRegionName = overrides?.subRegionName ?? (tour.subRegion?.name ?? "");
+  const tagNames = overrides?.tagNames ?? tour.tags.map((t) => t.name);
 
   const lines = [
-    `行程名稱：${tour.name}`,
+    `行程名稱：${name}`,
     regionName || subRegionName ? `地區：${[regionName, subRegionName].filter(Boolean).join(" / ")}` : null,
     tagNames.length ? `標籤：${tagNames.join("、")}` : null,
-    tour.price > 0 ? `參考價格：NT$ ${tour.price.toLocaleString()}` : "價格：客製化報價",
+    price > 0 ? `參考價格：NT$ ${price.toLocaleString()}` : "價格：客製化報價",
   ].filter(Boolean);
 
   // Load attached PDFs (best-effort; skip anything that fails to read).
@@ -65,7 +103,7 @@ export async function loadTourAiContext(tourId: string): Promise<TourAiContext |
   }
 
   return {
-    tour: { id: tour.id, name: tour.name, price: tour.price, description: tour.description },
+    tour: { id: tour.id, name, price, description: tour.description },
     contextText: lines.join("\n"),
     pdfs,
   };

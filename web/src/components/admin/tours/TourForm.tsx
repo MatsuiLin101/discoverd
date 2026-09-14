@@ -269,6 +269,21 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     }
   }
 
+  // Current (unsaved) form values passed to the AI so generation reflects
+  // what's on screen without needing to save first. Read at call time.
+  function getAiContext() {
+    const priceNum = Number(price);
+    return {
+      name: name.trim() || undefined,
+      price: Number.isFinite(priceNum) && price !== "" ? priceNum : undefined,
+      regionName: regions.find((r) => r.id === selectedRegionId)?.name,
+      subRegionName: filteredSubRegions.find((s) => s.id === subRegionId)?.name,
+      tagNames: selectedTagIds
+        .map((id) => tags.find((t) => t.id === id)?.name)
+        .filter((n): n is string => !!n),
+    };
+  }
+
   const currentThumb = clearThumbnail ? null : (thumbPreview ?? aiThumb?.url ?? tour?.thumbnail ?? null);
   const showClearButton = isEdit && (!!tour?.thumbnail || !!thumbFile || !!aiThumb) && !clearThumbnail;
 
@@ -312,7 +327,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             placeholder="簡短描述此行程的特色（選填）"
           />
           {isEdit && tourId ? (
-            <AiDescriptionCandidates tourId={tourId} onSelect={setDescription} />
+            <AiDescriptionCandidates tourId={tourId} onSelect={setDescription} getContext={getAiContext} />
           ) : (
             <p className="mt-1.5 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程簡介。</p>
           )}
@@ -449,7 +464,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             </div>
           </div>
           {isEdit && tourId ? (
-            <AiThumbnailCandidates tourId={tourId} onSelect={handleSelectAiThumb} />
+            <AiThumbnailCandidates tourId={tourId} onSelect={handleSelectAiThumb} getContext={getAiContext} />
           ) : (
             <p className="mt-3 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程縮圖。</p>
           )}
