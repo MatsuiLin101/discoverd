@@ -45,7 +45,10 @@ const navGroups: NavGroup[] = [
   },
   {
     title: "個人設定",
-    items: [{ label: "AI 偏好", href: "/ai-preferences" }],
+    items: [
+      { label: "AI 偏好", href: "/ai-preferences" },
+      { label: "AI 使用紀錄", href: "/ai-usage" },
+    ],
   },
 ];
 
