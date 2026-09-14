@@ -1,0 +1,76 @@
+/**
+ * Minimal client for Google's Generative Language (Gemini) REST API.
+ * Docs: https://ai.google.dev/api/generate-content
+ *
+ * We only need two things:
+ *  - `testGeminiKey`   : cheap validity check (list models).
+ *  - `generateDescription`: multimodal generateContent with optional PDF parts
+ *    (Gemini reads PDFs natively via inline_data, so no PDF parsing lib needed).
+ */
+
+const BASE = "https://generativelanguage.googleapis.com/v1beta";
+
+export interface GeminiPdfPart {
+  /** Base64-encoded PDF bytes. */
+  data: string;
+  mimeType?: string;
+}
+
+/** Validate an API key by listing models. Returns a friendly result. */
+export async function testGeminiKey(apiKey: string): Promise<{ ok: boolean; message: string }> {
+  try {
+    const res = await fetch(`${BASE}/models?pageSize=1`, {
+      headers: { "x-goog-api-key": apiKey },
+    });
+    if (res.ok) return { ok: true, message: "Gemini API 金鑰有效" };
+    const body = await res.json().catch(() => null);
+    const detail = body?.error?.message ?? `HTTP ${res.status}`;
+    return { ok: false, message: `Gemini 金鑰無效：${detail}` };
+  } catch (e) {
+    return { ok: false, message: `無法連線 Gemini：${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+/**
+ * Generate a tour description. `systemPrompt` is the persona/style template;
+ * `contextText` is the structured tour data; `pdfs` are attached content files.
+ */
+export async function generateDescription(opts: {
+  apiKey: string;
+  model: string;
+  systemPrompt: string;
+  contextText: string;
+  pdfs?: GeminiPdfPart[];
+}): Promise<string> {
+  const { apiKey, model, systemPrompt, contextText, pdfs = [] } = opts;
+
+  const parts: Record<string, unknown>[] = [
+    { text: `${systemPrompt}\n\n=== 行程資訊 ===\n${contextText}` },
+  ];
+  for (const pdf of pdfs) {
+    parts.push({ inline_data: { mime_type: pdf.mimeType ?? "application/pdf", data: pdf.data } });
+  }
+
+  const res = await fetch(`${BASE}/models/${encodeURIComponent(model)}:generateContent`, {
+    method: "POST",
+    headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts }],
+      generationConfig: { temperature: 0.9, maxOutputTokens: 1024 },
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    const detail = body?.error?.message ?? `HTTP ${res.status}`;
+    throw new Error(`Gemini 生成失敗：${detail}`);
+  }
+
+  const data = await res.json();
+  const text: string = (data?.candidates?.[0]?.content?.parts ?? [])
+    .map((p: { text?: string }) => p.text ?? "")
+    .join("")
+    .trim();
+  if (!text) throw new Error("Gemini 沒有回傳內容，請調整提示詞後再試");
+  return text;
+}
