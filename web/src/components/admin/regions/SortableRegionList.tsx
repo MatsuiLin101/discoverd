@@ -20,14 +20,17 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import DeleteRegionButton from "./DeleteRegionButton";
 import ImageLightbox from "./ImageLightbox";
+import CroppedPreview from "@/components/admin/CroppedPreview";
 import FloatingToast from "@/components/admin/FloatingToast";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
+import type { ThumbCrop } from "@/lib/crop";
 
 interface Region {
   id: string;
   name: string;
   slug: string;
   thumbnail: string | null;
+  crop?: ThumbCrop | null;
   _count: { subRegions: number };
   tourCount: number;
   subRegionNames: string[];
@@ -73,18 +76,25 @@ function SortableRow({ region, onImageClick, onDelete }: { region: Region; onIma
         </button>
       </td>
       <td className="px-4 py-3">
-        <div
-          className={`relative w-16 h-12 overflow-hidden bg-gray-100 rounded-md${region.thumbnail ? " cursor-zoom-in" : ""}`}
-          onClick={region.thumbnail ? () => onImageClick(region.thumbnail!) : undefined}
-        >
-          <Image
-            src={region.thumbnail ?? "/images/region-default.svg"}
+        {region.thumbnail ? (
+          <CroppedPreview
+            src={region.thumbnail}
             alt={region.name}
-            fill
-            className="object-cover"
-            unoptimized
+            crop={region.crop}
+            className="aspect-video w-16 cursor-zoom-in rounded-md bg-gray-100"
+            onClick={() => onImageClick(region.thumbnail!)}
           />
-        </div>
+        ) : (
+          <div className="relative aspect-video w-16 overflow-hidden rounded-md bg-gray-100">
+            <Image
+              src="/images/region-default.svg"
+              alt={region.name}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+        )}
       </td>
       <td className="px-4 py-3 font-medium text-gray-800">{region.name}</td>
       <td className="px-4 py-3 text-gray-500 break-all">{region.slug}</td>

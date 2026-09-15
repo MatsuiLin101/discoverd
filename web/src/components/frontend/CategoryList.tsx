@@ -1,11 +1,13 @@
 import Link from "next/link";
-import Image from "next/image";
+import CroppedThumb from "./CroppedThumb";
+import type { ThumbCrop } from "@/lib/crop";
 
 export interface CategoryItem {
   href: string;
   name: string;
   count: string | number;
   img: string;
+  crop?: ThumbCrop | null;
 }
 
 interface Props {
@@ -46,13 +48,7 @@ export default function CategoryList({ title, stats, categories }: Props) {
             </div>
             <div className="cat-thumb">
               {cat.img ? (
-                <Image
-                  src={cat.img}
-                  alt={cat.name}
-                  fill
-                  sizes="240px"
-                  style={{ objectFit: "cover" }}
-                />
+                <CroppedThumb src={cat.img} alt={cat.name} crop={cat.crop} sizes="240px" />
               ) : (
                 <div style={{ width: "100%", height: "100%", background: "var(--line)" }} />
               )}

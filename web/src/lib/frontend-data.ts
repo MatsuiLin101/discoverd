@@ -1,3 +1,5 @@
+import type { ThumbCrop } from "@/lib/crop";
+
 export interface Tour {
   img: string;
   code: string;
@@ -451,6 +453,7 @@ export interface RegionListItem {
   slug: string;
   name: string;
   thumbnail: string | null;
+  crop: ThumbCrop | null;
   tourCount: number;
 }
 
@@ -459,6 +462,7 @@ export interface RegionDetail {
   slug: string;
   name: string;
   thumbnail: string | null;
+  crop: ThumbCrop | null;
   seoTitle: string | null;
   seoDescription: string | null;
   ogImage: string | null;
@@ -469,6 +473,7 @@ export interface SubRegionListItem {
   slug: string;
   name: string;
   thumbnail: string | null;
+  crop: ThumbCrop | null;
   tourCount: number;
 }
 
@@ -500,12 +505,90 @@ export interface TourMedia {
 export interface TourItem {
   id: string;
   slug: string;
+  productId: string | null;
   name: string;
   thumbnail: string | null;
+  crop: ThumbCrop | null;
   price: number;
   description: string | null;
   tags: string[];
   /** All TourFile records (images + PDFs) in sort order. Empty = use thumbnail. */
   media: TourMedia[];
+}
+
+/**
+ * Everything the shared tour detail card needs. The same payload drives both
+ * the standalone tour page (`/tours/[tourSlug]`) and the intercepted modal
+ * (`@modal/(.)tours/[tourSlug]`), so the two stay visually identical. Region /
+ * sub-region slugs are included for the standalone page's breadcrumb.
+ */
+export interface TourDetailData {
+  id: string;
+  slug: string;
+  productId: string | null;
+  name: string;
+  thumbnail: string | null;
+  price: number;
+  description: string | null;
+  tags: string[];
+  media: TourMedia[];
+  regionName: string;
+  regionSlug: string;
+  subRegionName: string;
+  subSlug: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Search — used by GET /api/search, the header quick-search
+// dropdown, and the /search full-results / advanced-search page.
+// ─────────────────────────────────────────────────────────────
+
+/** A single tour in search results (both quick dropdown and full page). */
+export interface SearchResultItem {
+  id: string;
+  slug: string;
+  productId: string | null;
+  name: string;
+  thumbnail: string | null;
+  price: number;
+  description: string | null;
+  tags: string[];
+  regionName: string;
+  regionSlug: string;
+  subRegionName: string;
+  subRegionSlug: string;
+}
+
+/** Normalized search filters shared by the API route and the query layer. */
+export interface SearchFilters {
+  /** Free-text keyword (matched against name / description / tag / region names). */
+  q?: string;
+  /** Region slug (main category). */
+  region?: string;
+  /** SubRegion slug (sub category); only meaningful together with `region`. */
+  sub?: string;
+  /** Tag names (multi-select). */
+  tags?: string[];
+  /**
+   * How multiple tags combine: "any" (default, OR — a tour matches if it has
+   * any selected tag) or "all" (AND — a tour must have every selected tag).
+   */
+  tagMode?: "any" | "all";
+}
+
+/** Envelope returned by GET /api/search: total hit count + capped results. */
+export interface SearchResponse {
+  total: number;
+  results: SearchResultItem[];
+}
+
+/** Filter facets for the /search advanced-search controls. */
+export interface SearchFilterData {
+  regions: {
+    slug: string;
+    name: string;
+    subRegions: { slug: string; name: string }[];
+  }[];
+  tags: string[];
 }
 

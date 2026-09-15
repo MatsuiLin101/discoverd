@@ -4,7 +4,9 @@ import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { normalizeCrop } from "@/lib/crop";
 import SortableRegionList from "@/components/admin/regions/SortableRegionList";
+import ImportExportPanel from "@/components/admin/ImportExportPanel";
 
 export default async function RegionsPage() {
   const session = await getSession();
@@ -16,14 +18,16 @@ export default async function RegionsPage() {
       name: true,
       slug: true,
       thumbnailKey: true,
+      thumbnailCrop: true,
       _count: { select: { subRegions: true } },
       subRegions: { select: { name: true, _count: { select: { tours: true } } } },
     },
     orderBy: { sortOrder: "asc" },
   });
-  const regions = regionsRaw.map(({ subRegions, thumbnailKey, ...r }) => ({
+  const regions = regionsRaw.map(({ subRegions, thumbnailKey, thumbnailCrop, ...r }) => ({
     ...r,
     thumbnail: thumbnailKey ? storage.publicUrl(thumbnailKey) : null,
+    crop: normalizeCrop(thumbnailCrop),
     tourCount: subRegions.reduce((sum, s) => sum + s._count.tours, 0),
     subRegionNames: subRegions.map(s => s.name),
   }));
@@ -43,6 +47,17 @@ export default async function RegionsPage() {
           新增主分類
         </Link>
       </div>
+      <div className="mb-6">
+        <ImportExportPanel
+          moduleLabel="地區"
+          exportHref="/api/admin/regions/export"
+          templateHref="/api/admin/regions/export?template=1"
+          previewUrl="/api/admin/regions/import/preview"
+          commitUrl="/api/admin/regions/import/commit"
+          columnsHint="主分類代碼、主分類名稱、次分類代碼、次分類名稱、SEO標題、SEO描述"
+        />
+      </div>
+
       <SortableRegionList regions={regions} />
     </div>
   );

@@ -4,9 +4,11 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { parseCropField } from "@/lib/crop";
+import { Prisma } from "@/generated/prisma/client";
 
 const schema = z.object({
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/, "slug 只允許小寫英數字和連字號"),
   seoTitle: z.string().max(100).optional(),
   seoDescription: z.string().max(160).optional(),
@@ -58,6 +60,8 @@ export async function PUT(
     thumbnailKey = newThumbnailKey;
   }
 
+  const thumbnailCrop = thumbnailKey ? parseCropField(fd.get("thumbnailCrop")) : null;
+
   let ogImageKey: string | null = existing.ogImageKey;
   const newOgImageKey = (fd.get("ogImageKey") as string) || null;
   const clearOgImage = fd.get("clearOgImage") === "true";
@@ -72,7 +76,7 @@ export async function PUT(
 
   const sub = await db.subRegion.update({
     where: { id: subId },
-    data: { name, slug, thumbnailKey, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey },
+    data: { name, slug, thumbnailKey, thumbnailCrop: thumbnailCrop ?? Prisma.DbNull, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey },
   });
   const thumbnailChange = clearThumbnail && !newThumbnailKey
     ? "removed"

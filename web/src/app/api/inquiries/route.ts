@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const { tourId, name, phone, email, lineId, content, tourName } = parsed.data;
 
     const tour = tourId
-      ? await db.tour.findUnique({ where: { id: tourId }, select: { slug: true } })
+      ? await db.tour.findUnique({ where: { id: tourId }, select: { slug: true, productId: true } })
       : null;
 
     await sendInquiryNotification({
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       lineId,
       content,
       tourName: tourName ?? null,
-      tourSlug: tour?.slug ?? null,
+      tourSlug: tour?.productId ?? tour?.slug ?? null,
     });
 
     return NextResponse.json({ ok: true }, { status: 201 });

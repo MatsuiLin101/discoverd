@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 import { writeLog } from "@/lib/log";
 
 const createSchema = z.object({
-  name: z.string().min(1, { error: "請輸入標籤名稱" }),
+  name: z.string().trim().min(1, { error: "請輸入標籤名稱" }),
 });
 
 export async function POST(request: NextRequest) {
@@ -28,8 +28,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "此標籤名稱已存在" }, { status: 409 });
     }
 
+    // Append new tags to the end of the admin drag-sort order (default is 0,
+    // which would otherwise jump them to the front of the tag-management list).
+    const last = await db.tag.findFirst({ orderBy: { sortOrder: "desc" }, select: { sortOrder: true } });
+    const sortOrder = (last?.sortOrder ?? -1) + 1;
+
     const tag = await db.tag.create({
-      data: { name },
+      data: { name, sortOrder },
       select: { id: true, name: true },
     });
 

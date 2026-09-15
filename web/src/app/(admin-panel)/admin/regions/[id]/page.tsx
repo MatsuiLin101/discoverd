@@ -3,6 +3,7 @@ import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { normalizeCrop } from "@/lib/crop";
 import RegionForm from "@/components/admin/regions/RegionForm";
 
 const urlOf = (key: string | null): string | null => (key ? storage.publicUrl(key) : null);
@@ -18,7 +19,7 @@ export default async function EditRegionPage({
   const { id } = await params;
   const region = await db.region.findUnique({
     where: { id },
-    select: { id: true, name: true, slug: true, thumbnailKey: true, seoTitle: true, seoDescription: true, ogImageKey: true },
+    select: { id: true, name: true, slug: true, thumbnailKey: true, thumbnailCrop: true, seoTitle: true, seoDescription: true, ogImageKey: true },
   });
   if (!region) notFound();
 
@@ -33,6 +34,7 @@ export default async function EditRegionPage({
         initialName={region.name}
         initialSlug={region.slug}
         initialThumbnail={urlOf(region.thumbnailKey)}
+        initialThumbnailCrop={normalizeCrop(region.thumbnailCrop)}
         initialSeoTitle={region.seoTitle}
         initialSeoDescription={region.seoDescription}
         initialOgImage={urlOf(region.ogImageKey)}

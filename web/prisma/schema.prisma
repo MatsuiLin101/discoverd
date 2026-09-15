@@ -23,6 +23,10 @@ model User {
   role        Role          @default(STAFF)
   sessions    Session[]
   logs        ActivityLog[]
+  importLogs  ImportLog[]
+  aiPreference   UserAiPreference?
+  aiGenerations  AiGeneration[]
+  aiUsageLogs    AiUsageLog[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -42,7 +46,11 @@ model Region {
   id                String      @id @default(cuid())
   name              String      @unique
   slug              String      @unique
+  // Frozen 3-digit business code (101+), assigned once; reordering never changes it.
+  code              String?     @unique
   thumbnailKey      String?
+  // Crop rect over the original thumbnail, normalized 0..1: { x, y, w, h }. 16:9.
+  thumbnailCrop     Json?
   seoTitle          String?
   seoDescription    String?
   ogImageKey        String?
@@ -58,7 +66,11 @@ model SubRegion {
   region            Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
   name              String
   slug              String
+  // Frozen 2-digit business code (01+) within the parent region; reordering never changes it.
+  code              String?
   thumbnailKey      String?
+  // Crop rect over the original thumbnail, normalized 0..1: { x, y, w, h }. 16:9.
+  thumbnailCrop     Json?
   seoTitle          String?
   seoDescription    String?
   ogImageKey        String?
@@ -68,6 +80,7 @@ model SubRegion {
   updatedAt         DateTime @updatedAt
 
   @@unique([regionId, slug])
+  @@unique([regionId, code])
 }
 
 model Tag {
@@ -83,7 +96,12 @@ model Tour {
   subRegion         SubRegion  @relation(fields: [subRegionId], references: [id], onDelete: Restrict)
   name              String
   slug              String     @unique
+  // Frozen 13-digit product id: regionCode(3)+subCode(2)+YYMMDD(6,UTC+8)+dailySeq(2).
+  // Assigned once at creation; moving to another subRegion never recomputes it.
+  productId         String?    @unique
   thumbnailKey      String?
+  // Crop rect over the original thumbnail, normalized 0..1: { x, y, w, h }. 4:3.
+  thumbnailCrop     Json?
   price             Int
   description       String?
   seoTitle          String?
@@ -91,6 +109,7 @@ model Tour {
   ogImageKey        String?
   tags              Tag[]      @relation("TourTags")
   files             TourFile[]
+  aiGenerations     AiGeneration[]
   published         Boolean    @default(true)
   sortOrder         Int        @default(0)
   createdAt         DateTime   @default(now())
@@ -153,6 +172,9 @@ enum LogResource {
   SITE_SETTING
   SALES_REGION
   SALES_AGENT
+  IMPORT
+  AI_SETTING
+  AI_GENERATION
 }
 
 model HeroBanner {
@@ -170,7 +192,59 @@ model SiteSetting {
   instagramUrl     String?
   lineUrl          String?
   lineCommunityUrl String?
-  updatedAt        DateTime @updatedAt
+  // Site-wide layout mode:
+  //   "original" — full-bleed site; carousel is desktop full-bleed cover and
+  //                mobile follows mobileHeroRatio.
+  //   "fit"      — full-bleed site; carousel shows the whole image at full
+  //                width keeping its natural ratio, capped at heroMaxHeight px.
+  //   "boxed"    — the whole site (header, body, footer) is centered within
+  //                boxMaxWidth px; the carousel scales by ratio inside the box
+  //                and boxOuterBackground fills the area beside the box.
+  layoutMode         String   @default("original")
+  // Whether auto-advance pauses while the pointer hovers the carousel.
+  // (Keyboard-focus pause always stays on for accessibility.)
+  heroPauseOnHover   Boolean  @default(true)
+  // Max carousel height (px), used by the ratio modes ("fit" and "boxed").
+  heroMaxHeight      Int      @default(720)
+  // Carousel aspect ratio for the ratio modes ("fit" and "boxed"). "auto"
+  // uses the first image's natural ratio; "2/1" | "16/9" | "3/2" | "4/3" |
+  // "1/1" force a fixed ratio (the image is contained within it).
+  heroRatio          String   @default("auto")
+  // Box width (px) and the background beside it, used only by "boxed".
+  boxMaxWidth        Int      @default(1280)
+  boxOuterBackground String   @default("neutral") // "neutral" | "gradient" | "dark"
+  // Mobile hero fit for the "original" mode: "cover" keeps the full-bleed
+  // crop; "2/1", "4/3", "1/1" switch to a fixed aspect-ratio container that
+  // contains the whole image. Desktop always stays full-bleed cover.
+  mobileHeroRatio    String   @default("cover")
+
+  // --- AI 生成設定（全站共用）---------------------------------------------
+  // API 金鑰以 AES-256-GCM 加密後存放，永不回傳明文給前端。
+  geminiApiKeyEnc     String?
+  manusApiKeyEnc      String?
+  // 系統預設模型與提示詞範本；個人偏好（UserAiPreference）可覆蓋。
+  // 範本為 null 時改用程式內建的預設字串（見 src/lib/ai/prompts.ts）。
+  aiDescriptionModel  String   @default("gemini-3.6-flash")
+  aiDescriptionPrompt String?
+  aiThumbnailPrompt   String?
+  // Manus agent profile for thumbnails: "lite" | "standard" | "max".
+  aiThumbnailAgentProfile String @default("standard")
+  // Minimum personal Manus credits required to use a user's own key; below this
+  // the shared key is used (Manus cost per task isn't known until it runs).
+  aiManusPersonalThreshold Int @default(30)
+  // Optional unit prices for the AI usage cost estimate (in NT$). Null = don't
+  // show a cost. Gemini bills input and output tokens (thinking counts as
+  // output) at different rates, per 1,000,000 tokens.
+  aiGeminiInputPricePerM  Float?
+  aiGeminiOutputPricePerM Float?
+  aiManusPricePerCredit   Float?
+  // Assumed Manus credits per successful thumbnail, by agent profile (Manus
+  // doesn't report per-task cost). Used for the cost estimate only.
+  aiManusCreditsLite     Int @default(10)
+  aiManusCreditsStandard Int @default(22)
+  aiManusCreditsMax      Int @default(40)
+
+  updatedAt          DateTime @updatedAt
 }
 
 model ActivityLog {
@@ -184,4 +258,136 @@ model ActivityLog {
   resourceName String
   detail       Json?
   createdAt    DateTime    @default(now())
+}
+
+enum ImportModule {
+  TAG
+  REGION
+  TOUR
+}
+
+enum ImportStatus {
+  PENDING
+  COMMITTED
+}
+
+// Excel import staging + audit. A preview writes a PENDING row holding the
+// normalised rows (payload); committing applies them and flips to COMMITTED.
+// The md5 lets us warn on byte-identical re-uploads.
+model ImportLog {
+  id           String       @id @default(cuid())
+  module       ImportModule
+  filename     String
+  md5          String
+  status       ImportStatus @default(PENDING)
+  payload      Json         // normalised rows, used by the token-based commit
+  summary      Json         // preview summary: created/updated/skipped/errors/duplicates
+  createdCount Int          @default(0)
+  updatedCount Int          @default(0)
+  skippedCount Int          @default(0)
+  userId       String?
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
+  committedAt  DateTime?
+}
+
+// Per-user overrides for AI generation. Any field left null falls back to the
+// system default stored on SiteSetting (and then to the built-in default).
+model UserAiPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  descriptionModel  String?
+  descriptionPrompt String?
+  thumbnailPrompt   String?
+  thumbnailAgentProfile String?
+  // Personal API keys (AES-256-GCM). When set, generation prefers the user's
+  // own quota and only falls back to the shared key (see the generation routes).
+  geminiApiKeyEnc   String?
+  manusApiKeyEnc    String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+enum AiGenerationKind {
+  DESCRIPTION
+  THUMBNAIL
+}
+
+enum AiGenerationStatus {
+  PENDING // Manus thumbnail task in flight; poll for the result
+  READY   // usable candidate (description text, or a stored thumbnail image)
+  FAILED  // generation errored; `error` holds the reason
+}
+
+// Saved AI candidates per tour so editors can regenerate several times and pick
+// their favourite. Capped at 5 per (tour, kind) in the API; never auto-pruned.
+model AiGeneration {
+  id          String             @id @default(cuid())
+  tourId      String
+  tour        Tour               @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  kind        AiGenerationKind
+  status      AiGenerationStatus @default(READY)
+  text        String?            // DESCRIPTION: generated intro text
+  imageKey    String?            // THUMBNAIL: stored image key (R2 / local)
+  taskId      String?            // THUMBNAIL: Manus task id while PENDING
+  error       String?            // FAILED: reason
+  model       String?            // model / agent profile actually used
+  prompt      String?            // the prompt actually sent, for reference
+  // Which quota paid for this: "personal" | "shared" | "fallback_quota" | "fallback_error".
+  keyOwner    String?
+  isSelected  Boolean            @default(false)
+  createdById String?
+  createdBy   User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+
+  @@index([tourId, kind])
+}
+
+enum AiUsageStatus {
+  PENDING // thumbnail task started, awaiting the async result
+  SUCCESS // generation completed
+  FAILED  // generation errored; `error` holds the reason
+}
+
+// Durable, write-once record of every AI generation attempt (success or fail).
+// Independent of AiGeneration candidates (which are capped and user-deletable),
+// so it survives as the usage/cost audit trail.
+model AiUsageLog {
+  id               String           @id @default(cuid())
+  createdAt        DateTime         @default(now())
+  userId           String?
+  user             User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userAccount      String           // denormalised: survives user deletion
+  tourId           String?
+  tourName         String           // denormalised: survives tour rename/delete
+  kind             AiGenerationKind
+  provider         String           // "gemini" | "manus"
+  model            String?
+  status           AiUsageStatus    @default(PENDING)
+  hint             String?
+  promptOverridden Boolean          @default(false)
+  promptText       String?          // full prompt actually sent
+  pdfCount         Int              @default(0)
+  // Gemini token usage (thinking billed as output).
+  inputTokens      Int?
+  outputTokens     Int?
+  thoughtsTokens   Int?
+  totalTokens      Int?
+  // Manus fields.
+  taskId           String?
+  agentProfile     String?
+  creditsUsed      Int?             // not attributable per-task yet; reserved
+  // Which quota paid: "personal" | "shared" | "fallback_quota" | "fallback_error".
+  // Personal usage is excluded from the company cost estimate.
+  keyOwner         String?
+  latencyMs        Int?
+  resultRef        String?          // candidate id / image key
+  outputChars      Int?             // DESCRIPTION output length
+  error            String?
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([kind])
+  @@index([taskId])
 }

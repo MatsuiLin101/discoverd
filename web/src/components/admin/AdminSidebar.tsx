@@ -26,7 +26,7 @@ const navGroups: NavGroup[] = [
   {
     title: "前台管理",
     items: [
-      { label: "輪播圖管理", href: "/hero-banners", adminOnly: true },
+      { label: "全站版面", href: "/hero-banners", adminOnly: true },
       { label: "地區管理", href: "/regions" },
       { label: "標籤管理", href: "/tags" },
       { label: "旅遊方案", href: "/tours" },
@@ -38,8 +38,16 @@ const navGroups: NavGroup[] = [
     title: "系統管理",
     adminOnly: true,
     items: [
+      { label: "AI 設定", href: "/ai-settings", adminOnly: true },
       { label: "操作日誌", href: "/logs" },
       { label: "使用者管理", href: "/users" },
+    ],
+  },
+  {
+    title: "個人設定",
+    items: [
+      { label: "AI 偏好", href: "/ai-preferences" },
+      { label: "AI 使用紀錄", href: "/ai-usage" },
     ],
   },
 ];

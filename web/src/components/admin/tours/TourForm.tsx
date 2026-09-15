@@ -4,10 +4,16 @@ import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TourFileList from "./TourFileList";
+import AiDescriptionCandidates from "./AiDescriptionCandidates";
+import AiThumbnailCandidates from "./AiThumbnailCandidates";
+import TagPicker from "./TagPicker";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
+import ImageCropper from "@/components/admin/ImageCropper";
+import CroppedPreview from "@/components/admin/CroppedPreview";
 import { uploadFile } from "@/lib/upload-client";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
 import CharCountField from "@/components/admin/CharCountField";
+import type { ThumbCrop } from "@/lib/crop";
 
 interface SubRegion {
   id: string;
@@ -31,6 +37,7 @@ interface Tour {
   price: number;
   description: string | null;
   thumbnail: string | null;
+  thumbnailCrop?: ThumbCrop | null;
   published: boolean;
   subRegionId: string;
   tags: { id: string }[];
@@ -78,15 +85,25 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [name, setName] = useState(tour?.name ?? "");
   const [price, setPrice] = useState(tour?.price.toString() ?? "");
   const [description, setDescription] = useState(tour?.description ?? "");
+  // Which AI description candidate is currently adopted (for the 已採用 flag);
+  // cleared when the text is edited by hand.
+  const [selectedDescId, setSelectedDescId] = useState<string | null>(null);
   const [selectedRegionId, setSelectedRegionId] = useState(initialRegionId);
   const [subRegionId, setSubRegionId] = useState(tour?.subRegionId ?? "");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
     tour?.tags.map((t) => t.id) ?? []
   );
+  // Local, mutable tag list so inline-created tags appear immediately.
+  const [tagList, setTagList] = useState<Tag[]>(tags);
   const [published, setPublished] = useState(tour?.published ?? true);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
   const [clearThumbnail, setClearThumbnail] = useState(false);
+  // An AI-generated thumbnail chosen from the candidate list: it already lives
+  // in storage, so on submit we send its key directly (no re-upload).
+  const [aiThumb, setAiThumb] = useState<{ key: string; url: string } | null>(null);
+  const [thumbnailCrop, setThumbnailCrop] = useState<ThumbCrop | null>(tour?.thumbnailCrop ?? null);
+  const [showCropper, setShowCropper] = useState(false);
   const [seoTitle, setSeoTitle] = useState(tour?.seoTitle ?? "");
   const [seoDescription, setSeoDescription] = useState(tour?.seoDescription ?? "");
   const [ogPreview, setOgPreview] = useState<string | null>(null);
@@ -94,6 +111,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [contentFiles, setContentFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [isDraftPending, setIsDraftPending] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const ogFileRef = useRef<HTMLInputElement>(null);
 
@@ -109,13 +127,27 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     const file = e.target.files?.[0] ?? null;
     setThumbFile(file);
     setThumbPreview(file ? URL.createObjectURL(file) : null);
-    if (file) setClearThumbnail(false);
+    setThumbnailCrop(null); // a new image invalidates any previous crop coords
+    if (file) {
+      setClearThumbnail(false);
+      setAiThumb(null);
+    }
   }
 
   function handleClearThumbnail() {
     setClearThumbnail(true);
     setThumbFile(null);
     setThumbPreview(null);
+    setThumbnailCrop(null);
+    setAiThumb(null);
+  }
+
+  function handleSelectAiThumb(choice: { key: string; url: string }) {
+    setAiThumb(choice);
+    setThumbFile(null);
+    setThumbPreview(null);
+    setClearThumbnail(false);
+    setThumbnailCrop(null);
   }
 
   function handleOgFileChange(e: ChangeEvent<HTMLInputElement>) {
@@ -131,12 +163,6 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     if (ogFileRef.current) ogFileRef.current.value = "";
   }
 
-  function toggleTag(id: string) {
-    setSelectedTagIds((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
-    );
-  }
-
   function handleContentFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
     const newFiles = Array.from(e.target.files ?? []);
     if (newFiles.length === 0) return;
@@ -148,19 +174,42 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     setContentFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    void save(false);
+  }
+
+  /**
+   * Create/update the tour. When `asDraft` is true (new tours only) we stay on
+   * the form by navigating in-place to the edit URL, so the AI generators become
+   * usable immediately without a trip out to the list.
+   */
+  async function save(asDraft: boolean) {
     if (!subRegionId) {
       setError("請選擇次分類");
       return;
     }
-    setIsPending(true);
+    // The draft button is type="button", so the browser's `required` checks
+    // don't run — validate the API-required fields ourselves for a clean error.
+    if (asDraft) {
+      if (!name.trim()) {
+        setError("請先輸入行程名稱");
+        return;
+      }
+      if (price === "" || Number.isNaN(Number(price)) || Number(price) < 0) {
+        setError("請先輸入有效的價格");
+        return;
+      }
+    }
+    const setPending = asDraft ? setIsDraftPending : setIsPending;
+    setPending(true);
     setError(null);
 
     const fd = new FormData();
     fd.append("name", name);
     fd.append("price", price);
     fd.append("description", description);
+    if (selectedDescId) fd.append("selectedDescriptionCandidateId", selectedDescId);
     fd.append("subRegionId", subRegionId);
     fd.append("published", published ? "true" : "false");
     selectedTagIds.forEach((id) => fd.append("tagIds", id));
@@ -173,8 +222,15 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       if (thumbFile) {
         const up = await uploadFile(thumbFile, "tours");
         fd.append("thumbnailKey", up.key);
+      } else if (aiThumb) {
+        // AI thumbnail already stored — send its key directly.
+        fd.append("thumbnailKey", aiThumb.key);
       } else if (clearThumbnail) {
         fd.append("clearThumbnail", "true");
+      }
+      // Crop only applies when a thumbnail remains; new upload / clear resets it.
+      if (thumbnailCrop && !clearThumbnail) {
+        fd.append("thumbnailCrop", JSON.stringify(thumbnailCrop));
       }
       if (ogFile) {
         const up = await uploadFile(ogFile, "seo-og/tours");
@@ -191,6 +247,13 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       const res = await fetch(url, { method: isEdit ? "PUT" : "POST", body: fd });
       const data = await res.json();
       if (res.ok && data.data) {
+        if (asDraft && data.data.id) {
+          // Stay on the form: land on this tour's edit page (AI panels appear).
+          const query = returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : "";
+          router.replace(`${adminPath}/tours/${data.data.id}${query}`);
+          router.refresh();
+          return;
+        }
         sessionStorage.setItem(
           "adminSaveMsg",
           isEdit ? `已更新旅遊方案「${name}」` : `已新增旅遊方案「${name}」`
@@ -203,13 +266,27 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     } catch (err) {
       setError(err instanceof Error ? err.message : "網路錯誤，請稍後再試");
     } finally {
-      setIsPending(false);
+      setPending(false);
     }
   }
 
-  const currentThumb = clearThumbnail ? null : (thumbPreview ?? tour?.thumbnail ?? null);
-  const showClearButton = isEdit && (!!tour?.thumbnail || !!thumbFile) && !clearThumbnail;
-  const canOpenLightbox = !!currentThumb;
+  // Current (unsaved) form values passed to the AI so generation reflects
+  // what's on screen without needing to save first. Read at call time.
+  function getAiContext() {
+    const priceNum = Number(price);
+    return {
+      name: name.trim() || undefined,
+      price: Number.isFinite(priceNum) && price !== "" ? priceNum : undefined,
+      regionName: regions.find((r) => r.id === selectedRegionId)?.name,
+      subRegionName: filteredSubRegions.find((s) => s.id === subRegionId)?.name,
+      tagNames: selectedTagIds
+        .map((id) => tagList.find((t) => t.id === id)?.name)
+        .filter((n): n is string => !!n),
+    };
+  }
+
+  const currentThumb = clearThumbnail ? null : (thumbPreview ?? aiThumb?.url ?? tour?.thumbnail ?? null);
+  const showClearButton = isEdit && (!!tour?.thumbnail || !!thumbFile || !!aiThumb) && !clearThumbnail;
 
   return (
     <>
@@ -236,18 +313,37 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             className={inputClass}
             placeholder="例如：29800"
           />
+          <p className="mt-1 text-xs text-gray-400">填 0 表示不定價，前台會顯示「客製化報價」。</p>
         </div>
 
         {/* 行程簡介 */}
-        <CharCountField
-          label="行程簡介"
-          multiline
-          rows={4}
-          value={description}
-          onChange={setDescription}
-          maxLength={500}
-          placeholder="簡短描述此行程的特色（選填）"
-        />
+        <div>
+          <CharCountField
+            label="行程簡介"
+            multiline
+            rows={10}
+            className={`${inputClass} resize-y`}
+            value={description}
+            onChange={(v) => {
+              setDescription(v);
+              setSelectedDescId(null); // manual edit → no longer "adopted from" a candidate
+            }}
+            maxLength={500}
+            placeholder="簡短描述此行程的特色（選填）"
+          />
+          {isEdit && tourId ? (
+            <AiDescriptionCandidates
+              tourId={tourId}
+              onSelect={(text, id) => {
+                setDescription(text);
+                setSelectedDescId(id);
+              }}
+              getContext={getAiContext}
+            />
+          ) : (
+            <p className="mt-1.5 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程簡介。</p>
+          )}
+        </div>
 
         {/* 主分類 / 次分類 */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -285,51 +381,36 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
         </div>
 
         {/* 標籤 */}
-        {tags.length > 0 && (
-          <div>
-            <label className={labelClass}>標籤（可多選）</label>
-            <div className="flex flex-wrap gap-2 rounded-lg border border-gray-300 bg-gray-50 p-3">
-              {tags.map((tag) => {
-                const checked = selectedTagIds.includes(tag.id);
-                return (
-                  <label
-                    key={tag.id}
-                    className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                      checked
-                        ? "border-[#D12351] bg-rose-50 text-[#D12351]"
-                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      className="hidden"
-                      checked={checked}
-                      onChange={() => toggleTag(tag.id)}
-                    />
-                    {tag.name}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <TagPicker
+          tags={tagList}
+          setTags={setTagList}
+          selectedIds={selectedTagIds}
+          setSelectedIds={setSelectedTagIds}
+        />
 
         {/* 行程縮圖 */}
         <div>
-          <label className={labelClass}>行程縮圖</label>
+          <label className={labelClass}>行程縮圖<span className="ml-2 text-xs font-normal text-gray-400">前台以 4:3 顯示</span></label>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-            <div
-              className={`relative h-24 w-36 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200${canOpenLightbox ? " cursor-zoom-in" : ""}`}
-              onClick={canOpenLightbox ? () => setLightbox(currentThumb!) : undefined}
-            >
-              <Image
-                src={currentThumb ?? "/images/tour-placeholder.svg"}
+            {currentThumb ? (
+              <CroppedPreview
+                src={currentThumb}
                 alt="縮圖預覽"
-                fill
-                className="object-cover"
-                unoptimized
+                crop={thumbnailCrop}
+                className="aspect-[4/3] w-40 flex-shrink-0 rounded-lg border border-gray-200 bg-gray-100 cursor-zoom-in"
+                onClick={() => setLightbox(currentThumb)}
               />
-            </div>
+            ) : (
+              <div className="relative aspect-[4/3] w-40 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+                <Image
+                  src="/images/tour-placeholder.svg"
+                  alt="縮圖預覽"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+            )}
             <div className="flex-1 space-y-2">
               <input
                 type="file"
@@ -337,11 +418,29 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
                 onChange={handleThumbChange}
                 className={fileInputClass}
               />
+              {currentThumb && (
+                <button
+                  type="button"
+                  onClick={() => setShowCropper(true)}
+                  className="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                >
+                  {thumbnailCrop ? "重新裁切" : "調整裁切"}
+                </button>
+              )}
+              {thumbnailCrop && (
+                <button
+                  type="button"
+                  onClick={() => setThumbnailCrop(null)}
+                  className="ml-2 cursor-pointer text-xs text-gray-400 hover:text-gray-600"
+                >
+                  取消裁切
+                </button>
+              )}
               {showClearButton && (
                 <button
                   type="button"
                   onClick={handleClearThumbnail}
-                  className="cursor-pointer text-xs text-rose-500 hover:text-rose-700"
+                  className="block cursor-pointer text-xs text-rose-500 hover:text-rose-700"
                 >
                   清除縮圖
                 </button>
@@ -350,11 +449,15 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
                 <p className="text-xs text-gray-400">縮圖將被清除，儲存後生效</p>
               )}
               <p className="text-xs text-gray-400">
-                支援 JPG、PNG、WebP；未上傳時顯示預設縮圖
-                {canOpenLightbox && "；點擊縮圖可放大預覽"}
+                支援 JPG、PNG、WebP；建議原圖至少 1200×900；未上傳時顯示預設縮圖
               </p>
             </div>
           </div>
+          {isEdit && tourId ? (
+            <AiThumbnailCandidates tourId={tourId} onSelect={handleSelectAiThumb} getContext={getAiContext} />
+          ) : (
+            <p className="mt-3 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程縮圖。</p>
+          )}
         </div>
 
         {/* 新增時的行程內容 */}
@@ -494,6 +597,16 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
                 ? "儲存變更"
                 : "新增旅遊方案"}
           </button>
+          {!isEdit && (
+            <button
+              type="button"
+              onClick={() => void save(true)}
+              disabled={isDraftPending || isPending}
+              className="cursor-pointer rounded-lg border border-[#D12351] bg-white px-5 py-2 text-sm font-medium text-[#D12351] transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isDraftPending ? "儲存草稿中…" : "儲存草稿並使用 AI"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => router.push(backUrl)}
@@ -506,6 +619,19 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
 
       {lightbox && (
         <ImageLightbox src={lightbox} alt="縮圖預覽" onClose={() => setLightbox(null)} />
+      )}
+
+      {showCropper && currentThumb && (
+        <ImageCropper
+          src={currentThumb}
+          aspect={4 / 3}
+          value={thumbnailCrop}
+          onApply={(crop) => {
+            setThumbnailCrop(crop);
+            setShowCropper(false);
+          }}
+          onCancel={() => setShowCropper(false)}
+        />
       )}
     </>
   );

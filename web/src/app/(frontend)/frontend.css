@@ -15,7 +15,7 @@
   --panel: rgba(255, 255, 255, 0.58);
   --panel-solid: rgba(255, 255, 255, 0.78);
   --fh-sans: var(--font-noto-sans, "Noto Sans"), var(--font-noto-sans-tc, "Noto Sans TC"), sans-serif;
-  --max: 1320px;
+  --max: 1280px;
   --gutter: 48px;
 
   min-height: 100vh;
@@ -31,6 +31,17 @@
 .fh-root img { max-width: 100%; display: block; }
 .fh-root a { color: inherit; text-decoration: none; }
 .fh-root ::selection { background: var(--accent); color: #fff; }
+
+/* Boxed layout: the whole site (header, body, footer) is centered within
+   --box; .fh-outer paints the area beside the box on wide screens. All rules
+   are inert unless layoutMode is "boxed" (no data-bg / data-layout otherwise). */
+.fh-outer[data-bg] { min-height: 100vh; }
+.fh-outer[data-bg="neutral"] { background: #EAE7F0; }
+.fh-outer[data-bg="dark"] { background: #1F1A24; }
+.fh-outer[data-bg="gradient"] {
+  background: linear-gradient(180deg, #FFECEF 0%, #F2E8F4 46%, #E0E0FF 100%);
+}
+.fh-root[data-layout="boxed"] { max-width: var(--box); margin-left: auto; margin-right: auto; }
 
 /* =====================================================
    HEADER
@@ -154,6 +165,16 @@
   position: absolute; inset: 0;
 }
 .fh-slide.active .slide-img { transform: scale(1); }
+/* "fit" display mode (all viewports): full-width image, natural aspect ratio,
+   capped height via inline max-height. Contain so nothing is cropped, and drop
+   the Ken Burns zoom so the aspect ratio is preserved exactly. */
+.fh-carousel[data-mode="fit"] .slide-img { object-fit: contain; transform: none; }
+/* Respect reduced-motion: no crossfade, no Ken Burns zoom (JS also stops the
+   auto-advance). Slides still switch, just instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .fh-slide { transition: none; }
+  .fh-slide .slide-img { transition: none; transform: none; }
+}
 .fh-car-nav {
   position: absolute;
   top: 50%;
@@ -314,8 +335,24 @@
   overflow: hidden;
   background: #d8cfe0;
 }
-.fh-cat-row .cat-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
-.fh-cat-row:hover .cat-thumb img { transform: scale(1.08); }
+.fh-cat-row .cat-thumb > img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+.fh-cat-row:hover .cat-thumb > img { transform: scale(1.08); }
+.fh-cat-row:hover .cat-thumb .thumb-crop > img { transform: scale(1.08); }
+
+/* Shared crop reconstruction (#6): render a stored crop rect with pure CSS.
+   The parent element owns the fixed-ratio box; this fills it and offsets the
+   original image so the chosen rectangle exactly covers it — no re-compression. */
+.thumb-crop { position: absolute; inset: 0; overflow: hidden; }
+.thumb-crop > img {
+  position: absolute;
+  max-width: none;
+  width: calc(100% / var(--cw));
+  height: calc(100% / var(--ch));
+  left: calc(-100% * var(--cx) / var(--cw));
+  top: calc(-100% * var(--cy) / var(--ch));
+  transition: transform .7s ease;
+  transform-origin: calc((var(--cx) + var(--cw) / 2) * 100%) calc((var(--cy) + var(--ch) / 2) * 100%);
+}
 .fh-cat-row .cat-arrow {
   width: 44px; height: 44px;
   border-radius: 50%;
@@ -370,8 +407,9 @@
 }
 /* Fixed 4:3 preview frame (#4) — image never stretches with source ratio */
 .fh-trow .t-img { position: relative; overflow: hidden; background: #d8cfe0; aspect-ratio: 4 / 3; }
-.fh-trow .t-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; position: absolute; inset: 0; }
-.fh-trow:hover .t-img img { transform: scale(1.07); }
+.fh-trow .t-img > img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; position: absolute; inset: 0; }
+.fh-trow:hover .t-img > img { transform: scale(1.07); }
+.fh-trow:hover .t-img .thumb-crop > img { transform: scale(1.07); }
 .fh-trow .t-body { padding: 24px 24px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .fh-trow .t-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .fh-trow .t-tags span {
@@ -392,6 +430,7 @@
 .fh-trow .t-amt .cur { font-size: 13px; color: var(--accent); }
 .fh-trow .t-amt .num { font-size: 28px; letter-spacing: 0.01em; }
 .fh-trow .t-amt .unit { font-size: 16px; color: var(--accent); }
+.fh-trow .t-amt .custom-quote { font-size: 20px; font-weight: 600; }
 .fh-trow .t-cta {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   background: transparent; color: var(--accent); border: 1px solid var(--accent);
@@ -405,6 +444,93 @@
   border: 1px dashed var(--line-2); border-radius: 18px;
   font-family: var(--fh-sans); font-size: 20px; color: var(--ink-3); font-weight: 300;
 }
+.fh-empty-link {
+  font: inherit; color: var(--accent); background: none; border: none;
+  padding: 0; cursor: pointer; text-decoration: underline;
+}
+.fh-empty-link:hover { color: var(--accent-2); }
+
+/* =====================================================
+   ADVANCED SEARCH — /search
+   ===================================================== */
+.fh-searchbox {
+  margin-top: 28px;
+  padding: clamp(20px, 2.4vw, 30px) clamp(20px, 2.4vw, 32px);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.fh-filter-group { display: flex; flex-direction: column; gap: 12px; }
+.fh-filter-label {
+  font-family: var(--fh-sans); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.fh-adv-input {
+  width: 100%;
+  font-family: var(--fh-sans); font-size: 15px; letter-spacing: 0.02em; color: var(--ink);
+  padding: 13px 18px;
+  border: 1px solid var(--line-2); border-radius: 12px; background: var(--panel-solid);
+  transition: border-color .2s;
+}
+.fh-adv-input::placeholder { color: var(--ink-3); }
+.fh-adv-input:focus { outline: none; border-color: var(--accent); }
+/* Reuse .fh-subtabs for the category rows; no extra top margin inside a group */
+.fh-searchbox .fh-subtabs { margin: 0; }
+
+.fh-tag-search { max-width: 320px; margin-bottom: 10px; }
+.fh-tag-mode { display: flex; gap: 8px; margin-bottom: 10px; }
+.fh-tag-mode .fh-tag-chip { padding: 6px 14px; font-size: 12px; }
+.fh-tag-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.fh-tag-empty { font-size: 13px; color: var(--ink-2); }
+.fh-tag-chip {
+  font-family: var(--fh-sans); font-size: 13px; letter-spacing: 0.04em;
+  padding: 8px 16px; border-radius: 999px;
+  border: 1px solid var(--line-2); background: var(--panel-solid);
+  color: var(--ink-2); cursor: pointer; transition: all .2s; white-space: nowrap;
+}
+.fh-tag-chip:hover { border-color: var(--accent); color: var(--ink); }
+.fh-tag-chip.on {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+
+.fh-filter-actions { display: flex; justify-content: flex-end; }
+.fh-clear-btn {
+  font-family: var(--fh-sans); font-size: 12px; letter-spacing: 0.1em; color: var(--ink-3);
+  background: transparent; border: none; cursor: pointer; padding: 4px 2px;
+  transition: color .2s; text-decoration: underline; text-underline-offset: 3px;
+}
+.fh-clear-btn:hover { color: var(--accent); }
+
+.fh-result-note {
+  margin-top: 24px; font-family: var(--fh-sans); font-size: 13px; color: var(--ink-3);
+}
+
+/* Dim the grid while a fresh query is loading */
+.fh-tour-list.is-loading { opacity: 0.55; transition: opacity .2s; pointer-events: none; }
+/* Subtle feedback while a card's detail is being fetched for the modal */
+.fh-trow.is-opening { opacity: 0.6; cursor: progress; }
+
+/* Region/sub eyebrow inside a search result card */
+.fh-trow .t-tags .t-region {
+  color: var(--accent-2); border-color: var(--line-2);
+  text-transform: none; letter-spacing: 0.04em;
+}
+
+/* Quick-search dropdown footer / advanced link */
+.fh-sr-all {
+  display: block; width: 100%; margin-top: 4px;
+  padding: 12px; border-radius: 12px; border: none; background: transparent; cursor: pointer;
+  font-family: var(--fh-sans); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); transition: background .18s ease;
+}
+.fh-sr-all:hover { background: rgba(224, 80, 107, 0.09); }
+.fh-sr-adv {
+  margin-top: 12px; background: transparent; border: 1px solid var(--accent); cursor: pointer;
+  font-family: var(--fh-sans); font-size: 12px; letter-spacing: 0.1em; color: var(--accent);
+  padding: 8px 18px; border-radius: 999px; transition: background .2s, color .2s;
+}
+.fh-sr-adv:hover { background: var(--accent); color: #fff; }
 
 /* =====================================================
    MODAL — 行程詳情
@@ -477,6 +603,7 @@
 .fh-modal-side .m-price .cur { font-size: 16px; }
 .fh-modal-side .m-price .num { font-size: 40px; letter-spacing: 0.01em; }
 .fh-modal-side .m-price .unit { font-size: 20px; }
+.fh-modal-side .m-price .custom-quote { font-size: 26px; font-weight: 600; }
 .fh-modal-side .m-note { font-size: 12px; line-height: 1.7; color: var(--ink-3); margin: 14px 0 0; }
 .fh-modal-side .m-actions { display: flex; flex-direction: column; gap: 12px; }
 .fh-modal-side .m-actions button,
@@ -518,6 +645,9 @@
 .fh-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 .fh-m-toggle { display: none; }
+/* Mobile-only scroll hint for the tour intro; revealed under the media query. */
+.m-scroll-cue { display: none; }
+@keyframes fh-cue-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
 
 /* =====================================================
    FORM MODAL — 諮詢單
@@ -725,6 +855,7 @@
 .fh-sr-price .cur { font-size: 11px; }
 .fh-sr-price .num { font-size: 21px; letter-spacing: 0.01em; }
 .fh-sr-price .unit { font-size: 13px; }
+.fh-sr-price .custom-quote { font-size: 15px; font-weight: 600; }
 .fh-sr-empty { padding: 22px 14px 26px; text-align: center; font-size: 13px; color: var(--ink-3); line-height: 1.7; }
 .fh-sr-empty .k { color: var(--ink); font-weight: 500; }
 
@@ -754,9 +885,14 @@
   .fh-modal-gallery { min-height: 0; }
   .fh-modal-side {
     position: relative; border-left: 0; border-top: 1px solid var(--line);
-    overflow: hidden; max-height: none; padding: 16px 20px;
+    /* Cap the side so a long intro never eats the whole modal: the gallery
+       (1fr row) always keeps space. The panel itself does not scroll — only
+       the intro (.m-top) does — so the corner toggle and the bottom action
+       buttons stay put and reachable no matter how long the intro is. */
+    overflow: hidden; max-height: 60vh; padding: 16px 20px;
     justify-content: flex-start; gap: 10px;
   }
+  .fh-modal-side .m-top { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
   .fh-m-toggle {
     display: inline-flex; align-items: center; justify-content: center;
     position: absolute; top: 12px; right: 16px; z-index: 3;
@@ -773,33 +909,60 @@
   .fh-modal-side .m-en { font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 9px; }
   .fh-modal-side .m-tags { gap: 6px; }
   .fh-modal-side .m-tags span { font-size: 9.5px; padding: 4px 10px; }
-  .fh-modal-side .m-bottom { gap: 12px; }
-  .fh-modal-side .m-price { margin-top: 6px; }
-  .fh-modal-side .m-price .cur { font-size: 13px; }
-  .fh-modal-side .m-price .num { font-size: 27px; }
-  .fh-modal-side .m-price .unit { font-size: 15px; }
-  .fh-modal-side .m-note { font-size: 11px; line-height: 1.55; margin-top: 8px; }
-  .fh-modal-side .m-actions { flex-direction: row; gap: 8px; }
-  .fh-modal-side .m-actions button { flex: 1; padding: 11px 10px; font-size: 13px; gap: 7px; }
+  /* Compact bottom bar on mobile in BOTH collapsed and expanded states: small
+     price, icon-only action buttons, note hidden. Keeping the bar short frees
+     the most vertical room for the intro (.m-top). */
+  .fh-modal-side .m-note { display: none; }
+  .fh-modal-side .m-bottom {
+    flex-direction: row; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .fh-modal-side .m-price { margin-top: 0; }
+  .fh-modal-side .m-price .cur { font-size: 12px; }
+  .fh-modal-side .m-price .num { font-size: 23px; }
+  .fh-modal-side .m-price .unit { font-size: 14px; }
+  .fh-modal-side .m-actions { flex: none; flex-direction: row; gap: 8px; }
+  .fh-modal-side .m-actions button,
+  .fh-modal-side .m-actions a {
+    flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; letter-spacing: 0; gap: 0;
+  }
+  /* Collapsed only hides the intro body and tightens the name. */
   .fh-modal-side.collapsed .m-en,
   .fh-modal-side.collapsed .m-tags,
-  .fh-modal-side.collapsed .m-lede,
-  .fh-modal-side.collapsed .m-note { display: none; }
+  .fh-modal-side.collapsed .m-lede { display: none; }
   .fh-modal-side.collapsed .m-eyebrow { margin-bottom: 4px; }
   .fh-modal-side.collapsed .m-name-row { margin-bottom: 0; }
   .fh-modal-side.collapsed .m-name { margin-bottom: 0; font-size: 17px; padding-right: 36px; }
-  .fh-modal-side.collapsed .m-bottom {
-    flex-direction: row; align-items: center; justify-content: space-between; gap: 12px;
+  /* Scroll affordance: while there is more intro below, show a thin scrollbar
+     and fade the bottom edge so it's clear the panel can be scrolled. The fade
+     is removed once scrolled to the end (.more-below toggled from JS). */
+  .fh-modal-side .m-top { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+  /* While there's more intro below, fade the bottom edge and show a bouncing
+     down-chevron so it's obvious the panel scrolls; both vanish at the end
+     (.more-below toggled from JS). The cue sticks to the scroll viewport
+     bottom and overlaps the last lines (negative margin) so it adds no height. */
+  .fh-modal-side.more-below .m-scroll-cue {
+    display: flex; position: sticky; bottom: 0; z-index: 2;
+    margin: -52px 0 0; height: 52px; pointer-events: none;
+    align-items: flex-end; justify-content: center; padding-bottom: 6px;
+    background: linear-gradient(to top, #FBF2F5 38%, rgba(251, 242, 245, 0));
   }
-  .fh-modal-side.collapsed .m-price { margin-top: 0; }
-  .fh-modal-side.collapsed .m-price .cur { font-size: 12px; }
-  .fh-modal-side.collapsed .m-price .num { font-size: 23px; }
-  .fh-modal-side.collapsed .m-price .unit { font-size: 14px; }
-  .fh-modal-side.collapsed .m-actions { flex: none; flex-direction: row; gap: 8px; }
-  .fh-modal-side.collapsed .m-actions button,
-  .fh-modal-side.collapsed .m-actions a {
-    flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; letter-spacing: 0; gap: 0;
+  .fh-modal-side.more-below .m-scroll-cue svg {
+    width: 28px; height: 28px; padding: 6px; box-sizing: border-box;
+    color: #fff; background: var(--accent); border-radius: 50%;
+    box-shadow: 0 6px 14px -3px rgba(42, 34, 51, 0.5);
+    animation: fh-cue-bounce 1.3s ease-in-out infinite;
   }
+}
+@media (max-width: 768px) {
+  /* Mobile hero: switch to the admin-selected fixed aspect-ratio container
+     that shows the whole image (contain). "cover" keeps the full-bleed crop
+     handled by the rules above. Desktop (>768) is unaffected. */
+  .fh-carousel[data-fit="contain"] {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: var(--m-ratio, 2 / 1);
+  }
+  .fh-carousel[data-fit="contain"] .slide-img { object-fit: contain; }
 }
 @media (max-width: 767px) {
   /* Mobile (<768): 1 card per row (#2) */
@@ -859,12 +1022,79 @@
 }
 
 /* =====================================================
-   TOUR DETAIL PAGE — standalone /tours/[slug]
+   ERROR PAGES — not-found (404) / error (500)
    ===================================================== */
-.fh-tour-detail {
-  display: flex; justify-content: center; align-items: flex-start;
-  padding: clamp(24px, 4vw, 56px) var(--gutter) clamp(48px, 8vw, 96px);
+.fh-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 56vh;
+  padding: clamp(48px, 10vw, 120px) var(--gutter);
 }
-.fh-tour-detail .fh-modal {
-  height: min(860px, 82vh);
+.fh-error-inner { max-width: 520px; }
+.fh-error-code {
+  font-size: clamp(72px, 16vw, 132px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  background: linear-gradient(120deg, var(--accent) 0%, var(--accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.fh-error-title {
+  margin-top: 20px;
+  font-size: clamp(20px, 3.4vw, 26px);
+  font-weight: 500;
+  color: var(--ink);
+}
+.fh-error-desc {
+  margin-top: 12px;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+.fh-error-actions {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.fh-error-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 26px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+.fh-error-btn:hover {
+  transform: translateY(-2px);
+}
+.fh-error-btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+.fh-error-btn.primary:hover {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+}
+.fh-error-countdown {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.fh-error-count {
+  font-weight: 600;
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
 }

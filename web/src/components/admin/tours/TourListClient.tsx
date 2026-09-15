@@ -21,15 +21,20 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import DeleteTourButton from "./DeleteTourButton";
 import TourPreviewModal from "./TourPreviewModal";
+import CroppedPreview from "@/components/admin/CroppedPreview";
 import FloatingToast from "@/components/admin/FloatingToast";
+import type { ThumbCrop } from "@/lib/crop";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
+import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import { compareTagName } from "@/lib/tag-sort";
 
 type TourRow = {
   id: string;
   slug: string;
   name: string;
   thumbnail: string | null;
+  crop?: ThumbCrop | null;
   price: number;
   published: boolean;
   sortOrder: number;
@@ -97,18 +102,25 @@ function TourMobileCard({
             className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#D12351]"
           />
         )}
-        <div
-          className={`relative h-10 overflow-hidden bg-gray-100 rounded w-14 shrink-0${tour.thumbnail ? " cursor-zoom-in" : ""}`}
-          onClick={tour.thumbnail ? () => onImageClick(tour.thumbnail!) : undefined}
-        >
-          <Image
-            src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
+        {tour.thumbnail ? (
+          <CroppedPreview
+            src={tour.thumbnail}
             alt={tour.name}
-            fill
-            className="object-cover"
-            unoptimized
+            crop={tour.crop}
+            className="aspect-[4/3] w-14 shrink-0 cursor-zoom-in rounded bg-gray-100"
+            onClick={() => onImageClick(tour.thumbnail!)}
           />
-        </div>
+        ) : (
+          <div className="relative aspect-[4/3] w-14 shrink-0 overflow-hidden rounded bg-gray-100">
+            <Image
+              src="/images/tour-placeholder.svg"
+              alt={tour.name}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <p className="text-sm font-medium leading-snug text-gray-800">
@@ -127,7 +139,9 @@ function TourMobileCard({
           <p className="mt-0.5 text-xs text-gray-500">
             {tour.subRegion.region.name} › {tour.subRegion.name}
           </p>
-          <p className="mt-1 text-sm text-gray-700">NT${tour.price.toLocaleString()}</p>
+          <p className="mt-1 text-sm text-gray-700">
+            {isCustomQuote(tour.price) ? CUSTOM_QUOTE_LABEL : `NT$${tour.price.toLocaleString()}`}
+          </p>
           {tour.tags.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
               {tour.tags.map((tag) => (
@@ -231,24 +245,33 @@ function SortableTourRow({
         )}
       </td>
       <td className="px-4 py-3">
-        <div
-          className={`relative h-10 overflow-hidden bg-gray-100 rounded w-14${tour.thumbnail ? " cursor-zoom-in" : ""}`}
-          onClick={tour.thumbnail ? () => onImageClick(tour.thumbnail!) : undefined}
-        >
-          <Image
-            src={tour.thumbnail ?? "/images/tour-placeholder.svg"}
+        {tour.thumbnail ? (
+          <CroppedPreview
+            src={tour.thumbnail}
             alt={tour.name}
-            fill
-            className="object-cover"
-            unoptimized
+            crop={tour.crop}
+            className="aspect-[4/3] w-14 cursor-zoom-in rounded bg-gray-100"
+            onClick={() => onImageClick(tour.thumbnail!)}
           />
-        </div>
+        ) : (
+          <div className="relative aspect-[4/3] w-14 overflow-hidden rounded bg-gray-100">
+            <Image
+              src="/images/tour-placeholder.svg"
+              alt={tour.name}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+        )}
       </td>
       <td className="px-4 py-3 font-medium text-gray-800">{tour.name}</td>
       <td className="px-4 py-3 text-gray-500">
         {tour.subRegion.region.name} › {tour.subRegion.name}
       </td>
-      <td className="px-4 py-3 text-gray-700">NT${tour.price.toLocaleString()}</td>
+      <td className="px-4 py-3 text-gray-700">
+        {isCustomQuote(tour.price) ? CUSTOM_QUOTE_LABEL : `NT$${tour.price.toLocaleString()}`}
+      </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
           {tour.tags.map((tag) => (
@@ -369,8 +392,10 @@ export default function TourListClient({
   const [batchLoading, setBatchLoading] = useState(false);
   const [batchError, setBatchError] = useState<string | null>(null);
 
-  // Batch publish state
+  // Batch publish state; publishConfirm holds the pending action (true =
+  // publish, false = unpublish) while the confirmation modal is open.
   const [publishLoading, setPublishLoading] = useState(false);
+  const [publishConfirm, setPublishConfirm] = useState<boolean | null>(null);
 
   // Batch delete state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -451,9 +476,15 @@ export default function TourListClient({
     setTagSearch("");
   }
 
-  const visibleTags = tagSearch
-    ? tags.filter((t) => t.name.includes(tagSearch))
-    : tags;
+  // Sorted like the tour form/filter (text + numeric collation).
+  const sortedTags = [...tags].sort((a, b) => compareTagName(a.name, b.name));
+  const batchTagQuery = tagSearch.trim().toLowerCase();
+  // Selected chips always show; the rest are filtered by the search text.
+  const visibleTags = batchTagQuery
+    ? sortedTags.filter(
+        (t) => batchTagIds.has(t.id) || t.name.toLowerCase().includes(batchTagQuery)
+      )
+    : sortedTags;
 
   function toggleBatchTag(id: string) {
     setBatchTagIds((prev) => {
@@ -510,13 +541,16 @@ export default function TourListClient({
       if (!res.ok) {
         const data = await res.json();
         setToastError(data.error ?? "操作失敗");
+        setPublishConfirm(null);
         return;
       }
+      setPublishConfirm(null);
       setSelectedIds(new Set());
       showSuccess(published ? "已批次發布" : "已批次取消發布");
       router.refresh();
     } catch {
       setToastError("操作失敗，請重試");
+      setPublishConfirm(null);
     } finally {
       setPublishLoading(false);
     }
@@ -643,14 +677,14 @@ export default function TourListClient({
             批次更改分類
           </button>
           <button
-            onClick={() => applyBatchPublish(true)}
+            onClick={() => { setPublishConfirm(true); setToastError(null); }}
             disabled={publishLoading}
             className={`${btnBase} border-emerald-400 bg-white text-emerald-600 hover:bg-emerald-50 disabled:opacity-50`}
           >
             批次發布
           </button>
           <button
-            onClick={() => applyBatchPublish(false)}
+            onClick={() => { setPublishConfirm(false); setToastError(null); }}
             disabled={publishLoading}
             className={`${btnBase} border-gray-300 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-50`}
           >
@@ -853,7 +887,7 @@ export default function TourListClient({
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setSortModeModalOpen(false)}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                className="cursor-pointer px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
                 取消
               </button>
@@ -863,7 +897,7 @@ export default function TourListClient({
                   setSortModeModalOpen(false);
                 }}
                 disabled={!sortModalSubRegionId}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50"
+                className="cursor-pointer px-4 py-2 text-sm font-medium text-white rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ backgroundColor: "#D12351" }}
               >
                 進入排序模式
@@ -882,54 +916,58 @@ export default function TourListClient({
             </h3>
             <p className="mb-4 text-sm text-gray-500">對象：{selectedIds.size} 個方案</p>
 
-            {tags.length > 5 && (
-              <input
-                type="search"
-                value={tagSearch}
-                onChange={(e) => setTagSearch(e.target.value)}
-                placeholder="搜尋標籤…"
-                className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351]"
-              />
-            )}
+            <input
+              type="search"
+              value={tagSearch}
+              onChange={(e) => setTagSearch(e.target.value)}
+              placeholder="搜尋標籤…"
+              className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351]"
+            />
 
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-gray-400">已選 {batchTagIds.size} 個標籤</span>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setBatchTagIds(new Set(visibleTags.map((t) => t.id)))}
-                  className="text-xs text-[#D12351] hover:underline"
+                  onClick={() => setBatchTagIds((prev) => new Set([...prev, ...visibleTags.map((t) => t.id)]))}
+                  className="cursor-pointer text-xs text-[#D12351] hover:underline"
                 >
                   全選
                 </button>
                 <button
                   onClick={() => setBatchTagIds(new Set())}
-                  className="text-xs text-gray-400 hover:underline"
+                  className="cursor-pointer text-xs text-gray-400 hover:underline"
                 >
                   取消全選
                 </button>
               </div>
             </div>
 
-            <div className="p-2 mb-4 space-y-2 overflow-y-auto border border-gray-100 rounded-lg max-h-52">
-              {visibleTags.length === 0 && (
+            <div className="mb-4 max-h-52 overflow-y-auto rounded-lg border border-gray-100 p-2">
+              {visibleTags.length === 0 ? (
                 <p className="text-sm text-gray-400">
                   {tagSearch ? "沒有符合的標籤" : "尚無標籤"}
                 </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {visibleTags.map((tag) => {
+                    const checked = batchTagIds.has(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleBatchTag(tag.id)}
+                        className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          checked
+                            ? "border-[#D12351] bg-rose-50 text-[#D12351]"
+                            : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-              {visibleTags.map((tag) => (
-                <label
-                  key={tag.id}
-                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-gray-50"
-                >
-                  <input
-                    type="checkbox"
-                    checked={batchTagIds.has(tag.id)}
-                    onChange={() => toggleBatchTag(tag.id)}
-                    className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
-                  />
-                  <span className="text-sm text-gray-700">{tag.name}</span>
-                </label>
-              ))}
             </div>
 
             {batchError && <p className="mb-3 text-sm text-rose-600">{batchError}</p>}
@@ -937,14 +975,14 @@ export default function TourListClient({
               <button
                 onClick={() => setBatchMode(null)}
                 disabled={batchLoading}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                className="cursor-pointer px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={applyBatchTags}
                 disabled={batchLoading}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50"
+                className="cursor-pointer px-4 py-2 text-sm font-medium text-white rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ backgroundColor: "#D12351" }}
               >
                 {batchLoading
@@ -1006,17 +1044,57 @@ export default function TourListClient({
               <button
                 onClick={() => setRegionModalOpen(false)}
                 disabled={regionLoading}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                className="cursor-pointer px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={applyBatchRegion}
                 disabled={regionLoading || !selectedSubRegionId}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg disabled:opacity-50"
+                className="cursor-pointer px-4 py-2 text-sm font-medium text-white rounded-lg disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ backgroundColor: "#D12351" }}
               >
                 {regionLoading ? "處理中…" : `更改 ${selectedIds.size} 個方案的分類`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch publish confirm modal */}
+      {publishConfirm !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm p-6 mx-4 bg-white shadow-xl rounded-xl">
+            <h3 className="mb-2 text-base font-semibold text-gray-800">
+              {publishConfirm ? "確認批次發布" : "確認批次取消發布"}
+            </h3>
+            <p className="mb-1 text-sm text-gray-700">
+              確定要{publishConfirm ? "發布" : "取消發布"}{" "}
+              <span className="font-semibold text-[#D12351]">{selectedIds.size} 個方案</span>？
+            </p>
+            <p className="mb-5 text-sm text-gray-500">
+              {publishConfirm ? "發布後前台將可看見這些方案。" : "取消發布後前台將隱藏這些方案。"}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setPublishConfirm(null)}
+                disabled={publishLoading}
+                className="cursor-pointer px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => applyBatchPublish(publishConfirm)}
+                disabled={publishLoading}
+                className={`cursor-pointer px-4 py-2 text-sm font-medium text-white rounded-lg disabled:cursor-not-allowed disabled:opacity-50 ${
+                  publishConfirm ? "bg-emerald-600 hover:bg-emerald-700" : "bg-gray-600 hover:bg-gray-700"
+                }`}
+              >
+                {publishLoading
+                  ? "處理中…"
+                  : publishConfirm
+                  ? `發布 ${selectedIds.size} 個方案`
+                  : `取消發布 ${selectedIds.size} 個方案`}
               </button>
             </div>
           </div>
@@ -1038,14 +1116,14 @@ export default function TourListClient({
               <button
                 onClick={() => setDeleteConfirmOpen(false)}
                 disabled={deleteLoading}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                className="cursor-pointer px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 onClick={applyBatchDelete}
                 disabled={deleteLoading}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-50"
+                className="cursor-pointer px-4 py-2 text-sm font-medium text-white rounded-lg bg-rose-600 hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deleteLoading ? "刪除中…" : `刪除 ${selectedIds.size} 個方案`}
               </button>

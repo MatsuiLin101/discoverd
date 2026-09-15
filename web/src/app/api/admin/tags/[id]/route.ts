@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 import { writeLog } from "@/lib/log";
 
 const updateSchema = z.object({
-  name: z.string().min(1, { error: "請輸入標籤名稱" }),
+  name: z.string().trim().min(1, { error: "請輸入標籤名稱" }),
 });
 
 export async function PUT(

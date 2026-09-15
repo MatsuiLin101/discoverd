@@ -3,9 +3,10 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { parseCropField } from "@/lib/crop";
 
 const schema = z.object({
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
   slug: z.string().regex(/^[a-z0-9-]+$/, "slug 只允許小寫英數字和連字號"),
   seoTitle: z.string().max(100).optional(),
   seoDescription: z.string().max(160).optional(),
@@ -42,10 +43,11 @@ export async function POST(req: NextRequest) {
   const sortOrder = (max._max.sortOrder ?? -1) + 1;
 
   const thumbnailKey = (fd.get("thumbnailKey") as string) || null;
+  const thumbnailCrop = thumbnailKey ? parseCropField(fd.get("thumbnailCrop")) : null;
   const ogImageKey = (fd.get("ogImageKey") as string) || null;
 
   const region = await db.region.create({
-    data: { name, slug, sortOrder, thumbnailKey, seoTitle, seoDescription, ogImageKey },
+    data: { name, slug, sortOrder, thumbnailKey, thumbnailCrop: thumbnailCrop ?? undefined, seoTitle, seoDescription, ogImageKey },
   });
   void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnailKey: thumbnailKey ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey: ogImageKey ?? null } });
   return NextResponse.json({ data: region }, { status: 201 });

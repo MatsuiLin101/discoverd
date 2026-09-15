@@ -5,9 +5,11 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { normalizeCrop } from "@/lib/crop";
 import type { Prisma } from "@/generated/prisma/client";
 import TourFilterBar from "@/components/admin/tours/TourFilterBar";
 import TourListClient from "@/components/admin/tours/TourListClient";
+import ImportExportPanel from "@/components/admin/ImportExportPanel";
 
 const VALID_LIMITS = [0, 10, 20, 50, 100];
 
@@ -19,6 +21,7 @@ export default async function ToursPage({
     regionId?: string;
     subRegionId?: string;
     tagIds?: string;
+    tagMode?: string;
     published?: string;
     page?: string;
     limit?: string;
@@ -28,12 +31,13 @@ export default async function ToursPage({
   const session = await getSession();
   if (!session) redirect(adminUrl("/login"));
 
-  const { q, regionId, subRegionId, tagIds, published, page: pageParam, limit: limitParam, sortMode } =
+  const { q, regionId, subRegionId, tagIds, tagMode, published, page: pageParam, limit: limitParam, sortMode } =
     await searchParams;
 
   const isSortMode = sortMode === "1" && !!subRegionId;
 
   const tagIdList = tagIds ? tagIds.split(",").filter(Boolean) : [];
+  const tagAll = tagMode === "all";
   const hasFilters = !!(q || regionId || subRegionId || tagIdList.length > 0 || published);
 
   const parsedLimit = parseInt(limitParam ?? "20", 10);
@@ -49,7 +53,14 @@ export default async function ToursPage({
     if (q) where.name = { contains: q, mode: "insensitive" };
     if (subRegionId) where.subRegionId = subRegionId;
     else if (regionId) where.subRegion = { regionId };
-    if (tagIdList.length > 0) where.tags = { some: { id: { in: tagIdList } } };
+    if (tagIdList.length > 0) {
+      if (tagAll) {
+        // Every selected tag must be present: one `some` condition per tag.
+        where.AND = tagIdList.map((id) => ({ tags: { some: { id } } }));
+      } else {
+        where.tags = { some: { id: { in: tagIdList } } };
+      }
+    }
     if (published === "true") where.published = true;
     else if (published === "false") where.published = false;
   }
@@ -77,6 +88,7 @@ export default async function ToursPage({
       select: {
         id: true,
         name: true,
+        code: true,
         subRegions: {
           orderBy: { sortOrder: "asc" },
           select: { id: true, name: true },
@@ -93,6 +105,7 @@ export default async function ToursPage({
   const toursForClient = tours.map((t) => ({
     ...t,
     thumbnail: t.thumbnailKey ? storage.publicUrl(t.thumbnailKey) : null,
+    crop: normalizeCrop(t.thumbnailCrop),
   }));
 
   const sortModeSubRegion = isSortMode
@@ -109,6 +122,7 @@ export default async function ToursPage({
     if (regionId) baseQs.set("regionId", regionId);
     if (subRegionId) baseQs.set("subRegionId", subRegionId);
     if (tagIds) baseQs.set("tagIds", tagIds);
+    if (tagAll && tagIdList.length > 1) baseQs.set("tagMode", "all");
     if (published) baseQs.set("published", published);
     if (pageSize !== 20) baseQs.set("limit", String(pageSize));
   }
@@ -125,7 +139,7 @@ export default async function ToursPage({
 
   const listKey = isSortMode
     ? `sortMode|${subRegionId ?? ""}`
-    : `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagIds ?? ""}|${published ?? ""}|${currentPage}|${pageSize}`;
+    : `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagIds ?? ""}|${tagAll ? "all" : "any"}|${published ?? ""}|${currentPage}|${pageSize}`;
 
   const returnUrlQs = new URLSearchParams(baseQs.toString());
   if (!isSortMode && currentPage > 1) returnUrlQs.set("page", String(currentPage));
@@ -148,6 +162,23 @@ export default async function ToursPage({
           </Link>
         )}
       </div>
+
+      {!isSortMode && (
+        <div className="mb-6">
+          <ImportExportPanel
+            moduleLabel="旅遊方案"
+            exportHref="/api/admin/tours/export"
+            templateHref="/api/admin/tours/export?template=1"
+            previewUrl="/api/admin/tours/import/preview"
+            commitUrl="/api/admin/tours/import/commit"
+            columnsHint="ProductID、主分類、次分類、標籤（逗號分隔）、行程名稱、價格、行程簡介、發布(Y/N)；匯出依主分類分工作表、依 ProductID 排序"
+            exportRegions={regions.map((r) => ({
+              id: r.id,
+              label: r.code ? `${r.code} ${r.name}` : r.name,
+            }))}
+          />
+        </div>
+      )}
 
       {isSortMode && sortModeSubRegion && (
         <div className="mb-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
@@ -174,6 +205,23 @@ export default async function ToursPage({
           {hasFilters
             ? `篩選後 ${filteredCount} 筆（共 ${allCount} 筆）`
             : `共 ${allCount} 筆`}
+        </p>
+      )}
+
+      {!isSortMode && tagAll && tagIdList.length > 1 && filteredCount === 0 && (
+        <p className="mb-3 text-xs text-gray-500">
+          找不到同時符合所有標籤的行程，試試
+          <Link
+            href={(() => {
+              const p = new URLSearchParams(baseQs.toString());
+              p.delete("tagMode");
+              return `${adminUrl("/tours")}?${p.toString()}`;
+            })()}
+            className="mx-1 font-medium text-[#D12351] hover:underline"
+          >
+            改用「符合任一標籤」
+          </Link>
+          。
         </p>
       )}
 

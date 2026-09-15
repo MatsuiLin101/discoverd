@@ -15,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
     db.tour.findMany({
       where: { published: true },
-      select: { slug: true },
+      select: { slug: true, productId: true },
     }),
   ]);
 
@@ -34,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   const tourEntries: MetadataRoute.Sitemap = tours.map((t) => ({
-    url: `${base}/tours/${t.slug}`,
+    url: `${base}/tours/${t.productId ?? t.slug}`,
     changeFrequency: "weekly",
     priority: 0.9,
   }));
