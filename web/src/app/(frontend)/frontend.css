@@ -444,6 +444,11 @@
   border: 1px dashed var(--line-2); border-radius: 18px;
   font-family: var(--fh-sans); font-size: 20px; color: var(--ink-3); font-weight: 300;
 }
+.fh-empty-link {
+  font: inherit; color: var(--accent); background: none; border: none;
+  padding: 0; cursor: pointer; text-decoration: underline;
+}
+.fh-empty-link:hover { color: var(--accent-2); }
 
 /* =====================================================
    ADVANCED SEARCH — /search
@@ -473,9 +478,11 @@
 /* Reuse .fh-subtabs for the category rows; no extra top margin inside a group */
 .fh-searchbox .fh-subtabs { margin: 0; }
 
+.fh-tag-search { max-width: 320px; margin-bottom: 10px; }
 .fh-tag-mode { display: flex; gap: 8px; margin-bottom: 10px; }
 .fh-tag-mode .fh-tag-chip { padding: 6px 14px; font-size: 12px; }
 .fh-tag-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.fh-tag-empty { font-size: 13px; color: var(--ink-2); }
 .fh-tag-chip {
   font-family: var(--fh-sans); font-size: 13px; letter-spacing: 0.04em;
   padding: 8px 16px; border-radius: 999px;
