@@ -180,7 +180,7 @@ export default function AiThumbnailCandidates({
           type="text"
           value={hint}
           onChange={(e) => setHint(e.target.value)}
-          placeholder="重點提示（選填），例如：櫻花、夜景"
+          placeholder="額外重點提示（選填），例如：櫻花、夜景"
           className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-[#D12351]"
         />
         <button
@@ -202,9 +202,11 @@ export default function AiThumbnailCandidates({
       </div>
 
       <p className="mt-1.5 text-xs text-gray-400">
-        由 Manus 產生，需稍候（可離開後再回來查看）。可多次生成挑選（{activeCount}/{MAX}）。
-        重點提示為選填，會「附加」在設定好的縮圖提示詞範本之後（不會取代範本）；想調整整段提示詞可用「預覽提示詞」。
-        {atLimit && <span className="text-rose-500">　已達上限，請先刪除舊版本。</span>}
+        由 Manus 產生，需稍候（可離開後再回來查看），可多次生成並挑選喜歡的版本（{activeCount}/{MAX}）。
+        {atLimit && <span className="text-rose-500">已達上限，請先刪除舊版本。</span>}
+      </p>
+      <p className="mt-1 text-xs text-gray-400">
+        「額外重點提示」為選填，會附加在縮圖提示詞範本之後作為補充，不會取代範本；想調整整段提示詞可用「預覽提示詞」。
       </p>
 
       {previewOpen && (
