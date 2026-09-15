@@ -7,12 +7,16 @@ import {
   DEFAULT_DESCRIPTION_MODEL,
   DEFAULT_DESCRIPTION_PROMPT,
   DEFAULT_THUMBNAIL_PROMPT,
+  DEFAULT_THUMBNAIL_AGENT_PROFILE,
+  MANUS_AGENT_PROFILES,
 } from "@/lib/ai/prompts";
 
 const schema = z.object({
   descriptionModel: z.string().max(100).optional(),
   descriptionPrompt: z.string().max(4000).optional(),
   thumbnailPrompt: z.string().max(4000).optional(),
+  // "" clears the override (fall back to system default).
+  thumbnailAgentProfile: z.enum(["", ...MANUS_AGENT_PROFILES]).optional(),
 });
 
 export async function GET() {
@@ -29,13 +33,16 @@ export async function GET() {
       descriptionModel: pref?.descriptionModel ?? "",
       descriptionPrompt: pref?.descriptionPrompt ?? "",
       thumbnailPrompt: pref?.thumbnailPrompt ?? "",
+      thumbnailAgentProfile: pref?.thumbnailAgentProfile ?? "",
     },
     // What a blank field falls back to (system default, then built-in).
     systemDefaults: {
       descriptionModel: site.aiDescriptionModel || DEFAULT_DESCRIPTION_MODEL,
       descriptionPrompt: site.aiDescriptionPrompt || DEFAULT_DESCRIPTION_PROMPT,
       thumbnailPrompt: site.aiThumbnailPrompt || DEFAULT_THUMBNAIL_PROMPT,
+      thumbnailAgentProfile: site.aiThumbnailAgentProfile || DEFAULT_THUMBNAIL_AGENT_PROFILE,
     },
+    agentProfiles: MANUS_AGENT_PROFILES,
   });
 }
 
@@ -52,6 +59,7 @@ export async function PUT(req: NextRequest) {
     descriptionModel: norm(parsed.data.descriptionModel),
     descriptionPrompt: norm(parsed.data.descriptionPrompt),
     thumbnailPrompt: norm(parsed.data.thumbnailPrompt),
+    thumbnailAgentProfile: norm(parsed.data.thumbnailAgentProfile),
   };
 
   const pref = await db.userAiPreference.upsert({
@@ -65,6 +73,7 @@ export async function PUT(req: NextRequest) {
       descriptionModel: pref.descriptionModel ?? "",
       descriptionPrompt: pref.descriptionPrompt ?? "",
       thumbnailPrompt: pref.thumbnailPrompt ?? "",
+      thumbnailAgentProfile: pref.thumbnailAgentProfile ?? "",
     },
   });
 }

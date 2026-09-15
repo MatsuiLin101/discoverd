@@ -45,13 +45,14 @@ export async function testManusKey(
 export async function createThumbnailTask(opts: {
   apiKey: string;
   prompt: string;
+  agentProfile?: string;
 }): Promise<string> {
   const res = await fetch(`${BASE}/v2/task.create`, {
     method: "POST",
     headers: headers(opts.apiKey),
     body: JSON.stringify({
       message: { content: opts.prompt },
-      agent_profile: "standard",
+      agent_profile: opts.agentProfile ?? "standard",
       locale: "zh-TW",
       hide_in_task_list: true,
     }),

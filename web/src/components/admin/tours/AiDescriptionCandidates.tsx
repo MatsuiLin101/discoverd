@@ -30,6 +30,7 @@ export default function AiDescriptionCandidates({
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
+  const [model, setModel] = useState("");
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +46,16 @@ export default function AiDescriptionCandidates({
       .finally(() => setLoading(false));
   }, [tourId]);
 
+  // Pre-fill the model selector with the user's effective model.
+  useEffect(() => {
+    fetch("/api/admin/ai/effective")
+      .then((r) => r.json())
+      .then(({ data }) => {
+        if (data?.descriptionModel) setModel(data.descriptionModel);
+      })
+      .catch(() => {});
+  }, []);
+
   const atLimit = candidates.length >= MAX;
 
   async function generate(promptOverride?: string) {
@@ -55,7 +66,7 @@ export default function AiDescriptionCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/description`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride }),
+        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride, model: model.trim() || undefined }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {
@@ -102,6 +113,17 @@ export default function AiDescriptionCandidates({
 
   return (
     <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <label className="whitespace-nowrap text-xs text-gray-500">Gemini 模型</label>
+        <input
+          type="text"
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          placeholder="例如：gemini-3.6-flash"
+          className="w-56 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#D12351]"
+        />
+        <span className="text-xs text-gray-400">本次生成使用；預設為你的偏好/系統值</span>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <input
           type="text"

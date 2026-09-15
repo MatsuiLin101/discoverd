@@ -3,11 +3,9 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
 import { createThumbnailTask } from "@/lib/ai/manus";
-import { buildThumbnailPrompt } from "@/lib/ai/prompts";
+import { buildThumbnailPrompt, toAgentProfile } from "@/lib/ai/prompts";
 import { logAiUsage } from "@/lib/ai/usage";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
-
-const AGENT_PROFILE = "standard";
 
 export async function POST(
   req: NextRequest,
@@ -35,12 +33,14 @@ export async function POST(
       return NextResponse.json({ error: "尚未設定 Manus API 金鑰，請先於「AI 設定」填寫" }, { status: 400 });
     }
 
-    const { thumbnailPrompt } = await getEffectiveAiSettings(session.userId);
+    const { thumbnailPrompt, thumbnailAgentProfile } = await getEffectiveAiSettings(session.userId);
 
     const body = await req.json().catch(() => ({}));
     const hint = typeof body?.hint === "string" && body.hint.trim() ? body.hint.trim() : null;
     const promptOverride =
       typeof body?.promptOverride === "string" && body.promptOverride.trim() ? body.promptOverride : null;
+    // Per-generation override, else the effective (personal ?? system) profile.
+    const agentProfile = toAgentProfile(body?.agentProfile) ?? thumbnailAgentProfile;
 
     // Use the editor's current (possibly unsaved) form values when provided.
     const ctx = await loadTourAiContext(id, parseContextOverride(body?.context));
@@ -57,7 +57,7 @@ export async function POST(
       kind: "THUMBNAIL" as const,
       provider: "manus" as const,
       model: "manus",
-      agentProfile: AGENT_PROFILE,
+      agentProfile,
       hint,
       promptOverridden: !!promptOverride,
       promptText: fullPrompt,
@@ -65,7 +65,7 @@ export async function POST(
 
     let taskId: string;
     try {
-      taskId = await createThumbnailTask({ apiKey: keys.manus, prompt: fullPrompt });
+      taskId = await createThumbnailTask({ apiKey: keys.manus, prompt: fullPrompt, agentProfile });
     } catch (genErr) {
       void logAiUsage({
         ...usageBase,

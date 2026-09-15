@@ -24,6 +24,7 @@ export default function AiSettingsForm() {
   const [aiDescriptionModel, setAiDescriptionModel] = useState("");
   const [aiDescriptionPrompt, setAiDescriptionPrompt] = useState("");
   const [aiThumbnailPrompt, setAiThumbnailPrompt] = useState("");
+  const [aiThumbnailAgentProfile, setAiThumbnailAgentProfile] = useState("standard");
   const [geminiInputPrice, setGeminiInputPrice] = useState("");
   const [geminiOutputPrice, setGeminiOutputPrice] = useState("");
   const [manusPrice, setManusPrice] = useState("");
@@ -47,6 +48,7 @@ export default function AiSettingsForm() {
           setAiDescriptionModel(data.aiDescriptionModel ?? "");
           setAiDescriptionPrompt(data.aiDescriptionPrompt ?? "");
           setAiThumbnailPrompt(data.aiThumbnailPrompt ?? "");
+          setAiThumbnailAgentProfile(data.aiThumbnailAgentProfile ?? "standard");
           setGeminiInputPrice(data.aiGeminiInputPricePerM != null ? String(data.aiGeminiInputPricePerM) : "");
           setGeminiOutputPrice(data.aiGeminiOutputPricePerM != null ? String(data.aiGeminiOutputPricePerM) : "");
           setManusPrice(data.aiManusPricePerCredit != null ? String(data.aiManusPricePerCredit) : "");
@@ -92,6 +94,7 @@ export default function AiSettingsForm() {
           aiDescriptionModel,
           aiDescriptionPrompt,
           aiThumbnailPrompt,
+          aiThumbnailAgentProfile,
           aiGeminiInputPricePerM: geminiInputPrice.trim() ? Number(geminiInputPrice) : null,
           aiGeminiOutputPricePerM: geminiOutputPrice.trim() ? Number(geminiOutputPrice) : null,
           aiManusPricePerCredit: manusPrice.trim() ? Number(manusPrice) : null,
@@ -245,6 +248,20 @@ export default function AiSettingsForm() {
               placeholder={defaults?.thumbnailPrompt}
             />
             <p className="mt-1 text-xs text-gray-400">留空則使用內建預設；使用者可於「AI 偏好」自行覆蓋。</p>
+          </div>
+
+          <div>
+            <label className={labelClass}>Manus 縮圖品質（agent profile）</label>
+            <select
+              value={aiThumbnailAgentProfile}
+              onChange={(e) => setAiThumbnailAgentProfile(e.target.value)}
+              className={inputClass}
+            >
+              <option value="lite">lite（輕量，較省 credit）</option>
+              <option value="standard">standard（標準，預設）</option>
+              <option value="max">max（高品質，較耗 credit）</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-400">全站預設值；使用者可於「AI 偏好」覆蓋，生成時亦可臨時更換。</p>
           </div>
 
           <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">

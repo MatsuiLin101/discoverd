@@ -227,6 +227,8 @@ model SiteSetting {
   aiDescriptionModel  String   @default("gemini-3.6-flash")
   aiDescriptionPrompt String?
   aiThumbnailPrompt   String?
+  // Manus agent profile for thumbnails: "lite" | "standard" | "max".
+  aiThumbnailAgentProfile String @default("standard")
   // Optional unit prices for the AI usage cost estimate (in NT$). Null = don't
   // show a cost. Gemini bills input and output tokens (thinking counts as
   // output) at different rates, per 1,000,000 tokens.
@@ -290,6 +292,7 @@ model UserAiPreference {
   descriptionModel  String?
   descriptionPrompt String?
   thumbnailPrompt   String?
+  thumbnailAgentProfile String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }

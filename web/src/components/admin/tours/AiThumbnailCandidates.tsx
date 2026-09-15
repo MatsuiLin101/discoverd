@@ -27,6 +27,7 @@ export default function AiThumbnailCandidates({
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
+  const [agentProfile, setAgentProfile] = useState("standard");
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +64,16 @@ export default function AiThumbnailCandidates({
       .finally(() => setLoading(false));
   }, [tourId]);
 
+  // Pre-fill the profile selector with the user's effective profile.
+  useEffect(() => {
+    fetch("/api/admin/ai/effective")
+      .then((r) => r.json())
+      .then(({ data }) => {
+        if (data?.thumbnailAgentProfile) setAgentProfile(data.thumbnailAgentProfile);
+      })
+      .catch(() => {});
+  }, []);
+
   // Poll while any candidate is pending.
   useEffect(() => {
     const hasPending = candidates.some((c) => c.status === "PENDING");
@@ -81,7 +92,7 @@ export default function AiThumbnailCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/thumbnail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride }),
+        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride, agentProfile }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {
@@ -128,6 +139,19 @@ export default function AiThumbnailCandidates({
 
   return (
     <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <label className="whitespace-nowrap text-xs text-gray-500">Manus 品質</label>
+        <select
+          value={agentProfile}
+          onChange={(e) => setAgentProfile(e.target.value)}
+          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#D12351]"
+        >
+          <option value="lite">lite（省 credit）</option>
+          <option value="standard">standard</option>
+          <option value="max">max（高品質）</option>
+        </select>
+        <span className="text-xs text-gray-400">本次生成使用；預設為你的偏好/系統值</span>
+      </div>
       <div className="flex flex-wrap items-center gap-2">
         <input
           type="text"

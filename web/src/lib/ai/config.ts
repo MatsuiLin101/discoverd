@@ -4,6 +4,7 @@ import {
   DEFAULT_DESCRIPTION_MODEL,
   DEFAULT_DESCRIPTION_PROMPT,
   DEFAULT_THUMBNAIL_PROMPT,
+  DEFAULT_THUMBNAIL_AGENT_PROFILE,
 } from "./prompts";
 
 /** Load (or create) the singleton SiteSetting row. */
@@ -50,5 +51,7 @@ export async function getEffectiveAiSettings(userId: string) {
       pref?.descriptionPrompt || s.aiDescriptionPrompt || DEFAULT_DESCRIPTION_PROMPT,
     thumbnailPrompt:
       pref?.thumbnailPrompt || s.aiThumbnailPrompt || DEFAULT_THUMBNAIL_PROMPT,
+    thumbnailAgentProfile:
+      pref?.thumbnailAgentProfile || s.aiThumbnailAgentProfile || DEFAULT_THUMBNAIL_AGENT_PROFILE,
   };
 }

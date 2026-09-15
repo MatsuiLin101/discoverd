@@ -11,6 +11,18 @@
 
 export const DEFAULT_DESCRIPTION_MODEL = "gemini-3.6-flash";
 
+/** Manus agent profiles (品質/耗用 credit 由低到高) and the system fallback. */
+export const MANUS_AGENT_PROFILES = ["lite", "standard", "max"] as const;
+export type ManusAgentProfile = (typeof MANUS_AGENT_PROFILES)[number];
+export const DEFAULT_THUMBNAIL_AGENT_PROFILE: ManusAgentProfile = "standard";
+
+/** Narrow an untrusted value to a valid agent profile, or null. */
+export function toAgentProfile(v: unknown): ManusAgentProfile | null {
+  return typeof v === "string" && (MANUS_AGENT_PROFILES as readonly string[]).includes(v)
+    ? (v as ManusAgentProfile)
+    : null;
+}
+
 export const DEFAULT_DESCRIPTION_PROMPT = `你是一位專業的旅遊文案編輯。請根據提供的行程資訊（可能包含行程 PDF 內容），撰寫一段吸引人的繁體中文「行程簡介」。
 
 要求：

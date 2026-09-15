@@ -10,12 +10,14 @@ interface Defaults {
   descriptionModel: string;
   descriptionPrompt: string;
   thumbnailPrompt: string;
+  thumbnailAgentProfile: string;
 }
 
 export default function AiPreferencesForm() {
   const [descriptionModel, setDescriptionModel] = useState("");
   const [descriptionPrompt, setDescriptionPrompt] = useState("");
   const [thumbnailPrompt, setThumbnailPrompt] = useState("");
+  const [thumbnailAgentProfile, setThumbnailAgentProfile] = useState("");
   const [defaults, setDefaults] = useState<Defaults | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,7 @@ export default function AiPreferencesForm() {
           setDescriptionModel(data.descriptionModel ?? "");
           setDescriptionPrompt(data.descriptionPrompt ?? "");
           setThumbnailPrompt(data.thumbnailPrompt ?? "");
+          setThumbnailAgentProfile(data.thumbnailAgentProfile ?? "");
         }
         if (systemDefaults) setDefaults(systemDefaults);
       })
@@ -46,7 +49,7 @@ export default function AiPreferencesForm() {
       const res = await fetch("/api/admin/ai/preferences", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ descriptionModel, descriptionPrompt, thumbnailPrompt }),
+        body: JSON.stringify({ descriptionModel, descriptionPrompt, thumbnailPrompt, thumbnailAgentProfile }),
       });
       const { data, error } = await res.json();
       if (data) {
@@ -54,6 +57,7 @@ export default function AiPreferencesForm() {
         setDescriptionModel(data.descriptionModel ?? "");
         setDescriptionPrompt(data.descriptionPrompt ?? "");
         setThumbnailPrompt(data.thumbnailPrompt ?? "");
+        setThumbnailAgentProfile(data.thumbnailAgentProfile ?? "");
       } else {
         setError(error ?? "儲存失敗");
       }
@@ -68,6 +72,7 @@ export default function AiPreferencesForm() {
     setDescriptionModel("");
     setDescriptionPrompt("");
     setThumbnailPrompt("");
+    setThumbnailAgentProfile("");
   }
 
   return (
@@ -114,6 +119,20 @@ export default function AiPreferencesForm() {
               className={inputClass}
               placeholder={defaults?.thumbnailPrompt}
             />
+          </div>
+
+          <div>
+            <label className={labelClass}>Manus 縮圖品質（agent profile）</label>
+            <select
+              value={thumbnailAgentProfile}
+              onChange={(e) => setThumbnailAgentProfile(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">沿用系統預設（{defaults?.thumbnailAgentProfile ?? "standard"}）</option>
+              <option value="lite">lite（輕量，較省 credit）</option>
+              <option value="standard">standard（標準）</option>
+              <option value="max">max（高品質，較耗 credit）</option>
+            </select>
           </div>
 
           {error && <p className="text-sm text-rose-600">{error}</p>}

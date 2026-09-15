@@ -30,12 +30,16 @@ export async function POST(
       return NextResponse.json({ error: "尚未設定 Gemini API 金鑰，請先於「AI 設定」填寫" }, { status: 400 });
     }
 
-    const { descriptionModel, descriptionPrompt } = await getEffectiveAiSettings(session.userId);
+    const effective = await getEffectiveAiSettings(session.userId);
+    const descriptionPrompt = effective.descriptionPrompt;
 
     const body = await req.json().catch(() => ({}));
     const hint = typeof body?.hint === "string" && body.hint.trim() ? body.hint.trim() : null;
     const promptOverride =
       typeof body?.promptOverride === "string" && body.promptOverride.trim() ? body.promptOverride : null;
+    // Per-generation model override, else the effective (personal ?? system) model.
+    const descriptionModel =
+      typeof body?.model === "string" && body.model.trim() ? body.model.trim() : effective.descriptionModel;
 
     // Use the editor's current (possibly unsaved) form values when provided.
     const ctx = await loadTourAiContext(id, parseContextOverride(body?.context));

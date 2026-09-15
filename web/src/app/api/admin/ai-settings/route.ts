@@ -9,6 +9,8 @@ import {
   DEFAULT_DESCRIPTION_MODEL,
   DEFAULT_DESCRIPTION_PROMPT,
   DEFAULT_THUMBNAIL_PROMPT,
+  DEFAULT_THUMBNAIL_AGENT_PROFILE,
+  MANUS_AGENT_PROFILES,
 } from "@/lib/ai/prompts";
 
 const SINGLETON_ID = "singleton";
@@ -22,6 +24,7 @@ const schema = z.object({
   aiDescriptionModel: z.string().min(1, "請輸入簡介模型名稱").max(100),
   aiDescriptionPrompt: z.string().max(4000).optional(),
   aiThumbnailPrompt: z.string().max(4000).optional(),
+  aiThumbnailAgentProfile: z.enum(MANUS_AGENT_PROFILES).optional(),
   // Cost estimate unit prices (NT$); null/undefined clears.
   aiGeminiInputPricePerM: z.number().min(0).nullable().optional(),
   aiGeminiOutputPricePerM: z.number().min(0).nullable().optional(),
@@ -42,6 +45,7 @@ export async function GET() {
       aiDescriptionModel: s.aiDescriptionModel,
       aiDescriptionPrompt: s.aiDescriptionPrompt ?? "",
       aiThumbnailPrompt: s.aiThumbnailPrompt ?? "",
+      aiThumbnailAgentProfile: s.aiThumbnailAgentProfile,
       aiGeminiInputPricePerM: s.aiGeminiInputPricePerM,
       aiGeminiOutputPricePerM: s.aiGeminiOutputPricePerM,
       aiManusPricePerCredit: s.aiManusPricePerCredit,
@@ -51,7 +55,9 @@ export async function GET() {
       descriptionModel: DEFAULT_DESCRIPTION_MODEL,
       descriptionPrompt: DEFAULT_DESCRIPTION_PROMPT,
       thumbnailPrompt: DEFAULT_THUMBNAIL_PROMPT,
+      thumbnailAgentProfile: DEFAULT_THUMBNAIL_AGENT_PROFILE,
     },
+    agentProfiles: MANUS_AGENT_PROFILES,
   });
 }
 
@@ -74,6 +80,7 @@ export async function PUT(req: NextRequest) {
     aiDescriptionModel,
     aiDescriptionPrompt,
     aiThumbnailPrompt,
+    aiThumbnailAgentProfile,
     aiGeminiInputPricePerM,
     aiGeminiOutputPricePerM,
     aiManusPricePerCredit,
@@ -92,6 +99,7 @@ export async function PUT(req: NextRequest) {
     aiDescriptionModel,
     aiDescriptionPrompt: aiDescriptionPrompt?.trim() ? aiDescriptionPrompt : null,
     aiThumbnailPrompt: aiThumbnailPrompt?.trim() ? aiThumbnailPrompt : null,
+    ...(aiThumbnailAgentProfile ? { aiThumbnailAgentProfile } : {}),
     aiGeminiInputPricePerM: aiGeminiInputPricePerM ?? null,
     aiGeminiOutputPricePerM: aiGeminiOutputPricePerM ?? null,
     aiManusPricePerCredit: aiManusPricePerCredit ?? null,
