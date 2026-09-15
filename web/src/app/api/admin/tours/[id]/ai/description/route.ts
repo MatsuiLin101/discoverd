@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getAiKeys, getUserAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
 import { buildDescriptionPrompt } from "@/lib/ai/prompts";
+import { GeminiHttpError } from "@/lib/ai/gemini";
 import { generateDescriptionWithFallback } from "@/lib/ai/fallback";
 import { logAiUsage } from "@/lib/ai/usage";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
@@ -40,6 +41,12 @@ export async function POST(
     // Per-generation model override, else the effective (personal ?? system) model.
     const descriptionModel =
       typeof body?.model === "string" && body.model.trim() ? body.model.trim() : effective.descriptionModel;
+    // Quota choice: "shared" forces the shared key; otherwise personal-first.
+    const forceShared = body?.quota === "shared";
+    const personalGemini = forceShared ? null : personal.gemini;
+    if (forceShared && !shared.gemini) {
+      return NextResponse.json({ error: "已選擇公用額度，但尚未設定公用 Gemini 金鑰" }, { status: 400 });
+    }
 
     // Use the editor's current (possibly unsaved) form values when provided.
     const ctx = await loadTourAiContext(id, parseContextOverride(body?.context));
@@ -67,7 +74,7 @@ export async function POST(
     let result, keyOwner;
     try {
       ({ result, keyOwner } = await generateDescriptionWithFallback({
-        personalKey: personal.gemini,
+        personalKey: personalGemini,
         sharedKey: shared.gemini,
         model: descriptionModel,
         prompt,
@@ -77,7 +84,7 @@ export async function POST(
       void logAiUsage({
         ...usageBase,
         status: "FAILED",
-        keyOwner: personal.gemini ? "personal" : "shared",
+        keyOwner: personalGemini ? "personal" : "shared",
         latencyMs: Date.now() - startedAt,
         error: genErr instanceof Error ? genErr.message : String(genErr),
       });
@@ -116,7 +123,12 @@ export async function POST(
     return NextResponse.json({ data: candidate }, { status: 201 });
   } catch (e) {
     console.error("[POST /api/admin/tours/[id]/ai/description]", e);
-    const message = e instanceof Error ? e.message : "伺服器錯誤，請稍後再試";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const quotaExhausted = e instanceof GeminiHttpError && e.status === 429;
+    const message = quotaExhausted
+      ? "Gemini 額度已用完（個人與公用皆無可用額度），請稍後再試或改用其他金鑰"
+      : e instanceof Error
+        ? e.message
+        : "伺服器錯誤，請稍後再試";
+    return NextResponse.json({ error: message }, { status: quotaExhausted ? 429 : 500 });
   }
 }

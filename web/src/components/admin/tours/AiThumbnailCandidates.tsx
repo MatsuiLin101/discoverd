@@ -30,6 +30,8 @@ export default function AiThumbnailCandidates({
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
   const [agentProfile, setAgentProfile] = useState("standard");
+  const [hasPersonalKey, setHasPersonalKey] = useState(false);
+  const [quota, setQuota] = useState<"personal" | "shared">("personal");
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +74,7 @@ export default function AiThumbnailCandidates({
       .then((r) => r.json())
       .then(({ data }) => {
         if (data?.thumbnailAgentProfile) setAgentProfile(data.thumbnailAgentProfile);
+        if (data?.hasPersonalManusKey) setHasPersonalKey(true);
       })
       .catch(() => {});
   }, []);
@@ -94,7 +97,7 @@ export default function AiThumbnailCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/thumbnail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride, agentProfile }),
+        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride, agentProfile, quota: hasPersonalKey ? quota : undefined }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {
@@ -154,6 +157,19 @@ export default function AiThumbnailCandidates({
         </select>
         <span className="text-xs text-gray-400">本次生成使用；預設為你的偏好/系統值</span>
       </div>
+      {hasPersonalKey && (
+        <div className="mb-2 flex items-center gap-2">
+          <label className="whitespace-nowrap text-xs text-gray-500">額度來源</label>
+          <select
+            value={quota}
+            onChange={(e) => setQuota(e.target.value as "personal" | "shared")}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#D12351]"
+          >
+            <option value="personal">個人額度（餘額不足自動改用公用）</option>
+            <option value="shared">公用額度</option>
+          </select>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <input
           type="text"

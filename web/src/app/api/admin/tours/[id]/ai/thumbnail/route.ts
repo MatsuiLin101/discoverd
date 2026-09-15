@@ -37,9 +37,16 @@ export async function POST(
     if (!shared.manus && !personal.manus) {
       return NextResponse.json({ error: "尚未設定 Manus API 金鑰，請先於「AI 設定」或「AI 偏好」填寫" }, { status: 400 });
     }
+
+    const reqBody = await req.json().catch(() => ({}));
+    // Quota choice: "shared" forces the shared key; otherwise personal-first.
+    const forceShared = reqBody?.quota === "shared";
+    if (forceShared && !shared.manus) {
+      return NextResponse.json({ error: "已選擇公用額度，但尚未設定公用 Manus 金鑰" }, { status: 400 });
+    }
     // Prefer the personal key when its balance clears the threshold; else shared.
     const { key: manusKey, keyOwner } = await selectManusKey({
-      personalKey: personal.manus,
+      personalKey: forceShared ? null : personal.manus,
       sharedKey: shared.manus,
       threshold: site.aiManusPersonalThreshold,
     });
@@ -49,7 +56,7 @@ export async function POST(
 
     const { thumbnailPrompt, thumbnailAgentProfile } = await getEffectiveAiSettings(session.userId);
 
-    const body = await req.json().catch(() => ({}));
+    const body = reqBody;
     const hint = typeof body?.hint === "string" && body.hint.trim() ? body.hint.trim() : null;
     const promptOverride =
       typeof body?.promptOverride === "string" && body.promptOverride.trim() ? body.promptOverride : null;
