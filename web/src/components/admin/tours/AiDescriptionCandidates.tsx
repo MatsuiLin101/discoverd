@@ -175,6 +175,7 @@ export default function AiDescriptionCandidates({
 
       <p className="mt-1.5 text-xs text-gray-400">
         會參考行程名稱、地區、標籤與已上傳的 PDF 內容生成，可多次生成挑選（{candidates.length}/{MAX}）。
+        重點提示為選填，會「附加」在設定好的提示詞範本之後（不會取代範本）；想調整整段提示詞可用「預覽提示詞」。
         {atLimit && <span className="text-rose-500">　已達上限，請先刪除舊版本。</span>}
       </p>
 

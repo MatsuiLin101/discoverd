@@ -203,6 +203,7 @@ export default function AiThumbnailCandidates({
 
       <p className="mt-1.5 text-xs text-gray-400">
         由 Manus 產生，需稍候（可離開後再回來查看）。可多次生成挑選（{activeCount}/{MAX}）。
+        重點提示為選填，會「附加」在設定好的縮圖提示詞範本之後（不會取代範本）；想調整整段提示詞可用「預覽提示詞」。
         {atLimit && <span className="text-rose-500">　已達上限，請先刪除舊版本。</span>}
       </p>
 
