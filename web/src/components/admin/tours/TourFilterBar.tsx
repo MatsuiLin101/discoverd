@@ -159,7 +159,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
             <button
               onClick={() => setTagPanelOpen((o) => !o)}
               aria-expanded={tagPanelOpen}
-              className={`${controlH} flex items-center gap-1.5 rounded-lg border px-3 text-sm outline-none transition whitespace-nowrap ${
+              className={`${controlH} flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 text-sm outline-none transition whitespace-nowrap ${
                 currentTagIds.length > 0
                   ? "border-[#D12351] bg-rose-50 text-[#D12351]"
                   : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
@@ -265,7 +265,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
                     key={tag.id}
                     type="button"
                     onClick={() => toggleTagId(tag.id)}
-                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                       checked
                         ? "border-[#D12351] bg-rose-50 text-[#D12351]"
                         : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
@@ -288,7 +288,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
                 params.delete("page");
                 router.replace(`${adminPath}/tours?${params.toString()}`);
               }}
-              className="text-xs text-gray-400 hover:text-gray-600"
+              className="cursor-pointer text-xs text-gray-400 hover:text-gray-600"
             >
               清除標籤選取
             </button>
