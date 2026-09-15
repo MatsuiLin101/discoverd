@@ -19,6 +19,7 @@ interface Props {
     region?: string;
     sub?: string;
     tags?: string | string[];
+    tagMode?: string;
   }>;
 }
 
@@ -35,11 +36,13 @@ function toList(value: string | string[] | undefined): string[] {
 export default async function SearchPage({ searchParams }: Props) {
   const sp = await searchParams;
 
+  const tagMode = sp.tagMode === "all" ? "all" : "any";
   const filters: SearchFilters = {
     q: sp.q?.trim() || undefined,
     region: sp.region?.trim() || undefined,
     sub: sp.sub?.trim() || undefined,
     tags: toList(sp.tags),
+    tagMode,
   };
 
   const [facets, initial] = await Promise.all([
@@ -51,7 +54,7 @@ export default async function SearchPage({ searchParams }: Props) {
   // header "檢視所有結果" button) remounts the client experience with the new
   // filters. Our own in-page shallow URL updates never reach the server, so
   // this key stays stable while the user interacts with the controls.
-  const experienceKey = `${filters.q ?? ""}|${filters.region ?? ""}|${filters.sub ?? ""}|${(filters.tags ?? []).join(",")}`;
+  const experienceKey = `${filters.q ?? ""}|${filters.region ?? ""}|${filters.sub ?? ""}|${(filters.tags ?? []).join(",")}|${tagMode}`;
 
   return (
     <>
@@ -77,6 +80,7 @@ export default async function SearchPage({ searchParams }: Props) {
               region: filters.region ?? "",
               sub: filters.sub ?? "",
               tags: filters.tags ?? [],
+              tagMode,
             }}
             initialResponse={initial}
           />

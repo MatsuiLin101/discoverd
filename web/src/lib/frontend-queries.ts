@@ -200,7 +200,12 @@ function buildSearchWhere(f: SearchFilters): Prisma.TourWhereInput | null {
   }
 
   if (tags.length > 0) {
-    AND.push({ tags: { some: { name: { in: tags } } } });
+    if (f.tagMode === "all") {
+      // Every selected tag must be present: one `some` condition per tag.
+      for (const name of tags) AND.push({ tags: { some: { name } } });
+    } else {
+      AND.push({ tags: { some: { name: { in: tags } } } });
+    }
   }
 
   return { AND };
