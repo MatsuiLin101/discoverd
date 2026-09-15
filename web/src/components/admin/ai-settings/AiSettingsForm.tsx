@@ -25,6 +25,7 @@ export default function AiSettingsForm() {
   const [aiDescriptionPrompt, setAiDescriptionPrompt] = useState("");
   const [aiThumbnailPrompt, setAiThumbnailPrompt] = useState("");
   const [aiThumbnailAgentProfile, setAiThumbnailAgentProfile] = useState("standard");
+  const [manusThreshold, setManusThreshold] = useState("30");
   const [geminiInputPrice, setGeminiInputPrice] = useState("");
   const [geminiOutputPrice, setGeminiOutputPrice] = useState("");
   const [manusPrice, setManusPrice] = useState("");
@@ -49,6 +50,7 @@ export default function AiSettingsForm() {
           setAiDescriptionPrompt(data.aiDescriptionPrompt ?? "");
           setAiThumbnailPrompt(data.aiThumbnailPrompt ?? "");
           setAiThumbnailAgentProfile(data.aiThumbnailAgentProfile ?? "standard");
+          setManusThreshold(data.aiManusPersonalThreshold != null ? String(data.aiManusPersonalThreshold) : "30");
           setGeminiInputPrice(data.aiGeminiInputPricePerM != null ? String(data.aiGeminiInputPricePerM) : "");
           setGeminiOutputPrice(data.aiGeminiOutputPricePerM != null ? String(data.aiGeminiOutputPricePerM) : "");
           setManusPrice(data.aiManusPricePerCredit != null ? String(data.aiManusPricePerCredit) : "");
@@ -95,6 +97,7 @@ export default function AiSettingsForm() {
           aiDescriptionPrompt,
           aiThumbnailPrompt,
           aiThumbnailAgentProfile,
+          aiManusPersonalThreshold: manusThreshold.trim() ? Number(manusThreshold) : undefined,
           aiGeminiInputPricePerM: geminiInputPrice.trim() ? Number(geminiInputPrice) : null,
           aiGeminiOutputPricePerM: geminiOutputPrice.trim() ? Number(geminiOutputPrice) : null,
           aiManusPricePerCredit: manusPrice.trim() ? Number(manusPrice) : null,
@@ -262,6 +265,22 @@ export default function AiSettingsForm() {
               <option value="max">max（高品質，較耗 credit）</option>
             </select>
             <p className="mt-1 text-xs text-gray-400">全站預設值；使用者可於「AI 偏好」覆蓋，生成時亦可臨時更換。</p>
+          </div>
+
+          <div>
+            <label className={labelClass}>Manus 個人額度門檻（credits）</label>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={manusThreshold}
+              onChange={(e) => setManusThreshold(e.target.value)}
+              className={inputClass}
+              placeholder="30"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              使用者設定個人 Manus 金鑰時，餘額需 ≥ 此門檻才會用個人額度，否則改用公用額度（預設 30）。
+            </p>
           </div>
 
           <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
