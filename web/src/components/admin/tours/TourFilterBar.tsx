@@ -175,7 +175,15 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
                   : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
               }`}
             >
-              {currentTagIds.length > 0 ? `標籤 (${currentTagIds.length})` : "標籤"}
+              {currentTagIds.length > 0
+                ? `標籤 (${currentTagIds.length})${
+                    currentTagIds.length > 1
+                      ? currentTagMode === "all"
+                        ? "·全部符合"
+                        : "·任一符合"
+                      : ""
+                  }`
+                : "標籤"}
               <svg
                 width="12"
                 height="12"

@@ -208,6 +208,23 @@ export default async function ToursPage({
         </p>
       )}
 
+      {!isSortMode && tagAll && tagIdList.length > 1 && filteredCount === 0 && (
+        <p className="mb-3 text-xs text-gray-500">
+          找不到同時符合所有標籤的行程，試試
+          <Link
+            href={(() => {
+              const p = new URLSearchParams(baseQs.toString());
+              p.delete("tagMode");
+              return `${adminUrl("/tours")}?${p.toString()}`;
+            })()}
+            className="mx-1 font-medium text-[#D12351] hover:underline"
+          >
+            改用「符合任一標籤」
+          </Link>
+          。
+        </p>
+      )}
+
       <TourListClient
         key={listKey}
         tours={toursForClient}
