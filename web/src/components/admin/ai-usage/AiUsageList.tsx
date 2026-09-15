@@ -22,6 +22,7 @@ interface Row {
   totalTokens: number | null;
   taskId: string | null;
   agentProfile: string | null;
+  keyOwner: string | null;
   latencyMs: number | null;
   resultRef: string | null;
   outputChars: number | null;
@@ -37,8 +38,16 @@ interface Summary {
   success: number;
   failed: number;
   pending: number;
+  personalCount: number;
   estimatedCost: number | null;
 }
+
+const KEY_OWNER_SHORT: Record<string, string> = {
+  personal: "個人",
+  shared: "公用",
+  fallback_quota: "公用(退回)",
+  fallback_error: "公用(退回)",
+};
 
 interface UserOpt {
   userId: string | null;
@@ -147,7 +156,10 @@ export default function AiUsageList() {
             <p className="mt-0.5 text-lg font-bold text-gray-800">
               {summary.estimatedCost != null ? `NT$ ${summary.estimatedCost.toFixed(2)}` : "—"}
             </p>
-            <p className="text-xs text-gray-400">{summary.estimatedCost == null ? "未設定單價" : "依 AI 設定單價"}</p>
+            <p className="text-xs text-gray-400">
+              {summary.estimatedCost == null ? "未設定單價" : "依 AI 設定單價"}
+              {summary.personalCount > 0 ? `・不含個人額度 ${summary.personalCount} 筆` : ""}
+            </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-3">
             <p className="text-xs text-gray-400">篩選結果</p>
@@ -199,6 +211,7 @@ export default function AiUsageList() {
                 <th className="px-3 py-2 font-medium">類型</th>
                 <th className="px-3 py-2 font-medium">模型</th>
                 <th className="px-3 py-2 font-medium">狀態</th>
+                <th className="px-3 py-2 font-medium">額度</th>
                 <th className="px-3 py-2 font-medium">用量</th>
                 <th className="px-3 py-2 font-medium">耗時</th>
                 <th className="px-3 py-2 font-medium">詳情</th>
@@ -217,6 +230,15 @@ export default function AiUsageList() {
                       <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLE[r.status]}`}>
                         {STATUS_LABEL[r.status]}
                       </span>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2">
+                      {r.keyOwner ? (
+                        <span className={r.keyOwner === "personal" ? "text-emerald-600" : "text-gray-500"}>
+                          {KEY_OWNER_SHORT[r.keyOwner] ?? r.keyOwner}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-gray-500">
                       {r.kind === "DESCRIPTION"
@@ -242,7 +264,7 @@ export default function AiUsageList() {
                   </tr>
                   {expanded === r.id && (
                     <tr className="bg-gray-50">
-                      <td colSpan={isAdmin ? 9 : 8} className="px-3 py-3">
+                      <td colSpan={isAdmin ? 10 : 9} className="px-3 py-3">
                         <div className="space-y-1.5 text-xs text-gray-600">
                           {r.error && <p className="text-rose-600">錯誤：{r.error}</p>}
                           <p>提供者 / 模型：{r.provider}{r.model ? ` / ${r.model}` : ""}{r.agentProfile ? `（${r.agentProfile}）` : ""}</p>

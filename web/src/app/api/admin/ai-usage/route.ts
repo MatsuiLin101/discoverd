@@ -34,13 +34,21 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, Number(sp.get("page")) || 1);
   const skip = (page - 1) * PAGE_SIZE;
 
-  const [rows, total, sums, byStatus, site, users] = await Promise.all([
+  // Company cost excludes usage paid by a user's personal key.
+  const companyWhere: Prisma.AiUsageLogWhereInput = { ...where, NOT: { keyOwner: "personal" } };
+
+  const [rows, total, sums, costSums, personalCount, byStatus, site, users] = await Promise.all([
     db.aiUsageLog.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: PAGE_SIZE }),
     db.aiUsageLog.count({ where }),
     db.aiUsageLog.aggregate({
       where,
       _sum: { inputTokens: true, outputTokens: true, thoughtsTokens: true, totalTokens: true, creditsUsed: true },
     }),
+    db.aiUsageLog.aggregate({
+      where: companyWhere,
+      _sum: { inputTokens: true, outputTokens: true, thoughtsTokens: true, creditsUsed: true },
+    }),
+    db.aiUsageLog.count({ where: { ...where, keyOwner: "personal" } }),
     db.aiUsageLog.groupBy({ by: ["status"], where, _count: { _all: true } }),
     getSiteAiSetting(),
     isAdmin
@@ -48,9 +56,10 @@ export async function GET(req: NextRequest) {
       : Promise.resolve([]),
   ]);
 
-  const inTok = sums._sum.inputTokens ?? 0;
-  const outTok = (sums._sum.outputTokens ?? 0) + (sums._sum.thoughtsTokens ?? 0);
-  const credits = sums._sum.creditsUsed ?? 0;
+  // Cost is computed only over company-paid usage.
+  const inTok = costSums._sum.inputTokens ?? 0;
+  const outTok = (costSums._sum.outputTokens ?? 0) + (costSums._sum.thoughtsTokens ?? 0);
+  const credits = costSums._sum.creditsUsed ?? 0;
   const hasPrice =
     site.aiGeminiInputPricePerM != null ||
     site.aiGeminiOutputPricePerM != null ||
@@ -78,6 +87,7 @@ export async function GET(req: NextRequest) {
       success: statusCounts.SUCCESS ?? 0,
       failed: statusCounts.FAILED ?? 0,
       pending: statusCounts.PENDING ?? 0,
+      personalCount,
       estimatedCost,
     },
     users: (users as Array<{ userId: string | null; userAccount: string; _count: { _all: number } }>).map((u) => ({

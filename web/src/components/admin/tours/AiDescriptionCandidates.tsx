@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { KEY_OWNER_LABEL, type KeyOwner } from "@/lib/ai/key-owner";
 
 const MAX = 5;
 
@@ -8,6 +9,7 @@ interface Candidate {
   id: string;
   text: string | null;
   model: string | null;
+  keyOwner: KeyOwner | null;
   createdAt: string;
 }
 
@@ -210,6 +212,11 @@ export default function AiDescriptionCandidates({
                   >
                     刪除
                   </button>
+                  {c.keyOwner && (
+                    <span className={`ml-auto text-xs ${c.keyOwner === "personal" ? "text-emerald-600" : "text-gray-400"}`}>
+                      {KEY_OWNER_LABEL[c.keyOwner]}
+                    </span>
+                  )}
                 </div>
               </li>
             ))}

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { AiContext } from "./AiDescriptionCandidates";
+import { KEY_OWNER_LABEL, type KeyOwner } from "@/lib/ai/key-owner";
 
 const MAX = 5;
 const POLL_INTERVAL = 4000;
@@ -13,6 +14,7 @@ interface Candidate {
   imageKey: string | null;
   imageUrl: string | null;
   error: string | null;
+  keyOwner: KeyOwner | null;
   createdAt: string;
 }
 
@@ -247,6 +249,13 @@ export default function AiThumbnailCandidates({
                     刪除
                   </button>
                 </div>
+                {c.keyOwner && (
+                  <p
+                    className={`px-2 pb-1.5 text-[10px] leading-tight ${c.keyOwner === "personal" ? "text-emerald-600" : "text-gray-400"}`}
+                  >
+                    {KEY_OWNER_LABEL[c.keyOwner]}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
