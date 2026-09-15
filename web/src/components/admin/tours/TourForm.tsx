@@ -4,6 +4,8 @@ import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TourFileList from "./TourFileList";
+import AiDescriptionCandidates from "./AiDescriptionCandidates";
+import AiThumbnailCandidates from "./AiThumbnailCandidates";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import ImageCropper from "@/components/admin/ImageCropper";
 import CroppedPreview from "@/components/admin/CroppedPreview";
@@ -82,6 +84,9 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [name, setName] = useState(tour?.name ?? "");
   const [price, setPrice] = useState(tour?.price.toString() ?? "");
   const [description, setDescription] = useState(tour?.description ?? "");
+  // Which AI description candidate is currently adopted (for the 已採用 flag);
+  // cleared when the text is edited by hand.
+  const [selectedDescId, setSelectedDescId] = useState<string | null>(null);
   const [selectedRegionId, setSelectedRegionId] = useState(initialRegionId);
   const [subRegionId, setSubRegionId] = useState(tour?.subRegionId ?? "");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
@@ -91,6 +96,9 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
   const [clearThumbnail, setClearThumbnail] = useState(false);
+  // An AI-generated thumbnail chosen from the candidate list: it already lives
+  // in storage, so on submit we send its key directly (no re-upload).
+  const [aiThumb, setAiThumb] = useState<{ key: string; url: string } | null>(null);
   const [thumbnailCrop, setThumbnailCrop] = useState<ThumbCrop | null>(tour?.thumbnailCrop ?? null);
   const [showCropper, setShowCropper] = useState(false);
   const [seoTitle, setSeoTitle] = useState(tour?.seoTitle ?? "");
@@ -100,6 +108,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [contentFiles, setContentFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [isDraftPending, setIsDraftPending] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const ogFileRef = useRef<HTMLInputElement>(null);
 
@@ -116,13 +125,25 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     setThumbFile(file);
     setThumbPreview(file ? URL.createObjectURL(file) : null);
     setThumbnailCrop(null); // a new image invalidates any previous crop coords
-    if (file) setClearThumbnail(false);
+    if (file) {
+      setClearThumbnail(false);
+      setAiThumb(null);
+    }
   }
 
   function handleClearThumbnail() {
     setClearThumbnail(true);
     setThumbFile(null);
     setThumbPreview(null);
+    setThumbnailCrop(null);
+    setAiThumb(null);
+  }
+
+  function handleSelectAiThumb(choice: { key: string; url: string }) {
+    setAiThumb(choice);
+    setThumbFile(null);
+    setThumbPreview(null);
+    setClearThumbnail(false);
     setThumbnailCrop(null);
   }
 
@@ -156,19 +177,42 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     setContentFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    void save(false);
+  }
+
+  /**
+   * Create/update the tour. When `asDraft` is true (new tours only) we stay on
+   * the form by navigating in-place to the edit URL, so the AI generators become
+   * usable immediately without a trip out to the list.
+   */
+  async function save(asDraft: boolean) {
     if (!subRegionId) {
       setError("請選擇次分類");
       return;
     }
-    setIsPending(true);
+    // The draft button is type="button", so the browser's `required` checks
+    // don't run — validate the API-required fields ourselves for a clean error.
+    if (asDraft) {
+      if (!name.trim()) {
+        setError("請先輸入行程名稱");
+        return;
+      }
+      if (price === "" || Number.isNaN(Number(price)) || Number(price) < 0) {
+        setError("請先輸入有效的價格");
+        return;
+      }
+    }
+    const setPending = asDraft ? setIsDraftPending : setIsPending;
+    setPending(true);
     setError(null);
 
     const fd = new FormData();
     fd.append("name", name);
     fd.append("price", price);
     fd.append("description", description);
+    if (selectedDescId) fd.append("selectedDescriptionCandidateId", selectedDescId);
     fd.append("subRegionId", subRegionId);
     fd.append("published", published ? "true" : "false");
     selectedTagIds.forEach((id) => fd.append("tagIds", id));
@@ -181,6 +225,9 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       if (thumbFile) {
         const up = await uploadFile(thumbFile, "tours");
         fd.append("thumbnailKey", up.key);
+      } else if (aiThumb) {
+        // AI thumbnail already stored — send its key directly.
+        fd.append("thumbnailKey", aiThumb.key);
       } else if (clearThumbnail) {
         fd.append("clearThumbnail", "true");
       }
@@ -203,6 +250,13 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       const res = await fetch(url, { method: isEdit ? "PUT" : "POST", body: fd });
       const data = await res.json();
       if (res.ok && data.data) {
+        if (asDraft && data.data.id) {
+          // Stay on the form: land on this tour's edit page (AI panels appear).
+          const query = returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : "";
+          router.replace(`${adminPath}/tours/${data.data.id}${query}`);
+          router.refresh();
+          return;
+        }
         sessionStorage.setItem(
           "adminSaveMsg",
           isEdit ? `已更新旅遊方案「${name}」` : `已新增旅遊方案「${name}」`
@@ -215,12 +269,27 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     } catch (err) {
       setError(err instanceof Error ? err.message : "網路錯誤，請稍後再試");
     } finally {
-      setIsPending(false);
+      setPending(false);
     }
   }
 
-  const currentThumb = clearThumbnail ? null : (thumbPreview ?? tour?.thumbnail ?? null);
-  const showClearButton = isEdit && (!!tour?.thumbnail || !!thumbFile) && !clearThumbnail;
+  // Current (unsaved) form values passed to the AI so generation reflects
+  // what's on screen without needing to save first. Read at call time.
+  function getAiContext() {
+    const priceNum = Number(price);
+    return {
+      name: name.trim() || undefined,
+      price: Number.isFinite(priceNum) && price !== "" ? priceNum : undefined,
+      regionName: regions.find((r) => r.id === selectedRegionId)?.name,
+      subRegionName: filteredSubRegions.find((s) => s.id === subRegionId)?.name,
+      tagNames: selectedTagIds
+        .map((id) => tags.find((t) => t.id === id)?.name)
+        .filter((n): n is string => !!n),
+    };
+  }
+
+  const currentThumb = clearThumbnail ? null : (thumbPreview ?? aiThumb?.url ?? tour?.thumbnail ?? null);
+  const showClearButton = isEdit && (!!tour?.thumbnail || !!thumbFile || !!aiThumb) && !clearThumbnail;
 
   return (
     <>
@@ -251,15 +320,32 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
         </div>
 
         {/* 行程簡介 */}
-        <CharCountField
-          label="行程簡介"
-          multiline
-          rows={4}
-          value={description}
-          onChange={setDescription}
-          maxLength={500}
-          placeholder="簡短描述此行程的特色（選填）"
-        />
+        <div>
+          <CharCountField
+            label="行程簡介"
+            multiline
+            rows={4}
+            value={description}
+            onChange={(v) => {
+              setDescription(v);
+              setSelectedDescId(null); // manual edit → no longer "adopted from" a candidate
+            }}
+            maxLength={500}
+            placeholder="簡短描述此行程的特色（選填）"
+          />
+          {isEdit && tourId ? (
+            <AiDescriptionCandidates
+              tourId={tourId}
+              onSelect={(text, id) => {
+                setDescription(text);
+                setSelectedDescId(id);
+              }}
+              getContext={getAiContext}
+            />
+          ) : (
+            <p className="mt-1.5 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程簡介。</p>
+          )}
+        </div>
 
         {/* 主分類 / 次分類 */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -391,6 +477,11 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
               </p>
             </div>
           </div>
+          {isEdit && tourId ? (
+            <AiThumbnailCandidates tourId={tourId} onSelect={handleSelectAiThumb} getContext={getAiContext} />
+          ) : (
+            <p className="mt-3 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程縮圖。</p>
+          )}
         </div>
 
         {/* 新增時的行程內容 */}
@@ -530,6 +621,16 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
                 ? "儲存變更"
                 : "新增旅遊方案"}
           </button>
+          {!isEdit && (
+            <button
+              type="button"
+              onClick={() => void save(true)}
+              disabled={isDraftPending || isPending}
+              className="cursor-pointer rounded-lg border border-[#D12351] bg-white px-5 py-2 text-sm font-medium text-[#D12351] transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isDraftPending ? "儲存草稿中…" : "儲存草稿並使用 AI"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => router.push(backUrl)}

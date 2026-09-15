@@ -7,6 +7,52 @@ import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 import { parseCropField } from "@/lib/crop";
 
+/**
+ * Delete a stored image, unless it is still referenced by an AI candidate
+ * (AiGeneration.imageKey) for this tour — selecting a candidate as the
+ * thumbnail shares its stored object, so we must not remove it here.
+ */
+async function deleteThumbIfUnreferenced(tourId: string, key: string): Promise<void> {
+  const referenced = await db.aiGeneration.findFirst({
+    where: { tourId, imageKey: key },
+    select: { id: true },
+  });
+  if (!referenced) await storage.delete(key).catch(() => {});
+}
+
+/**
+ * Flag the AI candidates the saved tour adopted (thumbnail by stored key,
+ * description by the id the editor picked), clearing the flag on the others.
+ */
+async function reconcileSelectedCandidates(
+  tourId: string,
+  thumbnailKey: string | null,
+  descriptionCandidateId: string | null,
+): Promise<void> {
+  try {
+    await db.aiGeneration.updateMany({ where: { tourId }, data: { isSelected: false } });
+    if (thumbnailKey) {
+      await db.aiGeneration.updateMany({
+        where: { tourId, kind: "THUMBNAIL", imageKey: thumbnailKey },
+        data: { isSelected: true },
+      });
+    }
+    if (descriptionCandidateId) {
+      await db.aiGeneration.updateMany({
+        where: { id: descriptionCandidateId, tourId, kind: "DESCRIPTION" },
+        data: { isSelected: true },
+      });
+    }
+  } catch (e) {
+    console.error("[reconcileSelectedCandidates]", e);
+  }
+}
+
+/** Normalise CRLF (added by multipart form encoding) back to LF. */
+function normalizeNewlines(v: FormDataEntryValue | null): string | null {
+  return typeof v === "string" ? v.replace(/\r\n/g, "\n") : null;
+}
+
 const updateSchema = z.object({
   name: z.string().min(1, "請輸入行程名稱"),
   price: z.coerce.number().int().min(0, "價格不可為負數"),
@@ -35,9 +81,11 @@ export async function PUT(
       name: fd.get("name"),
       price: fd.get("price"),
       subRegionId: fd.get("subRegionId"),
-      description: fd.get("description"),
+      // Multipart form encoding turns each "\n" into "\r\n"; normalise so the
+      // length check matches what the editor saw (and the stored text is clean).
+      description: normalizeNewlines(fd.get("description")),
       seoTitle: typeof rawSeoTitle === "string" && rawSeoTitle ? rawSeoTitle : undefined,
-      seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? rawSeoDescription : undefined,
+      seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? normalizeNewlines(rawSeoDescription) : undefined,
     });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
@@ -57,10 +105,10 @@ export async function PUT(
     const clearThumbnail = fd.get("clearThumbnail") === "true";
 
     if (clearThumbnail && !newThumbnailKey) {
-      if (existing.thumbnailKey) await storage.delete(existing.thumbnailKey).catch(() => {});
+      if (existing.thumbnailKey) await deleteThumbIfUnreferenced(id, existing.thumbnailKey);
       thumbnailKey = null;
-    } else if (newThumbnailKey) {
-      if (existing.thumbnailKey) await storage.delete(existing.thumbnailKey).catch(() => {});
+    } else if (newThumbnailKey && newThumbnailKey !== existing.thumbnailKey) {
+      if (existing.thumbnailKey) await deleteThumbIfUnreferenced(id, existing.thumbnailKey);
       thumbnailKey = newThumbnailKey;
     }
 
@@ -96,6 +144,11 @@ export async function PUT(
         tags: { set: tagIds.map((tagId) => ({ id: tagId })) },
       },
     });
+    // Record which AI candidates (if any) were adopted: thumbnail by stored
+    // key, description by the candidate id the editor picked.
+    const selectedDescId = (fd.get("selectedDescriptionCandidateId") as string) || null;
+    void reconcileSelectedCandidates(id, thumbnailKey, selectedDescId);
+
     const thumbnailChange = clearThumbnail && !newThumbnailKey
       ? "removed"
       : newThumbnailKey
@@ -125,17 +178,21 @@ export async function DELETE(
     const { id } = await params;
     const tour = await db.tour.findUnique({
       where: { id },
-      include: { files: { select: { key: true } } },
+      include: {
+        files: { select: { key: true } },
+        aiGenerations: { where: { imageKey: { not: null } }, select: { imageKey: true } },
+      },
     });
     if (!tour) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
 
-    const deleteJobs: Promise<unknown>[] = [];
-    if (tour.thumbnailKey) deleteJobs.push(storage.delete(tour.thumbnailKey).catch(() => {}));
-    if (tour.ogImageKey) deleteJobs.push(storage.delete(tour.ogImageKey).catch(() => {}));
-    for (const file of tour.files) {
-      deleteJobs.push(storage.delete(file.key).catch(() => {}));
-    }
-    await Promise.all(deleteJobs);
+    // Collect every stored object to remove; a shared key (thumbnail selected
+    // from a candidate) is de-duplicated so we don't delete it twice.
+    const keys = new Set<string>();
+    if (tour.thumbnailKey) keys.add(tour.thumbnailKey);
+    if (tour.ogImageKey) keys.add(tour.ogImageKey);
+    for (const file of tour.files) keys.add(file.key);
+    for (const g of tour.aiGenerations) if (g.imageKey) keys.add(g.imageKey);
+    await Promise.all([...keys].map((key) => storage.delete(key).catch(() => {})));
 
     await db.tour.delete({ where: { id } });
     void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR", resourceId: id, resourceName: tour.name, detail: { id, name: tour.name, hadThumbnail: !!tour.thumbnailKey } });

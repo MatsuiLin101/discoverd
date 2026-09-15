@@ -56,6 +56,8 @@ const RESOURCE_LABELS: Record<LogResource, string> = {
   SALES_REGION: "業務地區",
   SALES_AGENT: "業務名片",
   IMPORT: "資料匯入",
+  AI_SETTING: "AI 設定",
+  AI_GENERATION: "AI 生成",
 };
 
 function formatDate(iso: string) {

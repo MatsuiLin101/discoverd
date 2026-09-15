@@ -43,9 +43,10 @@ export async function POST(req: NextRequest) {
       name: fd.get("name"),
       price: fd.get("price"),
       subRegionId: fd.get("subRegionId"),
-      description: fd.get("description"),
+      // Multipart encoding turns "\n" into "\r\n"; normalise before length check.
+      description: typeof fd.get("description") === "string" ? (fd.get("description") as string).replace(/\r\n/g, "\n") : fd.get("description"),
       seoTitle: typeof rawSeoTitle === "string" && rawSeoTitle ? rawSeoTitle : undefined,
-      seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? rawSeoDescription : undefined,
+      seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? rawSeoDescription.replace(/\r\n/g, "\n") : undefined,
     });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });

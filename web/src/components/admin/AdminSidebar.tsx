@@ -38,8 +38,16 @@ const navGroups: NavGroup[] = [
     title: "系統管理",
     adminOnly: true,
     items: [
+      { label: "AI 設定", href: "/ai-settings", adminOnly: true },
       { label: "操作日誌", href: "/logs" },
       { label: "使用者管理", href: "/users" },
+    ],
+  },
+  {
+    title: "個人設定",
+    items: [
+      { label: "AI 偏好", href: "/ai-preferences" },
+      { label: "AI 使用紀錄", href: "/ai-usage" },
     ],
   },
 ];
