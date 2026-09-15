@@ -130,16 +130,21 @@ export default function AiDescriptionCandidates({
         <span className="text-xs text-gray-400">本次生成使用；預設為你的偏好/系統值</span>
       </div>
       {hasPersonalKey && (
-        <div className="mb-2 flex items-center gap-2">
-          <label className="whitespace-nowrap text-xs text-gray-500">額度來源</label>
-          <select
-            value={quota}
-            onChange={(e) => setQuota(e.target.value as "personal" | "shared")}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#D12351]"
-          >
-            <option value="personal">個人額度（用完自動改用公用）</option>
-            <option value="shared">公用額度</option>
-          </select>
+        <div className="mb-2">
+          <div className="flex items-center gap-2">
+            <label className="whitespace-nowrap text-xs text-gray-500">額度來源</label>
+            <select
+              value={quota}
+              onChange={(e) => setQuota(e.target.value as "personal" | "shared")}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#D12351]"
+            >
+              <option value="personal">個人額度（用完自動改用公用）</option>
+              <option value="shared">公用額度</option>
+            </select>
+          </div>
+          <p className="mt-1 text-xs text-gray-400">
+            「個人額度」優先用你自己的金鑰，用完會自動改用公用、不中斷；「公用額度」只用公司金鑰、保留你的個人額度。兩者皆用完才會失敗。
+          </p>
         </div>
       )}
       <div className="flex flex-wrap items-center gap-2">
