@@ -645,6 +645,9 @@
 .fh-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 .fh-m-toggle { display: none; }
+/* Mobile-only scroll hint for the tour intro; revealed under the media query. */
+.m-scroll-cue { display: none; }
+@keyframes fh-cue-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
 
 /* =====================================================
    FORM MODAL — 諮詢單
@@ -889,7 +892,7 @@
     overflow: hidden; max-height: 60vh; padding: 16px 20px;
     justify-content: flex-start; gap: 10px;
   }
-  .fh-modal-side .m-top { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  .fh-modal-side .m-top { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
   .fh-m-toggle {
     display: inline-flex; align-items: center; justify-content: center;
     position: absolute; top: 12px; right: 16px; z-index: 3;
@@ -906,32 +909,48 @@
   .fh-modal-side .m-en { font-size: 9.5px; letter-spacing: 0.16em; margin-bottom: 9px; }
   .fh-modal-side .m-tags { gap: 6px; }
   .fh-modal-side .m-tags span { font-size: 9.5px; padding: 4px 10px; }
-  .fh-modal-side .m-bottom { gap: 12px; }
-  .fh-modal-side .m-price { margin-top: 6px; }
-  .fh-modal-side .m-price .cur { font-size: 13px; }
-  .fh-modal-side .m-price .num { font-size: 27px; }
-  .fh-modal-side .m-price .unit { font-size: 15px; }
-  .fh-modal-side .m-note { font-size: 11px; line-height: 1.55; margin-top: 8px; }
-  .fh-modal-side .m-actions { flex-direction: row; gap: 8px; }
-  .fh-modal-side .m-actions button { flex: 1; padding: 11px 10px; font-size: 13px; gap: 7px; }
+  /* Compact bottom bar on mobile in BOTH collapsed and expanded states: small
+     price, icon-only action buttons, note hidden. Keeping the bar short frees
+     the most vertical room for the intro (.m-top). */
+  .fh-modal-side .m-note { display: none; }
+  .fh-modal-side .m-bottom {
+    flex-direction: row; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .fh-modal-side .m-price { margin-top: 0; }
+  .fh-modal-side .m-price .cur { font-size: 12px; }
+  .fh-modal-side .m-price .num { font-size: 23px; }
+  .fh-modal-side .m-price .unit { font-size: 14px; }
+  .fh-modal-side .m-actions { flex: none; flex-direction: row; gap: 8px; }
+  .fh-modal-side .m-actions button,
+  .fh-modal-side .m-actions a {
+    flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; letter-spacing: 0; gap: 0;
+  }
+  /* Collapsed only hides the intro body and tightens the name. */
   .fh-modal-side.collapsed .m-en,
   .fh-modal-side.collapsed .m-tags,
-  .fh-modal-side.collapsed .m-lede,
-  .fh-modal-side.collapsed .m-note { display: none; }
+  .fh-modal-side.collapsed .m-lede { display: none; }
   .fh-modal-side.collapsed .m-eyebrow { margin-bottom: 4px; }
   .fh-modal-side.collapsed .m-name-row { margin-bottom: 0; }
   .fh-modal-side.collapsed .m-name { margin-bottom: 0; font-size: 17px; padding-right: 36px; }
-  .fh-modal-side.collapsed .m-bottom {
-    flex-direction: row; align-items: center; justify-content: space-between; gap: 12px;
+  /* Scroll affordance: while there is more intro below, show a thin scrollbar
+     and fade the bottom edge so it's clear the panel can be scrolled. The fade
+     is removed once scrolled to the end (.more-below toggled from JS). */
+  .fh-modal-side .m-top { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+  /* While there's more intro below, fade the bottom edge and show a bouncing
+     down-chevron so it's obvious the panel scrolls; both vanish at the end
+     (.more-below toggled from JS). The cue sticks to the scroll viewport
+     bottom and overlaps the last lines (negative margin) so it adds no height. */
+  .fh-modal-side.more-below .m-scroll-cue {
+    display: flex; position: sticky; bottom: 0; z-index: 2;
+    margin: -52px 0 0; height: 52px; pointer-events: none;
+    align-items: flex-end; justify-content: center; padding-bottom: 6px;
+    background: linear-gradient(to top, #FBF2F5 38%, rgba(251, 242, 245, 0));
   }
-  .fh-modal-side.collapsed .m-price { margin-top: 0; }
-  .fh-modal-side.collapsed .m-price .cur { font-size: 12px; }
-  .fh-modal-side.collapsed .m-price .num { font-size: 23px; }
-  .fh-modal-side.collapsed .m-price .unit { font-size: 14px; }
-  .fh-modal-side.collapsed .m-actions { flex: none; flex-direction: row; gap: 8px; }
-  .fh-modal-side.collapsed .m-actions button,
-  .fh-modal-side.collapsed .m-actions a {
-    flex: none; width: 42px; height: 42px; padding: 0; font-size: 0; letter-spacing: 0; gap: 0;
+  .fh-modal-side.more-below .m-scroll-cue svg {
+    width: 28px; height: 28px; padding: 6px; box-sizing: border-box;
+    color: #fff; background: var(--accent); border-radius: 50%;
+    box-shadow: 0 6px 14px -3px rgba(42, 34, 51, 0.5);
+    animation: fh-cue-bounce 1.3s ease-in-out infinite;
   }
 }
 @media (max-width: 768px) {
