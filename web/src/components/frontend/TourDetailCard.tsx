@@ -20,7 +20,11 @@ interface Props {
  * is provided by the caller.
  */
 export default function TourDetailCard({ tour, headingTag = "h3" }: Props) {
-  const [mobileCollapsed, setMobileCollapsed] = useState(false);
+  // Collapsed by default so mobile opens showing the gallery with a compact
+  // info bar; the user expands to read the full intro. Desktop ignores the
+  // `.collapsed` class (styled only under the mobile media query) and always
+  // shows everything, so this default has no effect there.
+  const [mobileCollapsed, setMobileCollapsed] = useState(true);
   const Heading = headingTag;
 
   return (
