@@ -321,7 +321,8 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
           <CharCountField
             label="行程簡介"
             multiline
-            rows={4}
+            rows={10}
+            className={`${inputClass} resize-y`}
             value={description}
             onChange={(v) => {
               setDescription(v);
