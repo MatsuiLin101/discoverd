@@ -174,11 +174,11 @@ export default function AiDescriptionCandidates({
       </div>
 
       <p className="mt-1.5 text-xs text-gray-400">
-        會依行程名稱、地區、標籤與已上傳的 PDF 生成，可多次生成並挑選喜歡的版本（{candidates.length}/{MAX}）。
-        {atLimit && <span className="text-rose-500">已達上限，請先刪除舊版本。</span>}
+        「額外重點提示」為選填，會附加在提示詞範本之後作為補充，不會取代範本；想調整整段提示詞可用「預覽提示詞」。
       </p>
       <p className="mt-1 text-xs text-gray-400">
-        「額外重點提示」為選填，會附加在提示詞範本之後作為補充，不會取代範本；想調整整段提示詞可用「預覽提示詞」。
+        會依行程名稱、地區、標籤與已上傳的 PDF 生成，可多次生成並挑選喜歡的版本（{candidates.length}/{MAX}）。
+        {atLimit && <span className="text-rose-500">已達上限，請先刪除舊版本。</span>}
       </p>
 
       {previewOpen && (

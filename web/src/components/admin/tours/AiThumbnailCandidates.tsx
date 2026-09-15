@@ -202,11 +202,11 @@ export default function AiThumbnailCandidates({
       </div>
 
       <p className="mt-1.5 text-xs text-gray-400">
-        由 Manus 產生，需稍候（可離開後再回來查看），可多次生成並挑選喜歡的版本（{activeCount}/{MAX}）。
-        {atLimit && <span className="text-rose-500">已達上限，請先刪除舊版本。</span>}
+        「額外重點提示」為選填，會附加在縮圖提示詞範本之後作為補充，不會取代範本；想調整整段提示詞可用「預覽提示詞」。
       </p>
       <p className="mt-1 text-xs text-gray-400">
-        「額外重點提示」為選填，會附加在縮圖提示詞範本之後作為補充，不會取代範本；想調整整段提示詞可用「預覽提示詞」。
+        由 Manus 產生，需稍候（可離開後再回來查看），可多次生成並挑選喜歡的版本（{activeCount}/{MAX}）。
+        {atLimit && <span className="text-rose-500">已達上限，請先刪除舊版本。</span>}
       </p>
 
       {previewOpen && (
