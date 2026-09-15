@@ -41,6 +41,7 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
   const currentRegionId = searchParams.get("regionId") ?? "";
   const currentSubRegionId = searchParams.get("subRegionId") ?? "";
   const currentTagIds = (searchParams.get("tagIds") ?? "").split(",").filter(Boolean);
+  const currentTagMode = searchParams.get("tagMode") === "all" ? "all" : "any";
   const currentPublished = searchParams.get("published") ?? "";
   const currentLimit = searchParams.get("limit") ?? "20";
 
@@ -83,6 +84,15 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
     const params = new URLSearchParams(searchParams.toString());
     if (next.length > 0) params.set("tagIds", next.join(","));
     else params.delete("tagIds");
+    if (next.length < 2) params.delete("tagMode"); // toggle only matters with 2+
+    params.delete("page");
+    router.replace(`${adminPath}/tours?${params.toString()}`);
+  }
+
+  function setTagMode(mode: "any" | "all") {
+    const params = new URLSearchParams(searchParams.toString());
+    if (mode === "all") params.set("tagMode", "all");
+    else params.delete("tagMode");
     params.delete("page");
     router.replace(`${adminPath}/tours?${params.toString()}`);
   }
@@ -256,6 +266,28 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
             placeholder="搜尋標籤…"
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:border-transparent focus:ring-2 focus:ring-[#D12351] sm:max-w-xs"
           />
+          {currentTagIds.length > 1 && (
+            <div className="flex gap-2" role="group" aria-label="標籤符合方式">
+              {([
+                { mode: "any", label: "符合任一標籤" },
+                { mode: "all", label: "符合所有標籤" },
+              ] as const).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setTagMode(mode)}
+                  aria-pressed={currentTagMode === mode}
+                  className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    currentTagMode === mode
+                      ? "border-[#D12351] bg-[#D12351] text-white"
+                      : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           {visibleTags.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {visibleTags.map((tag) => {
