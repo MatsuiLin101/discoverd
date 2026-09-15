@@ -25,6 +25,7 @@ export interface AiUsageCreate {
   totalTokens?: number | null;
   taskId?: string | null;
   agentProfile?: string | null;
+  keyOwner?: string | null;
   latencyMs?: number | null;
   resultRef?: string | null;
   outputChars?: number | null;

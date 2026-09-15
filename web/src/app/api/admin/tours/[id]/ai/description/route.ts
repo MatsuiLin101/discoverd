@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
-import { generateDescription } from "@/lib/ai/gemini";
+import { getAiKeys, getUserAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
 import { buildDescriptionPrompt } from "@/lib/ai/prompts";
+import { generateDescriptionWithFallback } from "@/lib/ai/fallback";
 import { logAiUsage } from "@/lib/ai/usage";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
 
@@ -25,9 +25,9 @@ export async function POST(
       );
     }
 
-    const keys = await getAiKeys();
-    if (!keys.gemini) {
-      return NextResponse.json({ error: "尚未設定 Gemini API 金鑰，請先於「AI 設定」填寫" }, { status: 400 });
+    const [shared, personal] = await Promise.all([getAiKeys(), getUserAiKeys(session.userId)]);
+    if (!shared.gemini && !personal.gemini) {
+      return NextResponse.json({ error: "尚未設定 Gemini API 金鑰，請先於「AI 設定」或「AI 偏好」填寫" }, { status: 400 });
     }
 
     const effective = await getEffectiveAiSettings(session.userId);
@@ -64,13 +64,20 @@ export async function POST(
     };
 
     const startedAt = Date.now();
-    let result;
+    let result, keyOwner;
     try {
-      result = await generateDescription({ apiKey: keys.gemini, model: descriptionModel, prompt, pdfs: ctx.pdfs });
+      ({ result, keyOwner } = await generateDescriptionWithFallback({
+        personalKey: personal.gemini,
+        sharedKey: shared.gemini,
+        model: descriptionModel,
+        prompt,
+        pdfs: ctx.pdfs,
+      }));
     } catch (genErr) {
       void logAiUsage({
         ...usageBase,
         status: "FAILED",
+        keyOwner: personal.gemini ? "personal" : "shared",
         latencyMs: Date.now() - startedAt,
         error: genErr instanceof Error ? genErr.message : String(genErr),
       });
@@ -88,6 +95,7 @@ export async function POST(
         text: trimmed,
         model: descriptionModel,
         prompt: hint ?? undefined,
+        keyOwner,
         createdById: session.userId,
       },
     });
@@ -95,6 +103,7 @@ export async function POST(
     void logAiUsage({
       ...usageBase,
       status: "SUCCESS",
+      keyOwner,
       latencyMs: Date.now() - startedAt,
       inputTokens: result.usage.inputTokens,
       outputTokens: result.usage.outputTokens,

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
+import { getAiKeys, getUserAiKeys, getEffectiveAiSettings, getSiteAiSetting } from "@/lib/ai/config";
 import { createThumbnailTask } from "@/lib/ai/manus";
 import { buildThumbnailPrompt, toAgentProfile } from "@/lib/ai/prompts";
+import { selectManusKey } from "@/lib/ai/fallback";
 import { logAiUsage } from "@/lib/ai/usage";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
 
@@ -28,9 +29,22 @@ export async function POST(
       );
     }
 
-    const keys = await getAiKeys();
-    if (!keys.manus) {
-      return NextResponse.json({ error: "尚未設定 Manus API 金鑰，請先於「AI 設定」填寫" }, { status: 400 });
+    const [shared, personal, site] = await Promise.all([
+      getAiKeys(),
+      getUserAiKeys(session.userId),
+      getSiteAiSetting(),
+    ]);
+    if (!shared.manus && !personal.manus) {
+      return NextResponse.json({ error: "尚未設定 Manus API 金鑰，請先於「AI 設定」或「AI 偏好」填寫" }, { status: 400 });
+    }
+    // Prefer the personal key when its balance clears the threshold; else shared.
+    const { key: manusKey, keyOwner } = await selectManusKey({
+      personalKey: personal.manus,
+      sharedKey: shared.manus,
+      threshold: site.aiManusPersonalThreshold,
+    });
+    if (!manusKey) {
+      return NextResponse.json({ error: "個人 Manus 金鑰無效且未設定公用金鑰" }, { status: 400 });
     }
 
     const { thumbnailPrompt, thumbnailAgentProfile } = await getEffectiveAiSettings(session.userId);
@@ -58,6 +72,7 @@ export async function POST(
       provider: "manus" as const,
       model: "manus",
       agentProfile,
+      keyOwner,
       hint,
       promptOverridden: !!promptOverride,
       promptText: fullPrompt,
@@ -65,7 +80,7 @@ export async function POST(
 
     let taskId: string;
     try {
-      taskId = await createThumbnailTask({ apiKey: keys.manus, prompt: fullPrompt, agentProfile });
+      taskId = await createThumbnailTask({ apiKey: manusKey, prompt: fullPrompt, agentProfile });
     } catch (genErr) {
       void logAiUsage({
         ...usageBase,
@@ -83,6 +98,7 @@ export async function POST(
         taskId,
         model: "manus",
         prompt: hint ?? undefined,
+        keyOwner,
         createdById: session.userId,
       },
     });

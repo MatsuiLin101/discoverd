@@ -35,6 +35,15 @@ export async function getAiKeys(): Promise<{ gemini: string | null; manus: strin
   };
 }
 
+/** Decrypted personal API keys for a user (null when not configured). */
+export async function getUserAiKeys(userId: string): Promise<{ gemini: string | null; manus: string | null }> {
+  const pref = await db.userAiPreference.findUnique({ where: { userId } });
+  return {
+    gemini: safeDecrypt(pref?.geminiApiKeyEnc ?? null),
+    manus: safeDecrypt(pref?.manusApiKeyEnc ?? null),
+  };
+}
+
 /**
  * Effective per-user AI settings: personal override, then system default, then
  * the built-in default. Empty strings are treated as "unset" and fall through.

@@ -229,6 +229,9 @@ model SiteSetting {
   aiThumbnailPrompt   String?
   // Manus agent profile for thumbnails: "lite" | "standard" | "max".
   aiThumbnailAgentProfile String @default("standard")
+  // Minimum personal Manus credits required to use a user's own key; below this
+  // the shared key is used (Manus cost per task isn't known until it runs).
+  aiManusPersonalThreshold Int @default(30)
   // Optional unit prices for the AI usage cost estimate (in NT$). Null = don't
   // show a cost. Gemini bills input and output tokens (thinking counts as
   // output) at different rates, per 1,000,000 tokens.
@@ -293,6 +296,10 @@ model UserAiPreference {
   descriptionPrompt String?
   thumbnailPrompt   String?
   thumbnailAgentProfile String?
+  // Personal API keys (AES-256-GCM). When set, generation prefers the user's
+  // own quota and only falls back to the shared key (see the generation routes).
+  geminiApiKeyEnc   String?
+  manusApiKeyEnc    String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -322,6 +329,8 @@ model AiGeneration {
   error       String?            // FAILED: reason
   model       String?            // model / agent profile actually used
   prompt      String?            // the prompt actually sent, for reference
+  // Which quota paid for this: "personal" | "shared" | "fallback_quota" | "fallback_error".
+  keyOwner    String?
   isSelected  Boolean            @default(false)
   createdById String?
   createdBy   User?              @relation(fields: [createdById], references: [id], onDelete: SetNull)
@@ -364,6 +373,9 @@ model AiUsageLog {
   taskId           String?
   agentProfile     String?
   creditsUsed      Int?             // not attributable per-task yet; reserved
+  // Which quota paid: "personal" | "shared" | "fallback_quota" | "fallback_error".
+  // Personal usage is excluded from the company cost estimate.
+  keyOwner         String?
   latencyMs        Int?
   resultRef        String?          // candidate id / image key
   outputChars      Int?             // DESCRIPTION output length

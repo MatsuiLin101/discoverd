@@ -12,6 +12,7 @@ export function serializeGeneration(g: AiGeneration) {
     imageUrl: g.imageKey ? storage.publicUrl(g.imageKey) : null,
     error: g.error,
     model: g.model,
+    keyOwner: g.keyOwner,
     createdAt: g.createdAt,
   };
 }

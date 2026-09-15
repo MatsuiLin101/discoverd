@@ -10,6 +10,16 @@
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 
+/** Error carrying the HTTP status so callers can detect 429 (quota exhausted). */
+export class GeminiHttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "GeminiHttpError";
+    this.status = status;
+  }
+}
+
 export interface GeminiPdfPart {
   /** Base64-encoded PDF bytes. */
   data: string;
@@ -75,7 +85,7 @@ export async function generateDescription(opts: {
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     const detail = body?.error?.message ?? `HTTP ${res.status}`;
-    throw new Error(`Gemini 生成失敗：${detail}`);
+    throw new GeminiHttpError(res.status, `Gemini 生成失敗：${detail}`);
   }
 
   const data = await res.json();
