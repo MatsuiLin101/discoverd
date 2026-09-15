@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
+import { compareTagName } from "@/lib/tag-sort";
 
 type FilterRegion = {
   id: string;
@@ -44,9 +45,8 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
   const currentLimit = searchParams.get("limit") ?? "20";
 
   const [keyword, setKeyword] = useState(currentQ);
-  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+  const [tagPanelOpen, setTagPanelOpen] = useState(false);
   const [tagSearch, setTagSearch] = useState("");
-  const tagDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setKeyword(searchParams.get("q") ?? "");
@@ -66,17 +66,6 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword]);
-
-  // Close tag dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (tagDropdownRef.current && !tagDropdownRef.current.contains(e.target as Node)) {
-        setTagDropdownOpen(false);
-      }
-    }
-    if (tagDropdownOpen) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [tagDropdownOpen]);
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -103,9 +92,15 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
 
   const hasFilters = !!(currentQ || currentRegionId || currentSubRegionId || currentTagIds.length > 0 || currentPublished);
 
-  const visibleTags = tagSearch
-    ? tags.filter((t) => t.name.includes(tagSearch))
-    : tags;
+  // Sorted like the tour form (text + numeric collation).
+  const sortedTags = [...tags].sort((a, b) => compareTagName(a.name, b.name));
+  const tagQuery = tagSearch.trim().toLowerCase();
+  // Selected chips always show; the rest are filtered by the search text.
+  const visibleTags = tagQuery
+    ? sortedTags.filter(
+        (t) => currentTagIds.includes(t.id) || t.name.toLowerCase().includes(tagQuery)
+      )
+    : sortedTags;
 
   return (
     <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4">
@@ -157,84 +152,32 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
           </select>
         </div>
 
-        {/* 標籤多選 */}
+        {/* 標籤：展開/收起的多選區塊（區塊本體在篩選列下方） */}
         {tags.length > 0 && (
-          <div className="flex flex-col gap-1" ref={tagDropdownRef}>
+          <div className="flex flex-col gap-1">
             <label className={labelClass}>標籤</label>
-            <div className="relative">
-              <button
-                onClick={() => { setTagDropdownOpen((o) => !o); setTagSearch(""); }}
-                className={`${controlH} flex items-center gap-1.5 rounded-lg border px-3 text-sm outline-none transition whitespace-nowrap ${
-                  currentTagIds.length > 0
-                    ? "border-[#D12351] bg-rose-50 text-[#D12351]"
-                    : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                }`}
+            <button
+              onClick={() => setTagPanelOpen((o) => !o)}
+              aria-expanded={tagPanelOpen}
+              className={`${controlH} flex items-center gap-1.5 rounded-lg border px-3 text-sm outline-none transition whitespace-nowrap ${
+                currentTagIds.length > 0
+                  ? "border-[#D12351] bg-rose-50 text-[#D12351]"
+                  : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+              }`}
+            >
+              {currentTagIds.length > 0 ? `標籤 (${currentTagIds.length})` : "標籤"}
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className={`transition-transform ${tagPanelOpen ? "rotate-180" : ""}`}
               >
-                {currentTagIds.length > 0 ? `標籤 (${currentTagIds.length})` : "標籤"}
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className={`transition-transform ${tagDropdownOpen ? "rotate-180" : ""}`}
-                >
-                  <path d="M2 4l4 4 4-4" />
-                </svg>
-              </button>
-
-              {tagDropdownOpen && (
-                <div className="absolute top-full left-0 z-20 mt-1 w-52 rounded-xl border border-gray-200 bg-white shadow-lg">
-                  <div className="p-2">
-                    {tags.length > 6 && (
-                      <input
-                        type="search"
-                        value={tagSearch}
-                        onChange={(e) => setTagSearch(e.target.value)}
-                        placeholder="搜尋標籤…"
-                        className="mb-2 w-full rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#D12351] focus:ring-1 focus:ring-[#D12351]"
-                      />
-                    )}
-                    <div className="max-h-48 overflow-y-auto space-y-0.5">
-                      {visibleTags.length === 0 && (
-                        <p className="px-2 py-1.5 text-xs text-gray-400">
-                          {tagSearch ? "無符合標籤" : "尚無標籤"}
-                        </p>
-                      )}
-                      {visibleTags.map((tag) => (
-                        <label
-                          key={tag.id}
-                          className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-gray-50"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={currentTagIds.includes(tag.id)}
-                            onChange={() => toggleTagId(tag.id)}
-                            className="h-3.5 w-3.5 rounded border-gray-300 accent-[#D12351]"
-                          />
-                          <span className="text-gray-700">{tag.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {currentTagIds.length > 0 && (
-                      <button
-                        onClick={() => {
-                          const params = new URLSearchParams(searchParams.toString());
-                          params.delete("tagIds");
-                          params.delete("page");
-                          router.replace(`${adminPath}/tours?${params.toString()}`);
-                          setTagDropdownOpen(false);
-                        }}
-                        className="mt-2 w-full rounded-lg py-1 text-xs text-gray-400 hover:text-gray-600"
-                      >
-                        清除標籤選取
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+                <path d="M2 4l4 4 4-4" />
+              </svg>
+            </button>
           </div>
         )}
 
@@ -302,6 +245,56 @@ export default function TourFilterBar({ regions, tags }: TourFilterBarProps) {
           </Link>
         )}
       </div>
+
+      {/* 標籤選擇區塊：展開時顯示（搜尋 + 點擊 chip 多選，同行程表單） */}
+      {tags.length > 0 && tagPanelOpen && (
+        <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+          <input
+            type="search"
+            value={tagSearch}
+            onChange={(e) => setTagSearch(e.target.value)}
+            placeholder="搜尋標籤…"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-gray-300 focus:border-transparent focus:ring-2 focus:ring-[#D12351] sm:max-w-xs"
+          />
+          {visibleTags.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {visibleTags.map((tag) => {
+                const checked = currentTagIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleTagId(tag.id)}
+                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                      checked
+                        ? "border-[#D12351] bg-rose-50 text-[#D12351]"
+                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
+                    }`}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">沒有符合的標籤。</p>
+          )}
+          {currentTagIds.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete("tagIds");
+                params.delete("page");
+                router.replace(`${adminPath}/tours?${params.toString()}`);
+              }}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              清除標籤選取
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
