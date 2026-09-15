@@ -17,6 +17,7 @@ interface InitialFilters {
   region: string;
   sub: string;
   tags: string[];
+  tagMode: "any" | "all";
 }
 
 interface Props {
@@ -32,6 +33,8 @@ function buildQuery(f: InitialFilters): string {
   if (f.region) p.set("region", f.region);
   if (f.region && f.sub) p.set("sub", f.sub);
   for (const t of f.tags) p.append("tags", t);
+  // Only carry the tag mode when it changes behaviour (2+ tags, non-default).
+  if (f.tagMode === "all" && f.tags.length > 1) p.set("tagMode", "all");
   return p.toString();
 }
 
@@ -40,8 +43,19 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
   const [region, setRegion] = useState(initialFilters.region);
   const [sub, setSub] = useState(initialFilters.sub);
   const [tags, setTags] = useState<string[]>(initialFilters.tags);
+  const [tagMode, setTagMode] = useState<"any" | "all">(initialFilters.tagMode);
+  const [tagQuery, setTagQuery] = useState(""); // local chip search (not in URL)
   const [response, setResponse] = useState<SearchResponse>(initialResponse);
   const [loading, setLoading] = useState(false);
+
+  // Chip list filtered by the search box; selected chips always stay visible.
+  const visibleFacetTags = (() => {
+    const query = tagQuery.trim().toLowerCase();
+    if (!query) return facets.tags;
+    return facets.tags.filter(
+      (t) => tags.includes(t) || t.toLowerCase().includes(query),
+    );
+  })();
 
   const skipFetch = useRef(true); // SSR already provided initialResponse
 
@@ -54,7 +68,7 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
   // external navigation to /search?... while this component is already mounted
   // remounts it via the server page's key (see search/page.tsx).
   useEffect(() => {
-    const query = buildQuery({ q, region, sub, tags });
+    const query = buildQuery({ q, region, sub, tags, tagMode });
 
     const url = query ? `/search?${query}` : "/search";
     window.history.replaceState(window.history.state, "", url);
@@ -87,7 +101,7 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q, region, sub, tags]);
+  }, [q, region, sub, tags, tagMode]);
 
   const selectRegion = useCallback((slug: string) => {
     setRegion((prev) => (prev === slug ? prev : slug));
@@ -110,6 +124,8 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
     setRegion("");
     setSub("");
     setTags([]);
+    setTagMode("any");
+    setTagQuery("");
   }, []);
 
   const { total, results } = response;
@@ -199,21 +215,53 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
         {facets.tags.length > 0 && (
           <div className="fh-filter-group">
             <span className="fh-filter-label">標籤（可複選）</span>
+            <input
+              className="fh-adv-input fh-tag-search"
+              type="search"
+              value={tagQuery}
+              placeholder="搜尋標籤⋯"
+              autoComplete="off"
+              onChange={(e) => setTagQuery(e.target.value)}
+            />
+            {tags.length > 1 && (
+              <div className="fh-tag-mode" role="group" aria-label="標籤符合方式">
+                <button
+                  type="button"
+                  className={`fh-tag-chip${tagMode === "any" ? " on" : ""}`}
+                  aria-pressed={tagMode === "any"}
+                  onClick={() => setTagMode("any")}
+                >
+                  符合任一標籤
+                </button>
+                <button
+                  type="button"
+                  className={`fh-tag-chip${tagMode === "all" ? " on" : ""}`}
+                  aria-pressed={tagMode === "all"}
+                  onClick={() => setTagMode("all")}
+                >
+                  符合所有標籤
+                </button>
+              </div>
+            )}
             <div className="fh-tag-chips">
-              {facets.tags.map((t) => {
-                const on = tags.includes(t);
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    className={`fh-tag-chip${on ? " on" : ""}`}
-                    aria-pressed={on}
-                    onClick={() => toggleTag(t)}
-                  >
-                    {t === "hot" ? "熱門" : t}
-                  </button>
-                );
-              })}
+              {visibleFacetTags.length === 0 ? (
+                <span className="fh-tag-empty">沒有符合的標籤。</span>
+              ) : (
+                visibleFacetTags.map((t) => {
+                  const on = tags.includes(t);
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      className={`fh-tag-chip${on ? " on" : ""}`}
+                      aria-pressed={on}
+                      onClick={() => toggleTag(t)}
+                    >
+                      {t === "hot" ? "熱門" : t}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         )}
@@ -236,9 +284,23 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
 
       {results.length === 0 ? (
         <div className="fh-empty">
-          {hasAnyFilter
-            ? "找不到符合條件的行程，試試調整或清除篩選。"
-            : "選擇分類、標籤或輸入關鍵字，開始探索旅程。"}
+          {!hasAnyFilter ? (
+            "選擇分類、標籤或輸入關鍵字，開始探索旅程。"
+          ) : tagMode === "all" && tags.length > 1 ? (
+            <>
+              找不到同時符合所有標籤的行程，試試
+              <button
+                type="button"
+                className="fh-empty-link"
+                onClick={() => setTagMode("any")}
+              >
+                改用「符合任一標籤」
+              </button>
+              。
+            </>
+          ) : (
+            "找不到符合條件的行程，試試調整或清除篩選。"
+          )}
         </div>
       ) : (
         <div className={`fh-tour-list${loading ? " is-loading" : ""}`}>

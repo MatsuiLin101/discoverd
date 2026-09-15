@@ -14,11 +14,13 @@ export async function GET(req: NextRequest) {
     .map((t) => t.trim())
     .filter(Boolean);
 
+  const tagMode = sp.get("tagMode") === "all" ? "all" : "any";
+
   const limitRaw = Number.parseInt(sp.get("limit") ?? "", 10);
   const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 8;
 
   try {
-    const data = await searchTours({ q, region, sub, tags }, limit);
+    const data = await searchTours({ q, region, sub, tags, tagMode }, limit);
     return NextResponse.json(data);
   } catch (e) {
     console.error("[GET /api/search]", e);

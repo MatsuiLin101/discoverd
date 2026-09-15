@@ -21,6 +21,7 @@ export default async function ToursPage({
     regionId?: string;
     subRegionId?: string;
     tagIds?: string;
+    tagMode?: string;
     published?: string;
     page?: string;
     limit?: string;
@@ -30,12 +31,13 @@ export default async function ToursPage({
   const session = await getSession();
   if (!session) redirect(adminUrl("/login"));
 
-  const { q, regionId, subRegionId, tagIds, published, page: pageParam, limit: limitParam, sortMode } =
+  const { q, regionId, subRegionId, tagIds, tagMode, published, page: pageParam, limit: limitParam, sortMode } =
     await searchParams;
 
   const isSortMode = sortMode === "1" && !!subRegionId;
 
   const tagIdList = tagIds ? tagIds.split(",").filter(Boolean) : [];
+  const tagAll = tagMode === "all";
   const hasFilters = !!(q || regionId || subRegionId || tagIdList.length > 0 || published);
 
   const parsedLimit = parseInt(limitParam ?? "20", 10);
@@ -51,7 +53,14 @@ export default async function ToursPage({
     if (q) where.name = { contains: q, mode: "insensitive" };
     if (subRegionId) where.subRegionId = subRegionId;
     else if (regionId) where.subRegion = { regionId };
-    if (tagIdList.length > 0) where.tags = { some: { id: { in: tagIdList } } };
+    if (tagIdList.length > 0) {
+      if (tagAll) {
+        // Every selected tag must be present: one `some` condition per tag.
+        where.AND = tagIdList.map((id) => ({ tags: { some: { id } } }));
+      } else {
+        where.tags = { some: { id: { in: tagIdList } } };
+      }
+    }
     if (published === "true") where.published = true;
     else if (published === "false") where.published = false;
   }
@@ -113,6 +122,7 @@ export default async function ToursPage({
     if (regionId) baseQs.set("regionId", regionId);
     if (subRegionId) baseQs.set("subRegionId", subRegionId);
     if (tagIds) baseQs.set("tagIds", tagIds);
+    if (tagAll && tagIdList.length > 1) baseQs.set("tagMode", "all");
     if (published) baseQs.set("published", published);
     if (pageSize !== 20) baseQs.set("limit", String(pageSize));
   }
@@ -129,7 +139,7 @@ export default async function ToursPage({
 
   const listKey = isSortMode
     ? `sortMode|${subRegionId ?? ""}`
-    : `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagIds ?? ""}|${published ?? ""}|${currentPage}|${pageSize}`;
+    : `${q ?? ""}|${regionId ?? ""}|${subRegionId ?? ""}|${tagIds ?? ""}|${tagAll ? "all" : "any"}|${published ?? ""}|${currentPage}|${pageSize}`;
 
   const returnUrlQs = new URLSearchParams(baseQs.toString());
   if (!isSortMode && currentPage > 1) returnUrlQs.set("page", String(currentPage));
@@ -195,6 +205,23 @@ export default async function ToursPage({
           {hasFilters
             ? `篩選後 ${filteredCount} 筆（共 ${allCount} 筆）`
             : `共 ${allCount} 筆`}
+        </p>
+      )}
+
+      {!isSortMode && tagAll && tagIdList.length > 1 && filteredCount === 0 && (
+        <p className="mb-3 text-xs text-gray-500">
+          找不到同時符合所有標籤的行程，試試
+          <Link
+            href={(() => {
+              const p = new URLSearchParams(baseQs.toString());
+              p.delete("tagMode");
+              return `${adminUrl("/tours")}?${p.toString()}`;
+            })()}
+            className="mx-1 font-medium text-[#D12351] hover:underline"
+          >
+            改用「符合任一標籤」
+          </Link>
+          。
         </p>
       )}
 

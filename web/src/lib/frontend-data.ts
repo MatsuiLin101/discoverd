@@ -567,8 +567,13 @@ export interface SearchFilters {
   region?: string;
   /** SubRegion slug (sub category); only meaningful together with `region`. */
   sub?: string;
-  /** Tag names (multi-select); a tour matches if it has ANY of them. */
+  /** Tag names (multi-select). */
   tags?: string[];
+  /**
+   * How multiple tags combine: "any" (default, OR — a tour matches if it has
+   * any selected tag) or "all" (AND — a tour must have every selected tag).
+   */
+  tagMode?: "any" | "all";
 }
 
 /** Envelope returned by GET /api/search: total hit count + capped results. */

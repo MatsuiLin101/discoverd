@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { normalizeCrop } from "@/lib/crop";
+import { compareTagName } from "@/lib/tag-sort";
 import type { Prisma } from "@/generated/prisma/client";
 import type {
   RegionListItem,
@@ -199,7 +200,12 @@ function buildSearchWhere(f: SearchFilters): Prisma.TourWhereInput | null {
   }
 
   if (tags.length > 0) {
-    AND.push({ tags: { some: { name: { in: tags } } } });
+    if (f.tagMode === "all") {
+      // Every selected tag must be present: one `some` condition per tag.
+      for (const name of tags) AND.push({ tags: { some: { name } } });
+    } else {
+      AND.push({ tags: { some: { name: { in: tags } } } });
+    }
   }
 
   return { AND };
@@ -284,13 +290,8 @@ export async function getSearchFilters(): Promise<SearchFilterData> {
     }),
   ]);
 
-  // Advanced-search tags are sorted purely by text (Traditional Chinese
-  // collation) rather than the admin-defined sortOrder, so the chip list is
-  // easy to scan. `numeric` makes embedded numbers sort by value, so e.g.
-  // "4天" comes before "12天".
-  const sortedTags = tags
-    .map((t) => t.name)
-    .sort((a, b) => a.localeCompare(b, "zh-Hant", { numeric: true }));
+  // Advanced-search tags are sorted purely by text (see compareTagName).
+  const sortedTags = tags.map((t) => t.name).sort(compareTagName);
 
   return {
     regions: regions.map((r) => ({

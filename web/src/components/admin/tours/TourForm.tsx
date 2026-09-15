@@ -6,6 +6,7 @@ import Image from "next/image";
 import TourFileList from "./TourFileList";
 import AiDescriptionCandidates from "./AiDescriptionCandidates";
 import AiThumbnailCandidates from "./AiThumbnailCandidates";
+import TagPicker from "./TagPicker";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import ImageCropper from "@/components/admin/ImageCropper";
 import CroppedPreview from "@/components/admin/CroppedPreview";
@@ -92,6 +93,8 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
     tour?.tags.map((t) => t.id) ?? []
   );
+  // Local, mutable tag list so inline-created tags appear immediately.
+  const [tagList, setTagList] = useState<Tag[]>(tags);
   const [published, setPublished] = useState(tour?.published ?? true);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
@@ -158,12 +161,6 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     setClearOgImage(true);
     setOgPreview(null);
     if (ogFileRef.current) ogFileRef.current.value = "";
-  }
-
-  function toggleTag(id: string) {
-    setSelectedTagIds((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
-    );
   }
 
   function handleContentFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -283,7 +280,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
       regionName: regions.find((r) => r.id === selectedRegionId)?.name,
       subRegionName: filteredSubRegions.find((s) => s.id === subRegionId)?.name,
       tagNames: selectedTagIds
-        .map((id) => tags.find((t) => t.id === id)?.name)
+        .map((id) => tagList.find((t) => t.id === id)?.name)
         .filter((n): n is string => !!n),
     };
   }
@@ -383,34 +380,12 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
         </div>
 
         {/* 標籤 */}
-        {tags.length > 0 && (
-          <div>
-            <label className={labelClass}>標籤（可多選）</label>
-            <div className="flex flex-wrap gap-2 rounded-lg border border-gray-300 bg-gray-50 p-3">
-              {tags.map((tag) => {
-                const checked = selectedTagIds.includes(tag.id);
-                return (
-                  <label
-                    key={tag.id}
-                    className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                      checked
-                        ? "border-[#D12351] bg-rose-50 text-[#D12351]"
-                        : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      className="hidden"
-                      checked={checked}
-                      onChange={() => toggleTag(tag.id)}
-                    />
-                    {tag.name}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <TagPicker
+          tags={tagList}
+          setTags={setTagList}
+          selectedIds={selectedTagIds}
+          setSelectedIds={setSelectedTagIds}
+        />
 
         {/* 行程縮圖 */}
         <div>
