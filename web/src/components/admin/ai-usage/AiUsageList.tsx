@@ -157,7 +157,7 @@ export default function AiUsageList() {
               {summary.estimatedCost != null ? `NT$ ${summary.estimatedCost.toFixed(2)}` : "—"}
             </p>
             <p className="text-xs text-gray-400">
-              {summary.estimatedCost == null ? "未設定單價" : "依 AI 設定單價"}
+              {summary.estimatedCost == null ? "未設定單價" : "Gemini 實際、Manus 估算"}
               {summary.personalCount > 0 ? `・不含個人額度 ${summary.personalCount} 筆` : ""}
             </p>
           </div>

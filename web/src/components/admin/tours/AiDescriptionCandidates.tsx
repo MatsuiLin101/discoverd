@@ -10,6 +10,7 @@ interface Candidate {
   text: string | null;
   model: string | null;
   keyOwner: KeyOwner | null;
+  isSelected: boolean;
   createdAt: string;
 }
 
@@ -219,7 +220,10 @@ export default function AiDescriptionCandidates({
         candidates.length > 0 && (
           <ul className="mt-3 space-y-2">
             {candidates.map((c) => (
-              <li key={c.id} className="rounded-lg border border-gray-200 bg-white p-3">
+              <li key={c.id} className={`rounded-lg border bg-white p-3 ${c.isSelected ? "border-[#D12351]" : "border-gray-200"}`}>
+                {c.isSelected && (
+                  <span className="mb-1 inline-block rounded bg-rose-50 px-1.5 py-0.5 text-xs font-medium text-[#D12351]">已採用</span>
+                )}
                 <p className="whitespace-pre-wrap text-sm text-gray-700">{c.text}</p>
                 <div className="mt-2 flex items-center gap-3">
                   <button

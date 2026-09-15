@@ -13,6 +13,7 @@ export function serializeGeneration(g: AiGeneration) {
     error: g.error,
     model: g.model,
     keyOwner: g.keyOwner,
+    isSelected: g.isSelected,
     createdAt: g.createdAt,
   };
 }

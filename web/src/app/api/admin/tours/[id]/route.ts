@@ -20,6 +20,34 @@ async function deleteThumbIfUnreferenced(tourId: string, key: string): Promise<v
   if (!referenced) await storage.delete(key).catch(() => {});
 }
 
+/**
+ * Flag the AI candidates that the saved tour actually adopted (thumbnail by
+ * stored key, description by exact text), clearing the flag on the others.
+ */
+async function reconcileSelectedCandidates(
+  tourId: string,
+  thumbnailKey: string | null,
+  description: string | null,
+): Promise<void> {
+  try {
+    await db.aiGeneration.updateMany({ where: { tourId }, data: { isSelected: false } });
+    if (thumbnailKey) {
+      await db.aiGeneration.updateMany({
+        where: { tourId, kind: "THUMBNAIL", imageKey: thumbnailKey },
+        data: { isSelected: true },
+      });
+    }
+    if (description) {
+      await db.aiGeneration.updateMany({
+        where: { tourId, kind: "DESCRIPTION", text: description },
+        data: { isSelected: true },
+      });
+    }
+  } catch (e) {
+    console.error("[reconcileSelectedCandidates]", e);
+  }
+}
+
 const updateSchema = z.object({
   name: z.string().min(1, "請輸入行程名稱"),
   price: z.coerce.number().int().min(0, "價格不可為負數"),
@@ -109,6 +137,11 @@ export async function PUT(
         tags: { set: tagIds.map((tagId) => ({ id: tagId })) },
       },
     });
+    // Record which AI candidates (if any) were adopted, so the usage log and
+    // candidate list can show the chosen version. Matching is deterministic:
+    // thumbnail by stored key, description by exact text.
+    void reconcileSelectedCandidates(id, thumbnailKey, description ?? null);
+
     const thumbnailChange = clearThumbnail && !newThumbnailKey
       ? "removed"
       : newThumbnailKey

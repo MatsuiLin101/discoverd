@@ -15,6 +15,7 @@ interface Candidate {
   imageUrl: string | null;
   error: string | null;
   keyOwner: KeyOwner | null;
+  isSelected: boolean;
   createdAt: string;
 }
 
@@ -246,8 +247,11 @@ export default function AiThumbnailCandidates({
         candidates.length > 0 && (
           <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {candidates.map((c) => (
-              <li key={c.id} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <li key={c.id} className={`overflow-hidden rounded-lg border bg-white ${c.isSelected ? "border-[#D12351]" : "border-gray-200"}`}>
                 <div className="relative flex aspect-[4/3] items-center justify-center bg-gray-100">
+                  {c.isSelected && (
+                    <span className="absolute left-1 top-1 z-10 rounded bg-[#D12351] px-1.5 py-0.5 text-[10px] font-medium text-white">已採用</span>
+                  )}
                   {c.status === "READY" && c.imageUrl ? (
                     <Image src={c.imageUrl} alt="AI 縮圖候選" fill className="object-cover" unoptimized />
                   ) : c.status === "PENDING" ? (

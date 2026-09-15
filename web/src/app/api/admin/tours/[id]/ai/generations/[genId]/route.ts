@@ -3,10 +3,14 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage, buildKey, MIME_TO_EXT } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
-import { getAiKeys } from "@/lib/ai/config";
+import { getAiKeys, getSiteAiSetting } from "@/lib/ai/config";
 import { getTaskResult } from "@/lib/ai/manus";
 import { finishAiUsageByTaskId } from "@/lib/ai/usage";
 import { serializeGeneration } from "@/lib/ai/serialize";
+
+// A PENDING thumbnail is given up on after this long so it can't occupy the
+// per-tour cap forever if the Manus task never resolves.
+const THUMBNAIL_TIMEOUT_MS = 10 * 60 * 1000;
 
 /**
  * GET advances and reports a candidate. For a PENDING thumbnail it polls Manus:
@@ -29,6 +33,14 @@ export async function GET(
 
     if (gen.kind !== "THUMBNAIL" || gen.status !== "PENDING" || !gen.taskId) {
       return NextResponse.json({ data: serializeGeneration(gen) });
+    }
+
+    // Give up on a task that has been pending too long (stuck / never resolves).
+    if (Date.now() - gen.createdAt.getTime() > THUMBNAIL_TIMEOUT_MS) {
+      const msg = "生成逾時（超過 10 分鐘未完成）";
+      const updated = await db.aiGeneration.update({ where: { id: genId }, data: { status: "FAILED", error: msg } });
+      void finishAiUsageByTaskId(gen.taskId, { status: "FAILED", error: msg });
+      return NextResponse.json({ data: serializeGeneration(updated) });
     }
 
     const keys = await getAiKeys();
@@ -69,7 +81,12 @@ export async function GET(
       where: { id: genId },
       data: { status: "READY", imageKey: key, error: null },
     });
-    void finishAiUsageByTaskId(gen.taskId, { status: "SUCCESS", resultRef: key });
+    const site = await getSiteAiSetting();
+    void finishAiUsageByTaskId(
+      gen.taskId,
+      { status: "SUCCESS", resultRef: key },
+      { lite: site.aiManusCreditsLite, standard: site.aiManusCreditsStandard, max: site.aiManusCreditsMax },
+    );
     return NextResponse.json({ data: serializeGeneration(updated) });
   } catch (e) {
     console.error("[GET /api/admin/tours/[id]/ai/generations/[genId]]", e);

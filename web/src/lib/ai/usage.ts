@@ -44,18 +44,29 @@ export async function logAiUsage(data: AiUsageCreate) {
 
 /**
  * Finalise the PENDING usage row for an async thumbnail task (found by taskId),
- * filling in latency from when the row was created. No-op if the row is missing.
+ * filling in latency from when the row was created. On success, records the
+ * estimated Manus credits for the row's agent profile (Manus gives no per-task
+ * cost). No-op if the row is missing.
  */
 export async function finishAiUsageByTaskId(
   taskId: string,
   data: { status: AiUsageStatus; resultRef?: string | null; error?: string | null },
+  creditEstimates?: { lite: number; standard: number; max: number },
 ) {
   try {
     const row = await db.aiUsageLog.findFirst({ where: { taskId } });
     if (!row) return;
+    let creditsUsed: number | undefined;
+    if (data.status === "SUCCESS" && creditEstimates && row.agentProfile) {
+      creditsUsed = creditEstimates[row.agentProfile as "lite" | "standard" | "max"];
+    }
     await db.aiUsageLog.update({
       where: { id: row.id },
-      data: { ...data, latencyMs: Date.now() - row.createdAt.getTime() },
+      data: {
+        ...data,
+        latencyMs: Date.now() - row.createdAt.getTime(),
+        ...(creditsUsed != null ? { creditsUsed } : {}),
+      },
     });
   } catch (e) {
     console.error("[finishAiUsageByTaskId]", e);

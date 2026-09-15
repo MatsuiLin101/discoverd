@@ -30,6 +30,9 @@ const schema = z.object({
   aiGeminiInputPricePerM: z.number().min(0).nullable().optional(),
   aiGeminiOutputPricePerM: z.number().min(0).nullable().optional(),
   aiManusPricePerCredit: z.number().min(0).nullable().optional(),
+  aiManusCreditsLite: z.number().int().min(0).optional(),
+  aiManusCreditsStandard: z.number().int().min(0).optional(),
+  aiManusCreditsMax: z.number().int().min(0).optional(),
 });
 
 export async function GET() {
@@ -51,6 +54,9 @@ export async function GET() {
       aiGeminiInputPricePerM: s.aiGeminiInputPricePerM,
       aiGeminiOutputPricePerM: s.aiGeminiOutputPricePerM,
       aiManusPricePerCredit: s.aiManusPricePerCredit,
+      aiManusCreditsLite: s.aiManusCreditsLite,
+      aiManusCreditsStandard: s.aiManusCreditsStandard,
+      aiManusCreditsMax: s.aiManusCreditsMax,
       encryptionConfigured: isEncryptionConfigured(),
     },
     defaults: {
@@ -87,6 +93,9 @@ export async function PUT(req: NextRequest) {
     aiGeminiInputPricePerM,
     aiGeminiOutputPricePerM,
     aiManusPricePerCredit,
+    aiManusCreditsLite,
+    aiManusCreditsStandard,
+    aiManusCreditsMax,
   } = parsed.data;
 
   const settingNewKey = (geminiApiKey && geminiApiKey.trim()) || (manusApiKey && manusApiKey.trim());
@@ -107,6 +116,9 @@ export async function PUT(req: NextRequest) {
     aiGeminiInputPricePerM: aiGeminiInputPricePerM ?? null,
     aiGeminiOutputPricePerM: aiGeminiOutputPricePerM ?? null,
     aiManusPricePerCredit: aiManusPricePerCredit ?? null,
+    ...(aiManusCreditsLite != null ? { aiManusCreditsLite } : {}),
+    ...(aiManusCreditsStandard != null ? { aiManusCreditsStandard } : {}),
+    ...(aiManusCreditsMax != null ? { aiManusCreditsMax } : {}),
   };
   if (clearGeminiKey) data.geminiApiKeyEnc = null;
   else if (geminiApiKey && geminiApiKey.trim()) data.geminiApiKeyEnc = encryptSecret(geminiApiKey.trim());
