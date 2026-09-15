@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { encryptSecret, isEncryptionConfigured } from "@/lib/crypto";
 import { getSiteAiSetting } from "@/lib/ai/config";
 import {
   DEFAULT_DESCRIPTION_MODEL,
@@ -17,6 +18,11 @@ const schema = z.object({
   thumbnailPrompt: z.string().max(4000).optional(),
   // "" clears the override (fall back to system default).
   thumbnailAgentProfile: z.enum(["", ...MANUS_AGENT_PROFILES]).optional(),
+  // Personal keys: only stored when non-empty; empty means "leave unchanged".
+  geminiApiKey: z.string().optional(),
+  manusApiKey: z.string().optional(),
+  clearGeminiKey: z.boolean().optional(),
+  clearManusKey: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -34,6 +40,9 @@ export async function GET() {
       descriptionPrompt: pref?.descriptionPrompt ?? "",
       thumbnailPrompt: pref?.thumbnailPrompt ?? "",
       thumbnailAgentProfile: pref?.thumbnailAgentProfile ?? "",
+      hasGeminiKey: !!pref?.geminiApiKeyEnc,
+      hasManusKey: !!pref?.manusApiKeyEnc,
+      encryptionConfigured: isEncryptionConfigured(),
     },
     // What a blank field falls back to (system default, then built-in).
     systemDefaults: {
@@ -55,12 +64,22 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
   const norm = (v?: string) => (v && v.trim() ? v : null);
-  const data = {
+  const { geminiApiKey, manusApiKey, clearGeminiKey, clearManusKey } = parsed.data;
+  const settingNewKey = (geminiApiKey && geminiApiKey.trim()) || (manusApiKey && manusApiKey.trim());
+  if (settingNewKey && !isEncryptionConfigured()) {
+    return NextResponse.json({ error: "伺服器未設定 AI_ENCRYPTION_KEY，無法加密儲存金鑰" }, { status: 500 });
+  }
+
+  const data: Record<string, unknown> = {
     descriptionModel: norm(parsed.data.descriptionModel),
     descriptionPrompt: norm(parsed.data.descriptionPrompt),
     thumbnailPrompt: norm(parsed.data.thumbnailPrompt),
     thumbnailAgentProfile: norm(parsed.data.thumbnailAgentProfile),
   };
+  if (clearGeminiKey) data.geminiApiKeyEnc = null;
+  else if (geminiApiKey && geminiApiKey.trim()) data.geminiApiKeyEnc = encryptSecret(geminiApiKey.trim());
+  if (clearManusKey) data.manusApiKeyEnc = null;
+  else if (manusApiKey && manusApiKey.trim()) data.manusApiKeyEnc = encryptSecret(manusApiKey.trim());
 
   const pref = await db.userAiPreference.upsert({
     where: { userId: session.userId },
@@ -74,6 +93,8 @@ export async function PUT(req: NextRequest) {
       descriptionPrompt: pref.descriptionPrompt ?? "",
       thumbnailPrompt: pref.thumbnailPrompt ?? "",
       thumbnailAgentProfile: pref.thumbnailAgentProfile ?? "",
+      hasGeminiKey: !!pref.geminiApiKeyEnc,
+      hasManusKey: !!pref.manusApiKeyEnc,
     },
   });
 }
