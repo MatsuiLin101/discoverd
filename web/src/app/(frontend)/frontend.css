@@ -882,9 +882,14 @@
   .fh-modal-gallery { min-height: 0; }
   .fh-modal-side {
     position: relative; border-left: 0; border-top: 1px solid var(--line);
-    overflow: hidden; max-height: none; padding: 16px 20px;
+    /* Cap the side so a long intro never eats the whole modal: the gallery
+       (1fr row) always keeps space. The panel itself does not scroll — only
+       the intro (.m-top) does — so the corner toggle and the bottom action
+       buttons stay put and reachable no matter how long the intro is. */
+    overflow: hidden; max-height: 60vh; padding: 16px 20px;
     justify-content: flex-start; gap: 10px;
   }
+  .fh-modal-side .m-top { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
   .fh-m-toggle {
     display: inline-flex; align-items: center; justify-content: center;
     position: absolute; top: 12px; right: 16px; z-index: 3;
