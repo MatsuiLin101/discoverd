@@ -27,6 +27,7 @@ import type { ThumbCrop } from "@/lib/crop";
 import ImageLightbox from "@/components/admin/regions/ImageLightbox";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import { compareTagName } from "@/lib/tag-sort";
 
 type TourRow = {
   id: string;
@@ -473,9 +474,15 @@ export default function TourListClient({
     setTagSearch("");
   }
 
-  const visibleTags = tagSearch
-    ? tags.filter((t) => t.name.includes(tagSearch))
-    : tags;
+  // Sorted like the tour form/filter (text + numeric collation).
+  const sortedTags = [...tags].sort((a, b) => compareTagName(a.name, b.name));
+  const batchTagQuery = tagSearch.trim().toLowerCase();
+  // Selected chips always show; the rest are filtered by the search text.
+  const visibleTags = batchTagQuery
+    ? sortedTags.filter(
+        (t) => batchTagIds.has(t.id) || t.name.toLowerCase().includes(batchTagQuery)
+      )
+    : sortedTags;
 
   function toggleBatchTag(id: string) {
     setBatchTagIds((prev) => {
@@ -904,21 +911,19 @@ export default function TourListClient({
             </h3>
             <p className="mb-4 text-sm text-gray-500">對象：{selectedIds.size} 個方案</p>
 
-            {tags.length > 5 && (
-              <input
-                type="search"
-                value={tagSearch}
-                onChange={(e) => setTagSearch(e.target.value)}
-                placeholder="搜尋標籤…"
-                className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351]"
-              />
-            )}
+            <input
+              type="search"
+              value={tagSearch}
+              onChange={(e) => setTagSearch(e.target.value)}
+              placeholder="搜尋標籤…"
+              className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-[#D12351] focus:outline-none focus:ring-1 focus:ring-[#D12351]"
+            />
 
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-gray-400">已選 {batchTagIds.size} 個標籤</span>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setBatchTagIds(new Set(visibleTags.map((t) => t.id)))}
+                  onClick={() => setBatchTagIds((prev) => new Set([...prev, ...visibleTags.map((t) => t.id)]))}
                   className="text-xs text-[#D12351] hover:underline"
                 >
                   全選
@@ -932,26 +937,32 @@ export default function TourListClient({
               </div>
             </div>
 
-            <div className="p-2 mb-4 space-y-2 overflow-y-auto border border-gray-100 rounded-lg max-h-52">
-              {visibleTags.length === 0 && (
+            <div className="mb-4 max-h-52 overflow-y-auto rounded-lg border border-gray-100 p-2">
+              {visibleTags.length === 0 ? (
                 <p className="text-sm text-gray-400">
                   {tagSearch ? "沒有符合的標籤" : "尚無標籤"}
                 </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {visibleTags.map((tag) => {
+                    const checked = batchTagIds.has(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleBatchTag(tag.id)}
+                        className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                          checked
+                            ? "border-[#D12351] bg-rose-50 text-[#D12351]"
+                            : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
+                        }`}
+                      >
+                        {tag.name}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-              {visibleTags.map((tag) => (
-                <label
-                  key={tag.id}
-                  className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 hover:bg-gray-50"
-                >
-                  <input
-                    type="checkbox"
-                    checked={batchTagIds.has(tag.id)}
-                    onChange={() => toggleBatchTag(tag.id)}
-                    className="h-4 w-4 rounded border-gray-300 accent-[#D12351]"
-                  />
-                  <span className="text-sm text-gray-700">{tag.name}</span>
-                </label>
-              ))}
             </div>
 
             {batchError && <p className="mb-3 text-sm text-rose-600">{batchError}</p>}
