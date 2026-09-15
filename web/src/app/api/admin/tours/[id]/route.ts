@@ -21,13 +21,13 @@ async function deleteThumbIfUnreferenced(tourId: string, key: string): Promise<v
 }
 
 /**
- * Flag the AI candidates that the saved tour actually adopted (thumbnail by
- * stored key, description by exact text), clearing the flag on the others.
+ * Flag the AI candidates the saved tour adopted (thumbnail by stored key,
+ * description by the id the editor picked), clearing the flag on the others.
  */
 async function reconcileSelectedCandidates(
   tourId: string,
   thumbnailKey: string | null,
-  description: string | null,
+  descriptionCandidateId: string | null,
 ): Promise<void> {
   try {
     await db.aiGeneration.updateMany({ where: { tourId }, data: { isSelected: false } });
@@ -37,15 +37,20 @@ async function reconcileSelectedCandidates(
         data: { isSelected: true },
       });
     }
-    if (description) {
+    if (descriptionCandidateId) {
       await db.aiGeneration.updateMany({
-        where: { tourId, kind: "DESCRIPTION", text: description },
+        where: { id: descriptionCandidateId, tourId, kind: "DESCRIPTION" },
         data: { isSelected: true },
       });
     }
   } catch (e) {
     console.error("[reconcileSelectedCandidates]", e);
   }
+}
+
+/** Normalise CRLF (added by multipart form encoding) back to LF. */
+function normalizeNewlines(v: FormDataEntryValue | null): string | null {
+  return typeof v === "string" ? v.replace(/\r\n/g, "\n") : null;
 }
 
 const updateSchema = z.object({
@@ -76,9 +81,11 @@ export async function PUT(
       name: fd.get("name"),
       price: fd.get("price"),
       subRegionId: fd.get("subRegionId"),
-      description: fd.get("description"),
+      // Multipart form encoding turns each "\n" into "\r\n"; normalise so the
+      // length check matches what the editor saw (and the stored text is clean).
+      description: normalizeNewlines(fd.get("description")),
       seoTitle: typeof rawSeoTitle === "string" && rawSeoTitle ? rawSeoTitle : undefined,
-      seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? rawSeoDescription : undefined,
+      seoDescription: typeof rawSeoDescription === "string" && rawSeoDescription ? normalizeNewlines(rawSeoDescription) : undefined,
     });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
@@ -137,10 +144,10 @@ export async function PUT(
         tags: { set: tagIds.map((tagId) => ({ id: tagId })) },
       },
     });
-    // Record which AI candidates (if any) were adopted, so the usage log and
-    // candidate list can show the chosen version. Matching is deterministic:
-    // thumbnail by stored key, description by exact text.
-    void reconcileSelectedCandidates(id, thumbnailKey, description ?? null);
+    // Record which AI candidates (if any) were adopted: thumbnail by stored
+    // key, description by the candidate id the editor picked.
+    const selectedDescId = (fd.get("selectedDescriptionCandidateId") as string) || null;
+    void reconcileSelectedCandidates(id, thumbnailKey, selectedDescId);
 
     const thumbnailChange = clearThumbnail && !newThumbnailKey
       ? "removed"

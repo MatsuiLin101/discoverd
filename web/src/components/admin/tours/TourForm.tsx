@@ -84,6 +84,9 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
   const [name, setName] = useState(tour?.name ?? "");
   const [price, setPrice] = useState(tour?.price.toString() ?? "");
   const [description, setDescription] = useState(tour?.description ?? "");
+  // Which AI description candidate is currently adopted (for the 已採用 flag);
+  // cleared when the text is edited by hand.
+  const [selectedDescId, setSelectedDescId] = useState<string | null>(null);
   const [selectedRegionId, setSelectedRegionId] = useState(initialRegionId);
   const [subRegionId, setSubRegionId] = useState(tour?.subRegionId ?? "");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
@@ -209,6 +212,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
     fd.append("name", name);
     fd.append("price", price);
     fd.append("description", description);
+    if (selectedDescId) fd.append("selectedDescriptionCandidateId", selectedDescId);
     fd.append("subRegionId", subRegionId);
     fd.append("published", published ? "true" : "false");
     selectedTagIds.forEach((id) => fd.append("tagIds", id));
@@ -322,12 +326,22 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             multiline
             rows={4}
             value={description}
-            onChange={setDescription}
+            onChange={(v) => {
+              setDescription(v);
+              setSelectedDescId(null); // manual edit → no longer "adopted from" a candidate
+            }}
             maxLength={500}
             placeholder="簡短描述此行程的特色（選填）"
           />
           {isEdit && tourId ? (
-            <AiDescriptionCandidates tourId={tourId} onSelect={setDescription} getContext={getAiContext} />
+            <AiDescriptionCandidates
+              tourId={tourId}
+              onSelect={(text, id) => {
+                setDescription(text);
+                setSelectedDescId(id);
+              }}
+              getContext={getAiContext}
+            />
           ) : (
             <p className="mt-1.5 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程簡介。</p>
           )}

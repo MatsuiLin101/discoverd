@@ -28,7 +28,7 @@ export default function AiDescriptionCandidates({
   getContext,
 }: {
   tourId: string;
-  onSelect: (text: string) => void;
+  onSelect: (text: string, candidateId: string) => void;
   getContext?: () => AiContext;
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -228,7 +228,7 @@ export default function AiDescriptionCandidates({
                 <div className="mt-2 flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => onSelect(c.text ?? "")}
+                    onClick={() => onSelect(c.text ?? "", c.id)}
                     className="cursor-pointer rounded-md border border-[#D12351] px-2.5 py-1 text-xs font-medium text-[#D12351] transition-colors hover:bg-rose-50"
                   >
                     選用此版本
