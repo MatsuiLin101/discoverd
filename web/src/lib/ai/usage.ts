@@ -51,18 +51,27 @@ export async function logAiUsage(data: AiUsageCreate) {
  */
 export async function finishAiUsageByTaskId(
   taskId: string,
-  data: { status: AiUsageStatus; resultRef?: string | null; error?: string | null; creditsUsed?: number | null },
+  data: {
+    status: AiUsageStatus;
+    resultRef?: string | null;
+    error?: string | null;
+    creditsUsed?: number | null;
+    /** The profile Manus actually ran (may differ from the requested one, e.g.
+     * free accounts are forced to lite). */
+    agentProfile?: string | null;
+  },
 ) {
   try {
     const row = await db.aiUsageLog.findFirst({ where: { taskId } });
     if (!row) return;
-    const { creditsUsed, ...rest } = data;
+    const { creditsUsed, agentProfile, ...rest } = data;
     await db.aiUsageLog.update({
       where: { id: row.id },
       data: {
         ...rest,
         latencyMs: Date.now() - row.createdAt.getTime(),
         ...(creditsUsed != null ? { creditsUsed } : {}),
+        ...(agentProfile ? { agentProfile } : {}),
       },
     });
   } catch (e) {

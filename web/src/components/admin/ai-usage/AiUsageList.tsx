@@ -237,7 +237,9 @@ export default function AiUsageList() {
                     {isAdmin && <td className="px-3 py-2">{r.userAccount}</td>}
                     <td className="max-w-[12rem] truncate px-3 py-2" title={r.tourName}>{r.tourName}</td>
                     <td className="px-3 py-2">{KIND_LABEL[r.kind]}</td>
-                    <td className="whitespace-nowrap px-3 py-2 text-gray-500">{r.model ?? r.provider}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-gray-500">
+                      {r.provider === "manus" ? r.agentProfile ?? r.provider : r.model ?? r.provider}
+                    </td>
                     <td className="px-3 py-2">
                       <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLE[r.status]}`}>
                         {STATUS_LABEL[r.status]}

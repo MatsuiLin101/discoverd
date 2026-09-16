@@ -87,12 +87,18 @@ export async function GET(
       where: { id: genId },
       data: { status: "READY", imageKey: key, error: null },
     });
-    // Record the real credit usage from Manus. It is only final once the task
-    // has stopped; if the agent is still wrapping up, leave creditsUsed null so
-    // the AI-usage page can reconcile it later.
+    // Record the real credit usage and the exact model Manus ran (as reported,
+    // e.g. "manus-1.6-lite"; free accounts are forced to a lite model). Credits
+    // are only final once the task has stopped; if the agent is still wrapping
+    // up, leave creditsUsed null so the AI-usage page can reconcile it later.
     const detail = await getTaskDetail({ apiKey: manusKey, taskId: gen.taskId });
     const creditsUsed = detail?.status === "stopped" ? detail.creditUsage ?? null : null;
-    void finishAiUsageByTaskId(gen.taskId, { status: "SUCCESS", resultRef: key, creditsUsed });
+    void finishAiUsageByTaskId(gen.taskId, {
+      status: "SUCCESS",
+      resultRef: key,
+      creditsUsed,
+      agentProfile: detail?.agentProfile ?? undefined,
+    });
     return NextResponse.json({ data: serializeGeneration(updated) });
   } catch (e) {
     console.error("[GET /api/admin/tours/[id]/ai/generations/[genId]]", e);

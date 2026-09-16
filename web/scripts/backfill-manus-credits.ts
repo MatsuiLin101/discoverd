@@ -116,15 +116,16 @@ async function main() {
       continue;
     }
 
+    const agentProfile = detail.agentProfile;
     if (!dryRun) {
       await db.aiUsageLog.update({
         where: { id: row.id },
-        data: { creditsUsed: detail.creditUsage },
+        data: { creditsUsed: detail.creditUsage, ...(agentProfile ? { agentProfile } : {}) },
       });
     }
     updated++;
     console.log(
-      `  ✓ ${taskId}（${row.tourName}）：creditsUsed = ${detail.creditUsage}${dryRun ? "（未寫入）" : ""}`,
+      `  ✓ ${taskId}（${row.tourName}）：creditsUsed = ${detail.creditUsage}、model = ${agentProfile ?? "?"}${dryRun ? "（未寫入）" : ""}`,
     );
   }
 

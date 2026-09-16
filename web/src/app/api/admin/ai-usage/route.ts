@@ -34,8 +34,12 @@ async function reconcileManusCredits(rows: UsageRow[]) {
       if (!key) return;
       const detail = await getTaskDetail({ apiKey: key, taskId: r.taskId! });
       if (detail?.status === "stopped" && detail.creditUsage != null) {
-        await db.aiUsageLog.update({ where: { id: r.id }, data: { creditsUsed: detail.creditUsage } });
+        await db.aiUsageLog.update({
+          where: { id: r.id },
+          data: { creditsUsed: detail.creditUsage, ...(detail.agentProfile ? { agentProfile: detail.agentProfile } : {}) },
+        });
         r.creditsUsed = detail.creditUsage; // reflect in this response
+        if (detail.agentProfile) r.agentProfile = detail.agentProfile;
       }
     }),
   );
