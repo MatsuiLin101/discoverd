@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getSiteAiSetting, getAiKeys, getUserAiKeys } from "@/lib/ai/config";
+import { getAiKeys, getUserAiKeys } from "@/lib/ai/config";
 import { getTaskDetail } from "@/lib/ai/manus";
+import { computeUsageCost } from "@/lib/ai/cost";
 import type { Prisma } from "@/generated/prisma/client";
 
 const PAGE_SIZE = 50;
@@ -45,6 +46,24 @@ async function reconcileManusCredits(rows: UsageRow[]) {
   );
 }
 
+/**
+ * Snapshot the cost of rows that don't have one yet (historical rows, or a Manus
+ * row whose credits were just reconciled). Bounded to the current page; uses the
+ * current synced prices. Once written, the value is frozen.
+ */
+async function backfillCosts(rows: UsageRow[]) {
+  const missing = rows.filter((r) => r.costUsd == null && r.costTwd == null);
+  await Promise.all(
+    missing.map(async (r) => {
+      const { costUsd, costTwd } = await computeUsageCost(r);
+      if (costUsd == null && costTwd == null) return;
+      await db.aiUsageLog.update({ where: { id: r.id }, data: { costUsd, costTwd } });
+      r.costUsd = costUsd; // reflect in this response
+      r.costTwd = costTwd;
+    }),
+  );
+}
+
 export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "請先登入" }, { status: 403 });
@@ -76,47 +95,33 @@ export async function GET(req: NextRequest) {
   // Company cost excludes usage paid by a user's personal key.
   const companyWhere: Prisma.AiUsageLogWhereInput = { ...where, NOT: { keyOwner: "personal" } };
 
-  const [rows, total, sums, costSums, personalCount, byStatus, site, users] = await Promise.all([
+  const [rows, total, sums, personalCount, byStatus, users] = await Promise.all([
     db.aiUsageLog.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: PAGE_SIZE }),
     db.aiUsageLog.count({ where }),
     db.aiUsageLog.aggregate({
       where,
-      _sum: { inputTokens: true, outputTokens: true, thoughtsTokens: true, totalTokens: true, creditsUsed: true },
-    }),
-    db.aiUsageLog.aggregate({
-      where: companyWhere,
-      _sum: { inputTokens: true, outputTokens: true, thoughtsTokens: true, creditsUsed: true },
+      _sum: { inputTokens: true, outputTokens: true, thoughtsTokens: true, totalTokens: true },
     }),
     db.aiUsageLog.count({ where: { ...where, keyOwner: "personal" } }),
     db.aiUsageLog.groupBy({ by: ["status"], where, _count: { _all: true } }),
-    getSiteAiSetting(),
     isAdmin
       ? db.aiUsageLog.groupBy({ by: ["userId", "userAccount"], _count: { _all: true } })
       : Promise.resolve([]),
   ]);
 
-  // Fill real Manus credits for tasks that finished after their image was ready,
-  // then re-read the credit sums so totals reflect the reconciled rows.
+  // Reconcile Manus credits and snapshot any missing costs, then aggregate so the
+  // totals reflect the freshly filled rows. Cost totals are company-paid only.
   await reconcileManusCredits(rows);
-  const [allCreditSum, companyCreditSum] = await Promise.all([
+  await backfillCosts(rows);
+  const [allCreditSum, companyCreditSum, companyCostSum] = await Promise.all([
     db.aiUsageLog.aggregate({ where, _sum: { creditsUsed: true } }),
     db.aiUsageLog.aggregate({ where: companyWhere, _sum: { creditsUsed: true } }),
+    db.aiUsageLog.aggregate({ where: companyWhere, _sum: { costUsd: true, costTwd: true } }),
   ]);
   const allCredits = allCreditSum._sum.creditsUsed ?? 0;
-
-  // Cost is computed only over company-paid usage.
-  const inTok = costSums._sum.inputTokens ?? 0;
-  const outTok = (costSums._sum.outputTokens ?? 0) + (costSums._sum.thoughtsTokens ?? 0);
   const credits = companyCreditSum._sum.creditsUsed ?? 0;
-  const hasPrice =
-    site.aiGeminiInputPricePerM != null ||
-    site.aiGeminiOutputPricePerM != null ||
-    site.aiManusPricePerCredit != null;
-  const estimatedCost = hasPrice
-    ? (inTok / 1e6) * (site.aiGeminiInputPricePerM ?? 0) +
-      (outTok / 1e6) * (site.aiGeminiOutputPricePerM ?? 0) +
-      credits * (site.aiManusPricePerCredit ?? 0)
-    : null;
+  const costUsd = companyCostSum._sum.costUsd ?? 0;
+  const costTwd = companyCostSum._sum.costTwd ?? 0;
 
   const statusCounts: Record<string, number> = {};
   for (const g of byStatus) statusCounts[g.status] = g._count._all;
@@ -138,7 +143,8 @@ export async function GET(req: NextRequest) {
       failed: statusCounts.FAILED ?? 0,
       pending: statusCounts.PENDING ?? 0,
       personalCount,
-      estimatedCost,
+      costUsd,
+      costTwd,
     },
     users: (users as Array<{ userId: string | null; userAccount: string; _count: { _all: number } }>).map((u) => ({
       userId: u.userId,

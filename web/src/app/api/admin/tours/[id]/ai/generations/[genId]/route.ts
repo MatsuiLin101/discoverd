@@ -6,6 +6,7 @@ import { writeLog } from "@/lib/log";
 import { getAiKeys, getUserAiKeys } from "@/lib/ai/config";
 import { getTaskResult, getTaskDetail } from "@/lib/ai/manus";
 import { finishAiUsageByTaskId } from "@/lib/ai/usage";
+import { computeUsageCost } from "@/lib/ai/cost";
 import { serializeGeneration } from "@/lib/ai/serialize";
 
 // A PENDING thumbnail is given up on after this long so it can't occupy the
@@ -93,11 +94,13 @@ export async function GET(
     // up, leave creditsUsed null so the AI-usage page can reconcile it later.
     const detail = await getTaskDetail({ apiKey: manusKey, taskId: gen.taskId });
     const creditsUsed = detail?.status === "stopped" ? detail.creditUsage ?? null : null;
+    const cost = await computeUsageCost({ provider: "manus", creditsUsed });
     void finishAiUsageByTaskId(gen.taskId, {
       status: "SUCCESS",
       resultRef: key,
       creditsUsed,
       agentProfile: detail?.agentProfile ?? undefined,
+      costTwd: cost.costTwd,
     });
     return NextResponse.json({ data: serializeGeneration(updated) });
   } catch (e) {

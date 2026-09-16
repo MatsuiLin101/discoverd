@@ -21,6 +21,8 @@ interface Row {
   thoughtsTokens: number | null;
   totalTokens: number | null;
   creditsUsed: number | null;
+  costUsd: number | null;
+  costTwd: number | null;
   taskId: string | null;
   agentProfile: string | null;
   keyOwner: string | null;
@@ -42,7 +44,8 @@ interface Summary {
   failed: number;
   pending: number;
   personalCount: number;
-  estimatedCost: number | null;
+  costUsd: number;
+  costTwd: number;
 }
 
 const KEY_OWNER_SHORT: Record<string, string> = {
@@ -164,12 +167,10 @@ export default function AiUsageList() {
             </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-3">
-            <p className="text-xs text-gray-400">估算成本</p>
-            <p className="mt-0.5 text-lg font-bold text-gray-800">
-              {summary.estimatedCost != null ? `NT$ ${summary.estimatedCost.toFixed(2)}` : "—"}
-            </p>
+            <p className="text-xs text-gray-400">成本</p>
+            <p className="mt-0.5 text-lg font-bold text-gray-800">NT$ {summary.costTwd.toFixed(2)}</p>
             <p className="text-xs text-gray-400">
-              {summary.estimatedCost == null ? "未設定單價" : "Gemini 實際、Manus 估算"}
+              ≈ US$ {summary.costUsd.toFixed(4)}
               {summary.personalCount > 0 ? `・不含個人額度 ${summary.personalCount} 筆` : ""}
             </p>
           </div>
@@ -290,6 +291,10 @@ export default function AiUsageList() {
                           {r.kind === "THUMBNAIL" && (
                             <p>credits — {r.creditsUsed != null ? r.creditsUsed.toLocaleString() : "—"}</p>
                           )}
+                          <p>
+                            成本 — {r.costTwd != null ? `NT$ ${r.costTwd.toFixed(2)}` : "—"}
+                            {r.costUsd != null ? `（US$ ${r.costUsd.toFixed(4)}）` : ""}
+                          </p>
                           <p>PDF 份數：{r.pdfCount}・提示詞{r.promptOverridden ? "（已手動編輯）" : ""}{r.hint ? `・重點提示：${r.hint}` : ""}</p>
                           {r.taskId && <p>Manus taskId：{r.taskId}</p>}
                           {r.promptText && (

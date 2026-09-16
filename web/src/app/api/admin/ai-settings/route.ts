@@ -27,8 +27,6 @@ const schema = z.object({
   aiThumbnailAgentProfile: z.enum(MANUS_AGENT_PROFILES).optional(),
   aiManusPersonalThreshold: z.number().int().min(0).optional(),
   // Cost estimate unit prices (NT$); null/undefined clears.
-  aiGeminiInputPricePerM: z.number().min(0).nullable().optional(),
-  aiGeminiOutputPricePerM: z.number().min(0).nullable().optional(),
   aiManusPricePerCredit: z.number().min(0).nullable().optional(),
 });
 
@@ -48,8 +46,6 @@ export async function GET() {
       aiThumbnailPrompt: s.aiThumbnailPrompt ?? "",
       aiThumbnailAgentProfile: s.aiThumbnailAgentProfile,
       aiManusPersonalThreshold: s.aiManusPersonalThreshold,
-      aiGeminiInputPricePerM: s.aiGeminiInputPricePerM,
-      aiGeminiOutputPricePerM: s.aiGeminiOutputPricePerM,
       aiManusPricePerCredit: s.aiManusPricePerCredit,
       encryptionConfigured: isEncryptionConfigured(),
     },
@@ -84,8 +80,6 @@ export async function PUT(req: NextRequest) {
     aiThumbnailPrompt,
     aiThumbnailAgentProfile,
     aiManusPersonalThreshold,
-    aiGeminiInputPricePerM,
-    aiGeminiOutputPricePerM,
     aiManusPricePerCredit,
   } = parsed.data;
 
@@ -104,8 +98,6 @@ export async function PUT(req: NextRequest) {
     aiThumbnailPrompt: aiThumbnailPrompt?.trim() ? aiThumbnailPrompt : null,
     ...(aiThumbnailAgentProfile ? { aiThumbnailAgentProfile } : {}),
     ...(aiManusPersonalThreshold != null ? { aiManusPersonalThreshold } : {}),
-    aiGeminiInputPricePerM: aiGeminiInputPricePerM ?? null,
-    aiGeminiOutputPricePerM: aiGeminiOutputPricePerM ?? null,
     aiManusPricePerCredit: aiManusPricePerCredit ?? null,
   };
   if (clearGeminiKey) data.geminiApiKeyEnc = null;

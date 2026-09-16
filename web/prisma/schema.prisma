@@ -232,11 +232,8 @@ model SiteSetting {
   // Minimum personal Manus credits required to use a user's own key; below this
   // the shared key is used (Manus cost per task isn't known until it runs).
   aiManusPersonalThreshold Int @default(30)
-  // Optional unit prices for the AI usage cost estimate (in NT$). Null = don't
-  // show a cost. Gemini bills input and output tokens (thinking counts as
-  // output) at different rates, per 1,000,000 tokens.
-  aiGeminiInputPricePerM  Float?
-  aiGeminiOutputPricePerM Float?
+  // Manus per-credit price in NT$ for the cost estimate (null = no Manus cost).
+  // Gemini token prices come from the synced GeminiModelPrice table, not here.
   aiManusPricePerCredit   Float?
 
   updatedAt          DateTime @updatedAt
@@ -379,6 +376,11 @@ model AiUsageLog {
   latencyMs        Int?
   resultRef        String?          // candidate id / image key
   outputChars      Int?             // DESCRIPTION output length
+  // Snapshot cost of this generation, frozen at compute time so later price
+  // changes don't move historical figures. Manus has no USD price (billed in
+  // credits priced in NT$), so costUsd stays null for thumbnails.
+  costUsd          Float?
+  costTwd          Float?
   error            String?
 
   @@index([createdAt])

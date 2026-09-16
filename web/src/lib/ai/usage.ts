@@ -29,6 +29,8 @@ export interface AiUsageCreate {
   latencyMs?: number | null;
   resultRef?: string | null;
   outputChars?: number | null;
+  costUsd?: number | null;
+  costTwd?: number | null;
   error?: string | null;
 }
 
@@ -59,12 +61,14 @@ export async function finishAiUsageByTaskId(
     /** The profile Manus actually ran (may differ from the requested one, e.g.
      * free accounts are forced to lite). */
     agentProfile?: string | null;
+    costUsd?: number | null;
+    costTwd?: number | null;
   },
 ) {
   try {
     const row = await db.aiUsageLog.findFirst({ where: { taskId } });
     if (!row) return;
-    const { creditsUsed, agentProfile, ...rest } = data;
+    const { creditsUsed, agentProfile, costUsd, costTwd, ...rest } = data;
     await db.aiUsageLog.update({
       where: { id: row.id },
       data: {
@@ -72,6 +76,8 @@ export async function finishAiUsageByTaskId(
         latencyMs: Date.now() - row.createdAt.getTime(),
         ...(creditsUsed != null ? { creditsUsed } : {}),
         ...(agentProfile ? { agentProfile } : {}),
+        ...(costUsd != null ? { costUsd } : {}),
+        ...(costTwd != null ? { costTwd } : {}),
       },
     });
   } catch (e) {

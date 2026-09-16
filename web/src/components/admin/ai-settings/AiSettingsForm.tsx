@@ -26,8 +26,6 @@ export default function AiSettingsForm() {
   const [aiThumbnailPrompt, setAiThumbnailPrompt] = useState("");
   const [aiThumbnailAgentProfile, setAiThumbnailAgentProfile] = useState("standard");
   const [manusThreshold, setManusThreshold] = useState("30");
-  const [geminiInputPrice, setGeminiInputPrice] = useState("");
-  const [geminiOutputPrice, setGeminiOutputPrice] = useState("");
   const [manusPrice, setManusPrice] = useState("");
   const [defaults, setDefaults] = useState<Defaults | null>(null);
   const [encryptionConfigured, setEncryptionConfigured] = useState(true);
@@ -51,8 +49,6 @@ export default function AiSettingsForm() {
           setAiThumbnailPrompt(data.aiThumbnailPrompt ?? "");
           setAiThumbnailAgentProfile(data.aiThumbnailAgentProfile ?? "standard");
           setManusThreshold(data.aiManusPersonalThreshold != null ? String(data.aiManusPersonalThreshold) : "30");
-          setGeminiInputPrice(data.aiGeminiInputPricePerM != null ? String(data.aiGeminiInputPricePerM) : "");
-          setGeminiOutputPrice(data.aiGeminiOutputPricePerM != null ? String(data.aiGeminiOutputPricePerM) : "");
           setManusPrice(data.aiManusPricePerCredit != null ? String(data.aiManusPricePerCredit) : "");
           setEncryptionConfigured(data.encryptionConfigured ?? true);
         }
@@ -98,8 +94,6 @@ export default function AiSettingsForm() {
           aiThumbnailPrompt,
           aiThumbnailAgentProfile,
           aiManusPersonalThreshold: manusThreshold.trim() ? Number(manusThreshold) : undefined,
-          aiGeminiInputPricePerM: geminiInputPrice.trim() ? Number(geminiInputPrice) : null,
-          aiGeminiOutputPricePerM: geminiOutputPrice.trim() ? Number(geminiOutputPrice) : null,
           aiManusPricePerCredit: manusPrice.trim() ? Number(manusPrice) : null,
         }),
       });
@@ -290,31 +284,7 @@ export default function AiSettingsForm() {
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <label className={labelClass}>Gemini 輸入</label>
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={geminiInputPrice}
-                  onChange={(e) => setGeminiInputPrice(e.target.value)}
-                  className={inputClass}
-                  placeholder="NT$ / 每百萬 tokens"
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Gemini 輸出</label>
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={geminiOutputPrice}
-                  onChange={(e) => setGeminiOutputPrice(e.target.value)}
-                  className={inputClass}
-                  placeholder="NT$ / 每百萬 tokens"
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Manus</label>
+                <label className={labelClass}>Manus（每 credit）</label>
                 <input
                   type="number"
                   min={0}
@@ -327,7 +297,7 @@ export default function AiSettingsForm() {
               </div>
             </div>
             <p className="text-xs text-gray-400">
-              Gemini 的「思考」tokens 以輸出計價。Manus 縮圖的 credit 用量由 API（task.detail）實際回報，無需設定。
+              Gemini 的 token 單價由 Google Cloud Pricing API 自動同步，無需在此設定；Manus 縮圖的 credit 用量由 API（task.detail）實際回報，僅需設定每 credit 的 NT$ 單價。
             </p>
           </div>
 
