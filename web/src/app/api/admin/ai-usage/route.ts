@@ -84,6 +84,8 @@ export async function GET(req: NextRequest) {
       outputTokens: sums._sum.outputTokens ?? 0,
       thoughtsTokens: sums._sum.thoughtsTokens ?? 0,
       totalTokens: sums._sum.totalTokens ?? 0,
+      credits: sums._sum.creditsUsed ?? 0,
+      companyCredits: costSums._sum.creditsUsed ?? 0,
       success: statusCounts.SUCCESS ?? 0,
       failed: statusCounts.FAILED ?? 0,
       pending: statusCounts.PENDING ?? 0,

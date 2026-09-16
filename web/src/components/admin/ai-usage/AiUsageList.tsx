@@ -20,6 +20,7 @@ interface Row {
   outputTokens: number | null;
   thoughtsTokens: number | null;
   totalTokens: number | null;
+  creditsUsed: number | null;
   taskId: string | null;
   agentProfile: string | null;
   keyOwner: string | null;
@@ -35,6 +36,8 @@ interface Summary {
   outputTokens: number;
   thoughtsTokens: number;
   totalTokens: number;
+  credits: number;
+  companyCredits: number;
   success: number;
   failed: number;
   pending: number;
@@ -140,7 +143,7 @@ export default function AiUsageList() {
       </div>
 
       {summary && (
-        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <div className="rounded-lg border border-gray-200 bg-white p-3">
             <p className="text-xs text-gray-400">總次數</p>
             <p className="mt-0.5 text-lg font-bold text-gray-800">{summary.count}</p>
@@ -150,6 +153,15 @@ export default function AiUsageList() {
             <p className="text-xs text-gray-400">Gemini 總 tokens</p>
             <p className="mt-0.5 text-lg font-bold text-gray-800">{summary.totalTokens.toLocaleString()}</p>
             <p className="text-xs text-gray-400">輸入 {summary.inputTokens.toLocaleString()}・輸出+思考 {(summary.outputTokens + summary.thoughtsTokens).toLocaleString()}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-3">
+            <p className="text-xs text-gray-400">Manus 總 credits</p>
+            <p className="mt-0.5 text-lg font-bold text-gray-800">{summary.credits.toLocaleString()}</p>
+            <p className="text-xs text-gray-400">
+              {summary.credits === 0
+                ? "尚無縮圖用量"
+                : `公用 ${summary.companyCredits.toLocaleString()}・個人 ${(summary.credits - summary.companyCredits).toLocaleString()}`}
+            </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-3">
             <p className="text-xs text-gray-400">估算成本</p>
@@ -245,8 +257,8 @@ export default function AiUsageList() {
                         ? r.totalTokens != null
                           ? `${r.totalTokens.toLocaleString()} tok`
                           : "—"
-                        : r.provider === "manus"
-                          ? "縮圖"
+                        : r.creditsUsed != null
+                          ? `${r.creditsUsed.toLocaleString()} credits`
                           : "—"}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-gray-500">
@@ -272,6 +284,9 @@ export default function AiUsageList() {
                             <p>
                               tokens — 輸入 {r.inputTokens ?? "—"}、輸出 {r.outputTokens ?? "—"}、思考 {r.thoughtsTokens ?? "—"}、合計 {r.totalTokens ?? "—"}；輸出字數 {r.outputChars ?? "—"}
                             </p>
+                          )}
+                          {r.kind === "THUMBNAIL" && (
+                            <p>credits — {r.creditsUsed != null ? r.creditsUsed.toLocaleString() : "—"}</p>
                           )}
                           <p>PDF 份數：{r.pdfCount}・提示詞{r.promptOverridden ? "（已手動編輯）" : ""}{r.hint ? `・重點提示：${r.hint}` : ""}</p>
                           {r.taskId && <p>Manus taskId：{r.taskId}</p>}
