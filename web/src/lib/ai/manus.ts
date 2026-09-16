@@ -7,8 +7,11 @@
  *     status is "stopped" (done) or "error"; the produced image arrives as a
  *     message attachment URL.
  *  3. `testManusKey`        -> GET /v2/usage.availableCredits (validity + balance).
+ *  4. `getTaskDetail`       -> GET /v2/task.detail (status + real credit_usage).
  *
- * Auth header is `x-manus-api-key`.
+ * Auth header is `x-manus-api-key`. A task can only be read with a key from the
+ * account that created it (shared vs. personal), so callers must pass the key
+ * matching the task's keyOwner.
  */
 
 const BASE = "https://api.manus.ai";
@@ -38,6 +41,40 @@ export async function testManusKey(
     return { ok: false, message: `Manus 金鑰無效：${detail}` };
   } catch (e) {
     return { ok: false, message: `無法連線 Manus：${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+export interface ManusTaskDetail {
+  status?: "running" | "stopped" | "waiting" | "error";
+  /** Total credits consumed by the task. Absent when the task consumed none. */
+  creditUsage?: number;
+  agentProfile?: string;
+}
+
+/**
+ * Fetch a task's metadata, including the real `credit_usage` reported by Manus.
+ * Works for finished (stopped) tasks too, while Manus still retains them.
+ * Returns null on any transport / API error so callers can skip that row.
+ */
+export async function getTaskDetail(opts: {
+  apiKey: string;
+  taskId: string;
+}): Promise<ManusTaskDetail | null> {
+  try {
+    const url = `${BASE}/v2/task.detail?task_id=${encodeURIComponent(opts.taskId)}`;
+    const res = await fetch(url, { headers: headers(opts.apiKey) });
+    const body = await res.json().catch(() => null);
+    if (!res.ok || body?.ok === false) return null;
+    const task = body?.task ?? {};
+    const creditUsage: number | undefined =
+      typeof task.credit_usage === "number" ? task.credit_usage : undefined;
+    return {
+      status: task.status,
+      creditUsage,
+      agentProfile: task.agent_profile,
+    };
+  } catch {
+    return null;
   }
 }
 
