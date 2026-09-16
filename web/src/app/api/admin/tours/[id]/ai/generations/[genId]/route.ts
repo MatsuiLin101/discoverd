@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage, buildKey, MIME_TO_EXT } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
-import { getAiKeys, getSiteAiSetting } from "@/lib/ai/config";
+import { getAiKeys, getUserAiKeys, getSiteAiSetting } from "@/lib/ai/config";
 import { getTaskResult } from "@/lib/ai/manus";
 import { finishAiUsageByTaskId } from "@/lib/ai/usage";
 import { serializeGeneration } from "@/lib/ai/serialize";
@@ -43,12 +43,18 @@ export async function GET(
       return NextResponse.json({ data: serializeGeneration(updated) });
     }
 
-    const keys = await getAiKeys();
-    if (!keys.manus) {
+    // A Manus task is only readable with the key of the account that created it.
+    // Personal-key tasks must be polled with that user's personal key; shared and
+    // fallback_* tasks were created with the shared key.
+    const manusKey =
+      gen.keyOwner === "personal" && gen.createdById
+        ? (await getUserAiKeys(gen.createdById)).manus
+        : (await getAiKeys()).manus;
+    if (!manusKey) {
       return NextResponse.json({ data: serializeGeneration(gen) });
     }
 
-    const result = await getTaskResult({ apiKey: keys.manus, taskId: gen.taskId });
+    const result = await getTaskResult({ apiKey: manusKey, taskId: gen.taskId });
     if (result.status === "pending") {
       return NextResponse.json({ data: serializeGeneration(gen) });
     }
