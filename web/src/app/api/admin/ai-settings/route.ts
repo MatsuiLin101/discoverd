@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
 import { encryptSecret, isEncryptionConfigured } from "@/lib/crypto";
 import { getSiteAiSetting } from "@/lib/ai/config";
+import { getCurrentGeminiPrices, getLastGeminiSyncAt } from "@/lib/ai/gemini-price-sync";
 import {
   DEFAULT_DESCRIPTION_MODEL,
   DEFAULT_DESCRIPTION_PROMPT,
@@ -27,12 +28,7 @@ const schema = z.object({
   aiThumbnailAgentProfile: z.enum(MANUS_AGENT_PROFILES).optional(),
   aiManusPersonalThreshold: z.number().int().min(0).optional(),
   // Cost estimate unit prices (NT$); null/undefined clears.
-  aiGeminiInputPricePerM: z.number().min(0).nullable().optional(),
-  aiGeminiOutputPricePerM: z.number().min(0).nullable().optional(),
   aiManusPricePerCredit: z.number().min(0).nullable().optional(),
-  aiManusCreditsLite: z.number().int().min(0).optional(),
-  aiManusCreditsStandard: z.number().int().min(0).optional(),
-  aiManusCreditsMax: z.number().int().min(0).optional(),
 });
 
 export async function GET() {
@@ -42,7 +38,25 @@ export async function GET() {
   }
 
   const s = await getSiteAiSetting();
+  const [geminiPrices, lastGeminiSyncAt, usedModels] = await Promise.all([
+    getCurrentGeminiPrices(),
+    getLastGeminiSyncAt(),
+    db.aiUsageLog.findMany({
+      where: { provider: "gemini", model: { not: null } },
+      distinct: ["model"],
+      select: { model: true },
+    }),
+  ]);
+  // Gemini models that appear in usage logs but have no synced price yet — their
+  // cost can't be computed until an admin adds their SKUs to MODEL_SKU_MAP.
+  const pricedModels = new Set(geminiPrices.map((p) => p.model));
+  const unpricedModels = usedModels
+    .map((u) => u.model)
+    .filter((m): m is string => !!m && !pricedModels.has(m));
   return NextResponse.json({
+    geminiPrices,
+    lastGeminiSyncAt,
+    unpricedModels,
     data: {
       hasGeminiKey: !!s.geminiApiKeyEnc,
       hasManusKey: !!s.manusApiKeyEnc,
@@ -51,12 +65,7 @@ export async function GET() {
       aiThumbnailPrompt: s.aiThumbnailPrompt ?? "",
       aiThumbnailAgentProfile: s.aiThumbnailAgentProfile,
       aiManusPersonalThreshold: s.aiManusPersonalThreshold,
-      aiGeminiInputPricePerM: s.aiGeminiInputPricePerM,
-      aiGeminiOutputPricePerM: s.aiGeminiOutputPricePerM,
       aiManusPricePerCredit: s.aiManusPricePerCredit,
-      aiManusCreditsLite: s.aiManusCreditsLite,
-      aiManusCreditsStandard: s.aiManusCreditsStandard,
-      aiManusCreditsMax: s.aiManusCreditsMax,
       encryptionConfigured: isEncryptionConfigured(),
     },
     defaults: {
@@ -90,12 +99,7 @@ export async function PUT(req: NextRequest) {
     aiThumbnailPrompt,
     aiThumbnailAgentProfile,
     aiManusPersonalThreshold,
-    aiGeminiInputPricePerM,
-    aiGeminiOutputPricePerM,
     aiManusPricePerCredit,
-    aiManusCreditsLite,
-    aiManusCreditsStandard,
-    aiManusCreditsMax,
   } = parsed.data;
 
   const settingNewKey = (geminiApiKey && geminiApiKey.trim()) || (manusApiKey && manusApiKey.trim());
@@ -113,12 +117,7 @@ export async function PUT(req: NextRequest) {
     aiThumbnailPrompt: aiThumbnailPrompt?.trim() ? aiThumbnailPrompt : null,
     ...(aiThumbnailAgentProfile ? { aiThumbnailAgentProfile } : {}),
     ...(aiManusPersonalThreshold != null ? { aiManusPersonalThreshold } : {}),
-    aiGeminiInputPricePerM: aiGeminiInputPricePerM ?? null,
-    aiGeminiOutputPricePerM: aiGeminiOutputPricePerM ?? null,
     aiManusPricePerCredit: aiManusPricePerCredit ?? null,
-    ...(aiManusCreditsLite != null ? { aiManusCreditsLite } : {}),
-    ...(aiManusCreditsStandard != null ? { aiManusCreditsStandard } : {}),
-    ...(aiManusCreditsMax != null ? { aiManusCreditsMax } : {}),
   };
   if (clearGeminiKey) data.geminiApiKeyEnc = null;
   else if (geminiApiKey && geminiApiKey.trim()) data.geminiApiKeyEnc = encryptSecret(geminiApiKey.trim());

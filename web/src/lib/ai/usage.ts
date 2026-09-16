@@ -29,6 +29,8 @@ export interface AiUsageCreate {
   latencyMs?: number | null;
   resultRef?: string | null;
   outputChars?: number | null;
+  costUsd?: number | null;
+  costTwd?: number | null;
   error?: string | null;
 }
 
@@ -44,28 +46,38 @@ export async function logAiUsage(data: AiUsageCreate) {
 
 /**
  * Finalise the PENDING usage row for an async thumbnail task (found by taskId),
- * filling in latency from when the row was created. On success, records the
- * estimated Manus credits for the row's agent profile (Manus gives no per-task
- * cost). No-op if the row is missing.
+ * filling in latency from when the row was created. `creditsUsed` is the real
+ * per-task usage read from Manus task.detail; pass it only when the task has
+ * stopped (the value is final then), otherwise leave it null for later
+ * reconciliation. No-op if the row is missing.
  */
 export async function finishAiUsageByTaskId(
   taskId: string,
-  data: { status: AiUsageStatus; resultRef?: string | null; error?: string | null },
-  creditEstimates?: { lite: number; standard: number; max: number },
+  data: {
+    status: AiUsageStatus;
+    resultRef?: string | null;
+    error?: string | null;
+    creditsUsed?: number | null;
+    /** The profile Manus actually ran (may differ from the requested one, e.g.
+     * free accounts are forced to lite). */
+    agentProfile?: string | null;
+    costUsd?: number | null;
+    costTwd?: number | null;
+  },
 ) {
   try {
     const row = await db.aiUsageLog.findFirst({ where: { taskId } });
     if (!row) return;
-    let creditsUsed: number | undefined;
-    if (data.status === "SUCCESS" && creditEstimates && row.agentProfile) {
-      creditsUsed = creditEstimates[row.agentProfile as "lite" | "standard" | "max"];
-    }
+    const { creditsUsed, agentProfile, costUsd, costTwd, ...rest } = data;
     await db.aiUsageLog.update({
       where: { id: row.id },
       data: {
-        ...data,
+        ...rest,
         latencyMs: Date.now() - row.createdAt.getTime(),
         ...(creditsUsed != null ? { creditsUsed } : {}),
+        ...(agentProfile ? { agentProfile } : {}),
+        ...(costUsd != null ? { costUsd } : {}),
+        ...(costTwd != null ? { costTwd } : {}),
       },
     });
   } catch (e) {

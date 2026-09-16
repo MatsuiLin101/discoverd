@@ -12,6 +12,14 @@ interface Defaults {
   thumbnailPrompt: string;
 }
 
+interface GeminiPrice {
+  model: string;
+  currency: string;
+  inputPerM: number;
+  outputPerM: number;
+  fetchedAt: string;
+}
+
 type TestState = { loading: boolean; ok?: boolean; message?: string };
 
 export default function AiSettingsForm() {
@@ -26,14 +34,15 @@ export default function AiSettingsForm() {
   const [aiThumbnailPrompt, setAiThumbnailPrompt] = useState("");
   const [aiThumbnailAgentProfile, setAiThumbnailAgentProfile] = useState("standard");
   const [manusThreshold, setManusThreshold] = useState("30");
-  const [creditsLite, setCreditsLite] = useState("10");
-  const [creditsStandard, setCreditsStandard] = useState("22");
-  const [creditsMax, setCreditsMax] = useState("40");
-  const [geminiInputPrice, setGeminiInputPrice] = useState("");
-  const [geminiOutputPrice, setGeminiOutputPrice] = useState("");
   const [manusPrice, setManusPrice] = useState("");
   const [defaults, setDefaults] = useState<Defaults | null>(null);
+  const [geminiPrices, setGeminiPrices] = useState<GeminiPrice[]>([]);
   const [encryptionConfigured, setEncryptionConfigured] = useState(true);
+
+  const [lastGeminiSyncAt, setLastGeminiSyncAt] = useState<string | null>(null);
+  const [unpricedModels, setUnpricedModels] = useState<string[]>([]);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
@@ -45,7 +54,10 @@ export default function AiSettingsForm() {
   useEffect(() => {
     fetch("/api/admin/ai-settings")
       .then((r) => r.json())
-      .then(({ data, defaults }) => {
+      .then(({ data, defaults, geminiPrices, lastGeminiSyncAt, unpricedModels }) => {
+        if (geminiPrices) setGeminiPrices(geminiPrices);
+        setLastGeminiSyncAt(lastGeminiSyncAt ?? null);
+        setUnpricedModels(unpricedModels ?? []);
         if (data) {
           setHasGeminiKey(data.hasGeminiKey);
           setHasManusKey(data.hasManusKey);
@@ -54,11 +66,6 @@ export default function AiSettingsForm() {
           setAiThumbnailPrompt(data.aiThumbnailPrompt ?? "");
           setAiThumbnailAgentProfile(data.aiThumbnailAgentProfile ?? "standard");
           setManusThreshold(data.aiManusPersonalThreshold != null ? String(data.aiManusPersonalThreshold) : "30");
-          setCreditsLite(data.aiManusCreditsLite != null ? String(data.aiManusCreditsLite) : "10");
-          setCreditsStandard(data.aiManusCreditsStandard != null ? String(data.aiManusCreditsStandard) : "22");
-          setCreditsMax(data.aiManusCreditsMax != null ? String(data.aiManusCreditsMax) : "40");
-          setGeminiInputPrice(data.aiGeminiInputPricePerM != null ? String(data.aiGeminiInputPricePerM) : "");
-          setGeminiOutputPrice(data.aiGeminiOutputPricePerM != null ? String(data.aiGeminiOutputPricePerM) : "");
           setManusPrice(data.aiManusPricePerCredit != null ? String(data.aiManusPricePerCredit) : "");
           setEncryptionConfigured(data.encryptionConfigured ?? true);
         }
@@ -85,6 +92,30 @@ export default function AiSettingsForm() {
     }
   }
 
+  async function syncGeminiPrices() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res = await fetch("/api/admin/ai-settings/sync-gemini-prices", { method: "POST" });
+      const { data, error, lastSyncedAt } = await res.json();
+      if (res.ok && data) {
+        setSyncMsg({ ok: true, text: `已更新 ${data.models?.length ?? 0} 個模型的價格` });
+        // Reload the current prices and last-synced time from the server.
+        const r = await fetch("/api/admin/ai-settings").then((x) => x.json());
+        if (r.geminiPrices) setGeminiPrices(r.geminiPrices);
+        setLastGeminiSyncAt(r.lastGeminiSyncAt ?? null);
+        setUnpricedModels(r.unpricedModels ?? []);
+      } else {
+        if (lastSyncedAt) setLastGeminiSyncAt(lastSyncedAt);
+        setSyncMsg({ ok: false, text: error ?? "更新失敗" });
+      }
+    } catch {
+      setSyncMsg({ ok: false, text: "網路錯誤，請稍後再試" });
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setIsPending(true);
@@ -104,11 +135,6 @@ export default function AiSettingsForm() {
           aiThumbnailPrompt,
           aiThumbnailAgentProfile,
           aiManusPersonalThreshold: manusThreshold.trim() ? Number(manusThreshold) : undefined,
-          aiManusCreditsLite: creditsLite.trim() ? Number(creditsLite) : undefined,
-          aiManusCreditsStandard: creditsStandard.trim() ? Number(creditsStandard) : undefined,
-          aiManusCreditsMax: creditsMax.trim() ? Number(creditsMax) : undefined,
-          aiGeminiInputPricePerM: geminiInputPrice.trim() ? Number(geminiInputPrice) : null,
-          aiGeminiOutputPricePerM: geminiOutputPrice.trim() ? Number(geminiOutputPrice) : null,
           aiManusPricePerCredit: manusPrice.trim() ? Number(manusPrice) : null,
         }),
       });
@@ -297,33 +323,78 @@ export default function AiSettingsForm() {
               成本估算單價（選填）
               <span className="ml-2 text-xs font-normal text-gray-400">用於「AI 使用紀錄」的成本估算，留空則不顯示金額</span>
             </p>
+
+            <div>
+              <div className="mb-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <p className="text-xs font-medium text-gray-600">
+                  Gemini 目前價格（每百萬 tokens，來自 Google Cloud Pricing API）
+                </p>
+                <span className="text-xs text-gray-400">
+                  最後更新：
+                  {lastGeminiSyncAt
+                    ? new Date(lastGeminiSyncAt).toLocaleString("zh-TW", { hour12: false })
+                    : "尚未更新"}
+                </span>
+                <button
+                  type="button"
+                  onClick={syncGeminiPrices}
+                  disabled={syncing}
+                  className="cursor-pointer rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {syncing ? "更新中…" : "更新價格"}
+                </button>
+                {syncMsg && (
+                  <span className={`text-xs ${syncMsg.ok ? "text-emerald-600" : "text-rose-600"}`}>
+                    {syncMsg.text}
+                  </span>
+                )}
+              </div>
+              <p className="mb-1.5 text-xs text-gray-400">每天僅限更新一次。</p>
+              {geminiPrices.length === 0 ? (
+                <p className="text-xs text-gray-400">
+                  尚無價格資料，請按「更新價格」或執行 <code className="rounded bg-gray-100 px-1">npx tsx scripts/sync-gemini-prices.ts</code>。
+                </p>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-50 text-left text-gray-500">
+                      <tr>
+                        <th className="px-2 py-1.5 font-medium">模型</th>
+                        <th className="px-2 py-1.5 font-medium">幣別</th>
+                        <th className="px-2 py-1.5 font-medium">輸入 / M</th>
+                        <th className="px-2 py-1.5 font-medium">輸出 / M</th>
+                        <th className="px-2 py-1.5 font-medium">更新時間</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-gray-700">
+                      {geminiPrices.map((p) => (
+                        <tr key={`${p.model}-${p.currency}`}>
+                          <td className="px-2 py-1.5">{p.model}</td>
+                          <td className="px-2 py-1.5">{p.currency}</td>
+                          <td className="px-2 py-1.5">{p.inputPerM}</td>
+                          <td className="px-2 py-1.5">{p.outputPerM}</td>
+                          <td className="px-2 py-1.5 text-gray-400">
+                            {new Date(p.fetchedAt).toLocaleString("zh-TW", { hour12: false })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {unpricedModels.length > 0 && (
+                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-700">
+                  以下模型有使用紀錄但尚未收錄價格，其成本無法計算：
+                  <span className="font-medium">{unpricedModels.join("、")}</span>
+                  。請將該模型的 SKU 加入 <code className="rounded bg-amber-100 px-1">MODEL_SKU_MAP</code>
+                  （可用 <code className="rounded bg-amber-100 px-1">npx tsx scripts/find-gemini-sku.ts &quot;模型關鍵字&quot;</code> 找 SKU id）後再更新價格。
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <label className={labelClass}>Gemini 輸入</label>
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={geminiInputPrice}
-                  onChange={(e) => setGeminiInputPrice(e.target.value)}
-                  className={inputClass}
-                  placeholder="NT$ / 每百萬 tokens"
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Gemini 輸出</label>
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={geminiOutputPrice}
-                  onChange={(e) => setGeminiOutputPrice(e.target.value)}
-                  className={inputClass}
-                  placeholder="NT$ / 每百萬 tokens"
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Manus</label>
+                <label className={labelClass}>Manus（每 credit）</label>
                 <input
                   type="number"
                   min={0}
@@ -335,28 +406,9 @@ export default function AiSettingsForm() {
                 />
               </div>
             </div>
-            <p className="text-xs text-gray-400">Gemini 的「思考」tokens 以輸出計價。</p>
-
-            <div className="border-t border-gray-200 pt-3">
-              <p className="mb-2 text-xs font-medium text-gray-600">Manus 每張縮圖估算 credit（依 agent profile）</p>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                  <label className={labelClass}>lite</label>
-                  <input type="number" min={0} step={1} value={creditsLite} onChange={(e) => setCreditsLite(e.target.value)} className={inputClass} placeholder="10" />
-                </div>
-                <div>
-                  <label className={labelClass}>standard</label>
-                  <input type="number" min={0} step={1} value={creditsStandard} onChange={(e) => setCreditsStandard(e.target.value)} className={inputClass} placeholder="22" />
-                </div>
-                <div>
-                  <label className={labelClass}>max</label>
-                  <input type="number" min={0} step={1} value={creditsMax} onChange={(e) => setCreditsMax(e.target.value)} className={inputClass} placeholder="40" />
-                </div>
-              </div>
-              <p className="mt-1 text-xs text-gray-400">
-                Manus 不提供單筆任務的實際 credit，成本以此估算（縮圖成功時，依當次 profile 記錄）。可依實際帳單微調。
-              </p>
-            </div>
+            <p className="text-xs text-gray-400">
+              Gemini 的 token 單價由 Google Cloud Pricing API 自動同步，無需在此設定；Manus 縮圖的 credit 用量由 API（task.detail）實際回報，僅需設定每 credit 的 NT$ 單價。
+            </p>
           </div>
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
