@@ -83,11 +83,12 @@ export async function POST(
       hint,
       promptOverridden: !!promptOverride,
       promptText: fullPrompt,
+      pdfCount: ctx.pdfs.length,
     };
 
     let taskId: string;
     try {
-      taskId = await createThumbnailTask({ apiKey: manusKey, prompt: fullPrompt, agentProfile });
+      taskId = await createThumbnailTask({ apiKey: manusKey, prompt: fullPrompt, agentProfile, pdfs: ctx.pdfs });
     } catch (genErr) {
       void logAiUsage({
         ...usageBase,

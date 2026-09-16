@@ -96,7 +96,7 @@ export async function loadTourAiContext(
       const buf = await storage.get(file.key);
       if (total + buf.length > MAX_PDF_TOTAL_BYTES) continue;
       total += buf.length;
-      pdfs.push({ data: buf.toString("base64"), mimeType: "application/pdf" });
+      pdfs.push({ data: buf.toString("base64"), mimeType: "application/pdf", filename: file.filename ?? undefined });
     } catch {
       // ignore unreadable file
     }

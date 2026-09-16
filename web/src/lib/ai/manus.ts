@@ -78,17 +78,48 @@ export async function getTaskDetail(opts: {
   }
 }
 
-/** Create an image-generation task. Returns the Manus task id. */
+/** A file to attach to the task (inline base64, e.g. a tour PDF). */
+export interface ManusFilePart {
+  data: string; // base64, no data: prefix
+  mimeType?: string;
+  filename?: string;
+}
+
+/**
+ * Create an image-generation task. Returns the Manus task id. When `pdfs` are
+ * given, they are attached to the message so the agent can read them — the same
+ * as dropping the tour PDF into the Manus web UI. Otherwise a plain text prompt
+ * is sent.
+ */
 export async function createThumbnailTask(opts: {
   apiKey: string;
   prompt: string;
   agentProfile?: string;
+  pdfs?: ManusFilePart[];
 }): Promise<string> {
+  const pdfs = opts.pdfs ?? [];
+  // Manus content is either a plain string or an array of typed parts. Attach
+  // files via `file_data` (inline base64), which needs the `data:<mime>;base64,`
+  // prefix and a filename.
+  const content = pdfs.length
+    ? [
+        { type: "text", text: opts.prompt },
+        ...pdfs.map((p, i) => {
+          const mime = p.mimeType ?? "application/pdf";
+          return {
+            type: "file",
+            file_data: `data:${mime};base64,${p.data}`,
+            filename: p.filename?.trim() || `tour-attachment-${i + 1}.pdf`,
+            mime_type: mime,
+          };
+        }),
+      ]
+    : opts.prompt;
   const res = await fetch(`${BASE}/v2/task.create`, {
     method: "POST",
     headers: headers(opts.apiKey),
     body: JSON.stringify({
-      message: { content: opts.prompt },
+      message: { content },
       agent_profile: opts.agentProfile ?? "standard",
       locale: "zh-TW",
       hide_in_task_list: true,
