@@ -372,7 +372,7 @@ model AiUsageLog {
   // Manus fields.
   taskId           String?
   agentProfile     String?
-  creditsUsed      Int?             // not attributable per-task yet; reserved
+  creditsUsed      Int?             // real per-task credits from Manus task.detail
   // Which quota paid: "personal" | "shared" | "fallback_quota" | "fallback_error".
   // Personal usage is excluded from the company cost estimate.
   keyOwner         String?
@@ -385,4 +385,21 @@ model AiUsageLog {
   @@index([userId])
   @@index([kind])
   @@index([taskId])
+}
+
+// Cached Gemini token prices, synced from the Google Cloud Pricing API (one row
+// per model + currency). Prices are per 1,000,000 tokens. Used to compute the
+// cost of a generation from its token usage.
+model GeminiModelPrice {
+  id          String   @id @default(cuid())
+  model       String // e.g. "gemini-3.6-flash"
+  currency    String // ISO-4217, e.g. "USD" | "TWD"
+  inputPerM   Float // price per 1M input tokens
+  outputPerM  Float // price per 1M output tokens (thinking billed as output)
+  inputSkuId  String?
+  outputSkuId String?
+  fetchedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([model, currency])
 }
