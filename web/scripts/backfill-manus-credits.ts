@@ -17,7 +17,10 @@
  * Idempotent: rows that already have creditsUsed are ignored. Safe to re-run.
  *
  * Usage:
- *   npx tsx scripts/backfill-manus-credits.ts [--dry-run] [--limit=N]
+ *   npx tsx scripts/backfill-manus-credits.ts [--dry-run] [--overwrite] [--limit=N]
+ *
+ * --overwrite also re-reads rows that already have creditsUsed, correcting old
+ * per-profile estimates written before the switch to real API usage.
  */
 import { config } from "dotenv";
 import { expand } from "dotenv-expand";
@@ -29,6 +32,9 @@ expand(config({ path: ".env.local" }));
 
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
+// --overwrite also re-reads rows that already have a creditsUsed value, so old
+// estimates written before the switch to real usage get corrected.
+const overwrite = args.includes("--overwrite");
 const limitArg = args.find((a) => a.startsWith("--limit="));
 const limit = limitArg ? Number(limitArg.split("=")[1]) : undefined;
 
@@ -44,7 +50,7 @@ async function main() {
     where: {
       provider: "manus",
       taskId: { not: null },
-      creditsUsed: null,
+      ...(overwrite ? {} : { creditsUsed: null }),
     },
     orderBy: { createdAt: "asc" },
     ...(limit ? { take: limit } : {}),
@@ -103,9 +109,10 @@ async function main() {
       console.warn(`  ⚠ 跳過 ${taskId}：Manus 查無此任務（可能已逾保留期或金鑰不符）`);
       continue;
     }
-    if (detail.creditUsage == null) {
+    // credit_usage is only final once the task has stopped.
+    if (detail.status !== "stopped" || detail.creditUsage == null) {
       noCredit++;
-      console.log(`  · ${taskId}：Manus 未回報 credit_usage（status=${detail.status ?? "?"}），略過`);
+      console.log(`  · ${taskId}：尚無最終 credit_usage（status=${detail.status ?? "?"}），略過`);
       continue;
     }
 
