@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
 import { encryptSecret, isEncryptionConfigured } from "@/lib/crypto";
 import { getSiteAiSetting } from "@/lib/ai/config";
+import { getCurrentGeminiPrices, getLastGeminiSyncAt } from "@/lib/ai/gemini-price-sync";
 import {
   DEFAULT_DESCRIPTION_MODEL,
   DEFAULT_DESCRIPTION_PROMPT,
@@ -37,7 +38,25 @@ export async function GET() {
   }
 
   const s = await getSiteAiSetting();
+  const [geminiPrices, lastGeminiSyncAt, usedModels] = await Promise.all([
+    getCurrentGeminiPrices(),
+    getLastGeminiSyncAt(),
+    db.aiUsageLog.findMany({
+      where: { provider: "gemini", model: { not: null } },
+      distinct: ["model"],
+      select: { model: true },
+    }),
+  ]);
+  // Gemini models that appear in usage logs but have no synced price yet — their
+  // cost can't be computed until an admin adds their SKUs to MODEL_SKU_MAP.
+  const pricedModels = new Set(geminiPrices.map((p) => p.model));
+  const unpricedModels = usedModels
+    .map((u) => u.model)
+    .filter((m): m is string => !!m && !pricedModels.has(m));
   return NextResponse.json({
+    geminiPrices,
+    lastGeminiSyncAt,
+    unpricedModels,
     data: {
       hasGeminiKey: !!s.geminiApiKeyEnc,
       hasManusKey: !!s.manusApiKeyEnc,

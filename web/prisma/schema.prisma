@@ -389,11 +389,13 @@ model AiUsageLog {
   @@index([taskId])
 }
 
-// Cached Gemini token prices, synced from the Google Cloud Pricing API (one row
-// per model + currency). Prices are per 1,000,000 tokens. Used to compute the
-// cost of a generation from its token usage.
+// Gemini token prices synced from the Google Cloud Pricing API. Append-only: a
+// new row is inserted per sync, keeping the history. The current price for a
+// (model, currency) is the row with the latest fetchedAt. Prices are per
+// 1,000,000 tokens. A sync run is grouped by `syncId`.
 model GeminiModelPrice {
   id          String   @id @default(cuid())
+  syncId      String // groups the rows written by one sync run
   model       String // e.g. "gemini-3.6-flash"
   currency    String // ISO-4217, e.g. "USD" | "TWD"
   inputPerM   Float // price per 1M input tokens
@@ -401,7 +403,7 @@ model GeminiModelPrice {
   inputSkuId  String?
   outputSkuId String?
   fetchedAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  @@unique([model, currency])
+  @@index([model, currency, fetchedAt])
+  @@index([fetchedAt])
 }

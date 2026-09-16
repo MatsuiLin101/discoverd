@@ -17,7 +17,12 @@ export async function computeUsageCost(row: {
 }): Promise<{ costUsd: number | null; costTwd: number | null }> {
   if (row.provider === "gemini") {
     if (!row.model) return { costUsd: null, costTwd: null };
-    const prices = await db.geminiModelPrice.findMany({ where: { model: row.model } });
+    // Latest price per currency (the table is append-only history).
+    const prices = await db.geminiModelPrice.findMany({
+      where: { model: row.model },
+      distinct: ["currency"],
+      orderBy: { fetchedAt: "desc" },
+    });
     const inTok = row.inputTokens ?? 0;
     const outTok = (row.outputTokens ?? 0) + (row.thoughtsTokens ?? 0);
     const cost = (currency: string): number | null => {

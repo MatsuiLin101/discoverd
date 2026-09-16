@@ -1,9 +1,7 @@
 /**
- * Sync Gemini token prices from the Google Cloud Pricing API into the local
- * GeminiModelPrice cache. Manual for now; wire it to a scheduler later.
- *
- * For each model in MODEL_SKU_MAP it fetches the input and output SKU prices in
- * each requested currency and upserts one row per (model, currency).
+ * Sync Gemini token prices from the Google Cloud Pricing API into the
+ * (append-only) GeminiModelPrice history. Manual dev/ops tool; the admin panel
+ * has a button for the same thing (rate-limited to once a day).
  *
  * Requires a Google Cloud API key with the Cloud Billing API enabled:
  *   GOOGLE_CLOUD_API_KEY=...   (in .env.local)
@@ -15,75 +13,28 @@
 import { config } from "dotenv";
 import { expand } from "dotenv-expand";
 import { db } from "@/lib/db";
-import { MODEL_SKU_MAP, getSkuPricePerM } from "@/lib/ai/gemini-pricing";
+import { syncGeminiPrices, DEFAULT_SYNC_CURRENCIES } from "@/lib/ai/gemini-price-sync";
 
 expand(config({ path: ".env.local" }));
 
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
 const currenciesArg = args.find((a) => a.startsWith("--currencies="));
-const currencies = (currenciesArg ? currenciesArg.split("=")[1] : "USD,TWD")
-  .split(",")
-  .map((c) => c.trim().toUpperCase())
-  .filter(Boolean);
+const currencies = currenciesArg
+  ? currenciesArg
+      .split("=")[1]
+      .split(",")
+      .map((c) => c.trim().toUpperCase())
+      .filter(Boolean)
+  : DEFAULT_SYNC_CURRENCIES;
 
 async function main() {
-  const apiKey = process.env.GOOGLE_CLOUD_API_KEY;
-  if (!apiKey) {
-    throw new Error("缺少 GOOGLE_CLOUD_API_KEY，請於 .env.local 設定 Google Cloud API key");
-  }
-
+  const result = await syncGeminiPrices({ currencies, dryRun });
   console.log(
-    `同步 ${Object.keys(MODEL_SKU_MAP).length} 個模型 × ${currencies.join("/")} 價格${dryRun ? "（--dry-run，不寫入）" : ""}`,
+    `同步完成${dryRun ? "（--dry-run，不寫入）" : ""}：`,
+    { models: result.models, inserted: result.inserted, ranAt: result.ranAt.toISOString() },
   );
-
-  let updated = 0;
-  let failed = 0;
-
-  for (const [model, sku] of Object.entries(MODEL_SKU_MAP)) {
-    for (const currency of currencies) {
-      try {
-        const [input, output] = await Promise.all([
-          getSkuPricePerM(apiKey, sku.inputSkuId, currency),
-          getSkuPricePerM(apiKey, sku.outputSkuId, currency),
-        ]);
-        if (!input || !output) {
-          failed++;
-          console.warn(`  ⚠ ${model} (${currency})：SKU 未回報可用價格，略過`);
-          continue;
-        }
-        console.log(
-          `  ✓ ${model} (${currency})：input ${input.pricePerM}/M、output ${output.pricePerM}/M${dryRun ? "（未寫入）" : ""}`,
-        );
-        if (!dryRun) {
-          await db.geminiModelPrice.upsert({
-            where: { model_currency: { model, currency } },
-            create: {
-              model,
-              currency,
-              inputPerM: input.pricePerM,
-              outputPerM: output.pricePerM,
-              inputSkuId: sku.inputSkuId,
-              outputSkuId: sku.outputSkuId,
-            },
-            update: {
-              inputPerM: input.pricePerM,
-              outputPerM: output.pricePerM,
-              inputSkuId: sku.inputSkuId,
-              outputSkuId: sku.outputSkuId,
-              fetchedAt: new Date(),
-            },
-          });
-        }
-        updated++;
-      } catch (e) {
-        failed++;
-        console.error(`  ✗ ${model} (${currency})：${e instanceof Error ? e.message : String(e)}`);
-      }
-    }
-  }
-
-  console.log("同步完成：", { updated, failed, dryRun });
+  for (const e of result.errors) console.warn("  ⚠", e);
 }
 
 main()
