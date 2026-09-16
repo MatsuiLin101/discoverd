@@ -26,9 +26,6 @@ export default function AiSettingsForm() {
   const [aiThumbnailPrompt, setAiThumbnailPrompt] = useState("");
   const [aiThumbnailAgentProfile, setAiThumbnailAgentProfile] = useState("standard");
   const [manusThreshold, setManusThreshold] = useState("30");
-  const [creditsLite, setCreditsLite] = useState("10");
-  const [creditsStandard, setCreditsStandard] = useState("22");
-  const [creditsMax, setCreditsMax] = useState("40");
   const [geminiInputPrice, setGeminiInputPrice] = useState("");
   const [geminiOutputPrice, setGeminiOutputPrice] = useState("");
   const [manusPrice, setManusPrice] = useState("");
@@ -54,9 +51,6 @@ export default function AiSettingsForm() {
           setAiThumbnailPrompt(data.aiThumbnailPrompt ?? "");
           setAiThumbnailAgentProfile(data.aiThumbnailAgentProfile ?? "standard");
           setManusThreshold(data.aiManusPersonalThreshold != null ? String(data.aiManusPersonalThreshold) : "30");
-          setCreditsLite(data.aiManusCreditsLite != null ? String(data.aiManusCreditsLite) : "10");
-          setCreditsStandard(data.aiManusCreditsStandard != null ? String(data.aiManusCreditsStandard) : "22");
-          setCreditsMax(data.aiManusCreditsMax != null ? String(data.aiManusCreditsMax) : "40");
           setGeminiInputPrice(data.aiGeminiInputPricePerM != null ? String(data.aiGeminiInputPricePerM) : "");
           setGeminiOutputPrice(data.aiGeminiOutputPricePerM != null ? String(data.aiGeminiOutputPricePerM) : "");
           setManusPrice(data.aiManusPricePerCredit != null ? String(data.aiManusPricePerCredit) : "");
@@ -104,9 +98,6 @@ export default function AiSettingsForm() {
           aiThumbnailPrompt,
           aiThumbnailAgentProfile,
           aiManusPersonalThreshold: manusThreshold.trim() ? Number(manusThreshold) : undefined,
-          aiManusCreditsLite: creditsLite.trim() ? Number(creditsLite) : undefined,
-          aiManusCreditsStandard: creditsStandard.trim() ? Number(creditsStandard) : undefined,
-          aiManusCreditsMax: creditsMax.trim() ? Number(creditsMax) : undefined,
           aiGeminiInputPricePerM: geminiInputPrice.trim() ? Number(geminiInputPrice) : null,
           aiGeminiOutputPricePerM: geminiOutputPrice.trim() ? Number(geminiOutputPrice) : null,
           aiManusPricePerCredit: manusPrice.trim() ? Number(manusPrice) : null,
@@ -335,28 +326,9 @@ export default function AiSettingsForm() {
                 />
               </div>
             </div>
-            <p className="text-xs text-gray-400">Gemini 的「思考」tokens 以輸出計價。</p>
-
-            <div className="border-t border-gray-200 pt-3">
-              <p className="mb-2 text-xs font-medium text-gray-600">Manus 每張縮圖估算 credit（依 agent profile）</p>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                  <label className={labelClass}>lite</label>
-                  <input type="number" min={0} step={1} value={creditsLite} onChange={(e) => setCreditsLite(e.target.value)} className={inputClass} placeholder="10" />
-                </div>
-                <div>
-                  <label className={labelClass}>standard</label>
-                  <input type="number" min={0} step={1} value={creditsStandard} onChange={(e) => setCreditsStandard(e.target.value)} className={inputClass} placeholder="22" />
-                </div>
-                <div>
-                  <label className={labelClass}>max</label>
-                  <input type="number" min={0} step={1} value={creditsMax} onChange={(e) => setCreditsMax(e.target.value)} className={inputClass} placeholder="40" />
-                </div>
-              </div>
-              <p className="mt-1 text-xs text-gray-400">
-                Manus 不提供單筆任務的實際 credit，成本以此估算（縮圖成功時，依當次 profile 記錄）。可依實際帳單微調。
-              </p>
-            </div>
+            <p className="text-xs text-gray-400">
+              Gemini 的「思考」tokens 以輸出計價。Manus 縮圖的 credit 用量由 API（task.detail）實際回報，無需設定。
+            </p>
           </div>
 
           {error && <p className="text-sm text-rose-600">{error}</p>}

@@ -3,8 +3,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage, buildKey, MIME_TO_EXT } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
-import { getAiKeys, getUserAiKeys, getSiteAiSetting } from "@/lib/ai/config";
-import { getTaskResult } from "@/lib/ai/manus";
+import { getAiKeys, getUserAiKeys } from "@/lib/ai/config";
+import { getTaskResult, getTaskDetail } from "@/lib/ai/manus";
 import { finishAiUsageByTaskId } from "@/lib/ai/usage";
 import { serializeGeneration } from "@/lib/ai/serialize";
 
@@ -87,12 +87,12 @@ export async function GET(
       where: { id: genId },
       data: { status: "READY", imageKey: key, error: null },
     });
-    const site = await getSiteAiSetting();
-    void finishAiUsageByTaskId(
-      gen.taskId,
-      { status: "SUCCESS", resultRef: key },
-      { lite: site.aiManusCreditsLite, standard: site.aiManusCreditsStandard, max: site.aiManusCreditsMax },
-    );
+    // Record the real credit usage from Manus. It is only final once the task
+    // has stopped; if the agent is still wrapping up, leave creditsUsed null so
+    // the AI-usage page can reconcile it later.
+    const detail = await getTaskDetail({ apiKey: manusKey, taskId: gen.taskId });
+    const creditsUsed = detail?.status === "stopped" ? detail.creditUsage ?? null : null;
+    void finishAiUsageByTaskId(gen.taskId, { status: "SUCCESS", resultRef: key, creditsUsed });
     return NextResponse.json({ data: serializeGeneration(updated) });
   } catch (e) {
     console.error("[GET /api/admin/tours/[id]/ai/generations/[genId]]", e);

@@ -238,11 +238,6 @@ model SiteSetting {
   aiGeminiInputPricePerM  Float?
   aiGeminiOutputPricePerM Float?
   aiManusPricePerCredit   Float?
-  // Assumed Manus credits per successful thumbnail, by agent profile (Manus
-  // doesn't report per-task cost). Used for the cost estimate only.
-  aiManusCreditsLite     Int @default(10)
-  aiManusCreditsStandard Int @default(22)
-  aiManusCreditsMax      Int @default(40)
 
   updatedAt          DateTime @updatedAt
 }
