@@ -189,11 +189,11 @@ export default function AiDescriptionCandidates({
         />
         <button
           type="button"
-          onClick={openPreview}
+          onClick={() => (previewOpen ? setPreviewOpen(false) : openPreview())}
           disabled={atLimit || previewLoading || generating}
           className="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {previewLoading ? "載入中…" : "預覽提示詞"}
+          {previewLoading ? "載入中…" : previewOpen ? "收合提示詞" : "預覽提示詞"}
         </button>
         <button
           type="button"
@@ -215,7 +215,17 @@ export default function AiDescriptionCandidates({
 
       {previewOpen && (
         <div className="mt-3 rounded-lg border border-[#D12351]/40 bg-white p-3">
-          <p className="mb-1.5 text-xs font-medium text-gray-700">送出前可檢視並修改提示詞：</p>
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-gray-700">送出前可檢視並修改提示詞：</p>
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(false)}
+              aria-label="關閉預覽"
+              className="cursor-pointer rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
           <textarea
             rows={8}
             value={previewPrompt}
