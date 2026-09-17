@@ -23,10 +23,14 @@ export default function AiThumbnailCandidates({
   tourId,
   onSelect,
   getContext,
+  selectedKey,
 }: {
   tourId: string;
   onSelect: (choice: { key: string; url: string }) => void;
   getContext?: () => AiContext;
+  /** Live-adopted candidate image key (parent form state) — highlights the chosen
+   * card immediately, before the form is saved. Null means fall back to the saved one. */
+  selectedKey?: string | null;
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
@@ -260,11 +264,26 @@ export default function AiThumbnailCandidates({
       ) : (
         candidates.length > 0 && (
           <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {candidates.map((c) => (
-              <li key={c.id} className={`overflow-hidden rounded-lg border bg-white ${c.isSelected ? "border-[#D12351]" : "border-gray-200"}`}>
+            {candidates.map((c) => {
+              const applied = c.isSelected; // saved in DB (live on the site)
+              const picked = selectedKey != null && !!c.imageKey && c.imageKey === selectedKey; // live pick
+              const pendingPick = picked && !applied; // picked but not yet saved
+              // The candidate that will take effect on save (live pick, else the saved one).
+              const effective = selectedKey != null ? picked : applied;
+              return (
+              <li key={c.id} className={`overflow-hidden rounded-lg border bg-white ${
+                pendingPick
+                  ? "border-amber-400 ring-2 ring-amber-300/50"
+                  : applied
+                    ? "border-[#D12351] ring-2 ring-[#D12351]/30"
+                    : "border-gray-200"
+              }`}>
                 <div className="relative flex aspect-[4/3] items-center justify-center bg-gray-100">
-                  {c.isSelected && (
-                    <span className="absolute left-1 top-1 z-10 rounded bg-[#D12351] px-1.5 py-0.5 text-[10px] font-medium text-white">已採用</span>
+                  {applied && (
+                    <span className="absolute left-1 top-1 z-10 rounded bg-[#D12351] px-1.5 py-0.5 text-[10px] font-medium text-white">✓ 目前套用</span>
+                  )}
+                  {pendingPick && (
+                    <span className="absolute left-1 top-1 z-10 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">● 目前選擇・未存</span>
                   )}
                   {c.status === "READY" && c.imageUrl ? (
                     <Image src={c.imageUrl} alt="AI 縮圖候選" fill className="object-cover" unoptimized />
@@ -277,11 +296,11 @@ export default function AiThumbnailCandidates({
                 <div className="flex items-center justify-between gap-2 px-2 py-1.5">
                   <button
                     type="button"
-                    disabled={c.status !== "READY" || !c.imageUrl}
+                    disabled={c.status !== "READY" || !c.imageUrl || effective}
                     onClick={() => c.imageUrl && onSelect({ key: c.imageKey as string, url: c.imageUrl })}
-                    className="cursor-pointer rounded-md border border-[#D12351] px-2 py-0.5 text-xs font-medium text-[#D12351] transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                    className={`rounded-md border px-2 py-0.5 text-xs font-medium transition-colors ${effective ? "cursor-default border-[#D12351] bg-[#D12351] text-white" : "cursor-pointer border-[#D12351] text-[#D12351] hover:bg-rose-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"}`}
                   >
-                    選用
+                    {effective ? "使用中" : "選用"}
                   </button>
                   <button
                     type="button"
@@ -299,7 +318,8 @@ export default function AiThumbnailCandidates({
                   </p>
                 )}
               </li>
-            ))}
+              );
+            })}
           </ul>
         )
       )}

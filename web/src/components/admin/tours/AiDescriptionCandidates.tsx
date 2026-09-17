@@ -28,10 +28,14 @@ export default function AiDescriptionCandidates({
   tourId,
   onSelect,
   getContext,
+  selectedId,
 }: {
   tourId: string;
   onSelect: (text: string, candidateId: string) => void;
   getContext?: () => AiContext;
+  /** Live-adopted candidate id (parent form state) — highlights the chosen card
+   * immediately, before the form is saved. Null means fall back to the saved one. */
+  selectedId?: string | null;
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
@@ -254,15 +258,29 @@ export default function AiDescriptionCandidates({
               const text = c.text ?? "";
               const isExpanded = expanded.has(c.id);
               const canClamp = text.length > CLAMP_CHARS;
+              const applied = c.isSelected; // saved in DB (live on the site)
+              const picked = selectedId != null && c.id === selectedId; // live pick this session
+              const pendingPick = picked && !applied; // picked but not yet saved
+              // The version that will take effect on save (live pick, else the saved one).
+              const effective = selectedId != null ? picked : applied;
               return (
                 <li
                   key={c.id}
-                  className={`flex flex-col rounded-lg border bg-white p-3 ${c.isSelected ? "border-[#D12351]" : "border-gray-200"}`}
+                  className={`flex flex-col rounded-lg border bg-white p-3 ${
+                    pendingPick
+                      ? "border-amber-400 ring-2 ring-amber-300/50"
+                      : applied
+                        ? "border-[#D12351] ring-2 ring-[#D12351]/30"
+                        : "border-gray-200"
+                  }`}
                 >
-                  <div className="mb-1 flex items-center gap-2">
+                  <div className="mb-1 flex flex-wrap items-center gap-1.5">
                     <span className="text-xs font-medium text-gray-400">版本 {candidates.length - i}</span>
-                    {c.isSelected && (
-                      <span className="rounded bg-rose-50 px-1.5 py-0.5 text-xs font-medium text-[#D12351]">已採用</span>
+                    {applied && (
+                      <span className="rounded bg-[#D12351] px-1.5 py-0.5 text-xs font-medium text-white">✓ 目前套用</span>
+                    )}
+                    {pendingPick && (
+                      <span className="rounded bg-amber-500 px-1.5 py-0.5 text-xs font-medium text-white">● 目前選擇・尚未儲存</span>
                     )}
                     {c.keyOwner && (
                       <span className={`ml-auto text-xs ${c.keyOwner === "personal" ? "text-emerald-600" : "text-gray-400"}`}>
@@ -288,9 +306,10 @@ export default function AiDescriptionCandidates({
                     <button
                       type="button"
                       onClick={() => onSelect(text, c.id)}
-                      className="cursor-pointer rounded-md border border-[#D12351] px-2.5 py-1 text-xs font-medium text-[#D12351] transition-colors hover:bg-rose-50"
+                      disabled={effective}
+                      className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${effective ? "cursor-default border-[#D12351] bg-[#D12351] text-white" : "cursor-pointer border-[#D12351] text-[#D12351] hover:bg-rose-50"}`}
                     >
-                      選用此版本
+                      {effective ? "目前使用中" : "選用此版本"}
                     </button>
                     <button
                       type="button"
