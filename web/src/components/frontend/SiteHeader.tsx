@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import { trackEvent } from "@/lib/analytics";
 import type { SearchResultItem, SearchResponse } from "@/lib/frontend-data";
 import LineIcon from "./LineIcon";
 import LineCommunityIcon from "./LineCommunityIcon";
@@ -62,6 +63,7 @@ export default function SiteHeader() {
 
   function goToSearchPage(q: string) {
     const trimmed = q.trim();
+    if (trimmed) trackEvent("search", { search_term: trimmed, method: "header" });
     setOpen(false);
     router.push(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : "/search");
   }
