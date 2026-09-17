@@ -54,11 +54,17 @@ export function parseContextOverride(raw: unknown): TourContextOverride | undefi
  *
  * `overrides` lets the caller substitute the editor's current unsaved form
  * values so generation reflects what's on screen without saving first.
+ *
+ * `options.includePdfs` (default true) controls whether attached PDFs are read
+ * and fed to the model. Pass false to let the editor generate from the text
+ * context only, skipping the PDF reads entirely.
  */
 export async function loadTourAiContext(
   tourId: string,
   overrides?: TourContextOverride,
+  options?: { includePdfs?: boolean },
 ): Promise<TourAiContext | null> {
+  const includePdfs = options?.includePdfs ?? true;
   const tour = await db.tour.findUnique({
     where: { id: tourId },
     select: {
@@ -87,9 +93,10 @@ export async function loadTourAiContext(
   ].filter(Boolean);
 
   // Load attached PDFs (best-effort; skip anything that fails to read).
+  // When the caller opted out, skip the reads entirely and send text only.
   const pdfs: GeminiPdfPart[] = [];
   let total = 0;
-  for (const file of tour.files) {
+  for (const file of includePdfs ? tour.files : []) {
     if (pdfs.length >= MAX_PDF_FILES) break;
     if (file.mimeType !== "application/pdf") continue;
     try {

@@ -63,8 +63,11 @@ export async function POST(
     // Per-generation override, else the effective (personal ?? system) profile.
     const agentProfile = toAgentProfile(body?.agentProfile) ?? thumbnailAgentProfile;
 
+    // Attach uploaded PDFs unless the editor opted out (default: include).
+    const includePdfs = body?.includePdfs !== false;
+
     // Use the editor's current (possibly unsaved) form values when provided.
-    const ctx = await loadTourAiContext(id, parseContextOverride(body?.context));
+    const ctx = await loadTourAiContext(id, parseContextOverride(body?.context), { includePdfs });
     if (!ctx) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
 
     // A previewed/edited prompt is used verbatim; otherwise assemble it now.

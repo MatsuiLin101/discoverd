@@ -34,6 +34,7 @@ export default function AiDescriptionCandidates({
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
   const [model, setModel] = useState("");
+  const [includePdfs, setIncludePdfs] = useState(true);
   const [hasPersonalKey, setHasPersonalKey] = useState(false);
   const [quota, setQuota] = useState<"personal" | "shared">("personal");
   const [loading, setLoading] = useState(true);
@@ -72,7 +73,7 @@ export default function AiDescriptionCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/description`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride, model: model.trim() || undefined, quota: hasPersonalKey ? quota : undefined }),
+        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride, model: model.trim() || undefined, quota: hasPersonalKey ? quota : undefined, includePdfs }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {
@@ -96,7 +97,7 @@ export default function AiDescriptionCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "DESCRIPTION", hint: hint.trim() || undefined, context: getContext?.() }),
+        body: JSON.stringify({ kind: "DESCRIPTION", hint: hint.trim() || undefined, context: getContext?.(), includePdfs }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {
@@ -129,6 +130,18 @@ export default function AiDescriptionCandidates({
           className="w-56 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[#D12351]"
         />
         <span className="text-xs text-gray-400">本次生成使用；預設為你的偏好/系統值</span>
+      </div>
+      <div className="mb-2">
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+          <input
+            type="checkbox"
+            checked={includePdfs}
+            onChange={(e) => setIncludePdfs(e.target.checked)}
+            className="h-3.5 w-3.5 cursor-pointer accent-[#D12351]"
+          />
+          一併送出已上傳的 PDF 作為參考
+        </label>
+        <p className="mt-1 text-xs text-gray-400">取消勾選則只依行程名稱、地區、標籤等文字資訊生成，不讀取 PDF。</p>
       </div>
       {hasPersonalKey && (
         <div className="mb-2">
@@ -191,7 +204,11 @@ export default function AiDescriptionCandidates({
             onChange={(e) => setPreviewPrompt(e.target.value)}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[#D12351]"
           />
-          <p className="mt-1 text-xs text-gray-400">附加的 PDF 內容會自動一併送出（不在此文字中）。</p>
+          <p className="mt-1 text-xs text-gray-400">
+            {includePdfs
+              ? "附加的 PDF 內容會一併送出（不在此文字中）。"
+              : "已選擇不送出 PDF，本次僅以上方文字生成。"}
+          </p>
           <div className="mt-2 flex items-center gap-2">
             <button
               type="button"
