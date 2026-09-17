@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { KEY_OWNER_LABEL, type KeyOwner } from "@/lib/ai/key-owner";
 
 const MAX = 5;
+// Collapse長版本至固定行數，超過此字數才顯示「展開」（約略對應摺疊行數）。
+const CLAMP_CHARS = 90;
 
 interface Candidate {
   id: string;
@@ -43,6 +45,17 @@ export default function AiDescriptionCandidates({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewPrompt, setPreviewPrompt] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
+  // Ids of candidates whose full text is expanded (default: collapsed).
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  function toggleExpanded(id: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   useEffect(() => {
     fetch(`/api/admin/tours/${tourId}/ai/generations?kind=DESCRIPTION`)
@@ -235,36 +248,60 @@ export default function AiDescriptionCandidates({
         <p className="mt-2 text-xs text-gray-400">載入候選中…</p>
       ) : (
         candidates.length > 0 && (
-          <ul className="mt-3 space-y-2">
-            {candidates.map((c) => (
-              <li key={c.id} className={`rounded-lg border bg-white p-3 ${c.isSelected ? "border-[#D12351]" : "border-gray-200"}`}>
-                {c.isSelected && (
-                  <span className="mb-1 inline-block rounded bg-rose-50 px-1.5 py-0.5 text-xs font-medium text-[#D12351]">已採用</span>
-                )}
-                <p className="whitespace-pre-wrap text-sm text-gray-700">{c.text}</p>
-                <div className="mt-2 flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => onSelect(c.text ?? "", c.id)}
-                    className="cursor-pointer rounded-md border border-[#D12351] px-2.5 py-1 text-xs font-medium text-[#D12351] transition-colors hover:bg-rose-50"
+          <ul className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {candidates.map((c, i) => {
+              const text = c.text ?? "";
+              const isExpanded = expanded.has(c.id);
+              const canClamp = text.length > CLAMP_CHARS;
+              return (
+                <li
+                  key={c.id}
+                  className={`flex flex-col rounded-lg border bg-white p-3 ${c.isSelected ? "border-[#D12351]" : "border-gray-200"}`}
+                >
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="text-xs font-medium text-gray-400">版本 {candidates.length - i}</span>
+                    {c.isSelected && (
+                      <span className="rounded bg-rose-50 px-1.5 py-0.5 text-xs font-medium text-[#D12351]">已採用</span>
+                    )}
+                    {c.keyOwner && (
+                      <span className={`ml-auto text-xs ${c.keyOwner === "personal" ? "text-emerald-600" : "text-gray-400"}`}>
+                        {KEY_OWNER_LABEL[c.keyOwner]}
+                      </span>
+                    )}
+                  </div>
+                  <p
+                    className={`whitespace-pre-wrap text-sm text-gray-700 ${canClamp && !isExpanded ? "line-clamp-6" : ""}`}
                   >
-                    選用此版本
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => remove(c.id)}
-                    className="cursor-pointer text-xs text-gray-400 hover:text-rose-600"
-                  >
-                    刪除
-                  </button>
-                  {c.keyOwner && (
-                    <span className={`ml-auto text-xs ${c.keyOwner === "personal" ? "text-emerald-600" : "text-gray-400"}`}>
-                      {KEY_OWNER_LABEL[c.keyOwner]}
-                    </span>
+                    {text}
+                  </p>
+                  {canClamp && (
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(c.id)}
+                      className="mt-1 self-start cursor-pointer text-xs text-[#D12351] hover:underline"
+                    >
+                      {isExpanded ? "收合" : "展開全文"}
+                    </button>
                   )}
-                </div>
-              </li>
-            ))}
+                  <div className="mt-2 flex items-center gap-3 border-t border-gray-100 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => onSelect(text, c.id)}
+                      className="cursor-pointer rounded-md border border-[#D12351] px-2.5 py-1 text-xs font-medium text-[#D12351] transition-colors hover:bg-rose-50"
+                    >
+                      選用此版本
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => remove(c.id)}
+                      className="cursor-pointer text-xs text-gray-400 hover:text-rose-600"
+                    >
+                      刪除
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )
       )}
