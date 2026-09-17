@@ -3,26 +3,24 @@
 import { useEffect } from "react";
 import { trackEvent } from "@/lib/analytics";
 
-// Delegated click tracker for outbound LINE contact links. A single document
-// listener covers every LINE anchor on the frontend — header, footer (a server
-// component), tour detail actions and the staff modal — without wiring an
-// onClick into each one. Mounted once in the (frontend) layout.
+// Delegated click tracker for social / contact links. Any anchor tagged with a
+// `data-contact` attribute is tracked, regardless of its href — so tracking
+// keeps working even when the destination URLs change. Covers anchors rendered
+// by both server and client components without per-anchor wiring. The attribute
+// value is a stable channel label (e.g. "line", "facebook"); GA can further
+// distinguish by link_url. Mounted once in the (frontend) layout.
 export default function ContactClickTracker() {
   useEffect(() => {
     function onClick(e: MouseEvent) {
-      const anchor = (e.target as HTMLElement | null)?.closest?.("a");
-      if (!anchor?.href) return;
+      const anchor = (e.target as HTMLElement | null)?.closest?.(
+        "a[data-contact]",
+      ) as HTMLAnchorElement | null;
+      if (!anchor) return;
 
-      let url: URL;
-      try {
-        url = new URL(anchor.href);
-      } catch {
-        return;
-      }
-
-      if (!url.hostname.includes("line.me")) return;
-
-      trackEvent("contact_click", { method: "line", link_url: url.href });
+      trackEvent("contact_click", {
+        method: anchor.dataset.contact || "other",
+        link_url: anchor.href,
+      });
     }
 
     document.addEventListener("click", onClick);
