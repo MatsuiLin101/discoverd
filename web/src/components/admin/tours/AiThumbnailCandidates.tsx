@@ -23,14 +23,22 @@ export default function AiThumbnailCandidates({
   tourId,
   onSelect,
   getContext,
+  selectedKey,
+  onZoom,
 }: {
   tourId: string;
   onSelect: (choice: { key: string; url: string }) => void;
   getContext?: () => AiContext;
+  /** Live-adopted candidate image key (parent form state) — highlights the chosen
+   * card immediately, before the form is saved. Null means fall back to the saved one. */
+  selectedKey?: string | null;
+  /** Open a full-size preview of a candidate image (parent renders the lightbox). */
+  onZoom?: (url: string) => void;
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
   const [agentProfile, setAgentProfile] = useState("standard");
+  const [includePdfs, setIncludePdfs] = useState(true);
   const [hasPersonalKey, setHasPersonalKey] = useState(false);
   const [quota, setQuota] = useState<"personal" | "shared">("personal");
   const [loading, setLoading] = useState(true);
@@ -98,7 +106,7 @@ export default function AiThumbnailCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/thumbnail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride, agentProfile, quota: hasPersonalKey ? quota : undefined }),
+        body: JSON.stringify({ hint: hint.trim() || undefined, context: getContext?.(), promptOverride, agentProfile, quota: hasPersonalKey ? quota : undefined, includePdfs }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {
@@ -122,7 +130,7 @@ export default function AiThumbnailCandidates({
       const res = await fetch(`/api/admin/tours/${tourId}/ai/preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "THUMBNAIL", hint: hint.trim() || undefined, context: getContext?.() }),
+        body: JSON.stringify({ kind: "THUMBNAIL", hint: hint.trim() || undefined, context: getContext?.(), includePdfs }),
       });
       const { data, error } = await res.json();
       if (res.ok && data) {
@@ -139,6 +147,7 @@ export default function AiThumbnailCandidates({
   }
 
   async function remove(id: string) {
+    if (!confirm("確定刪除此縮圖？刪除後無法復原。")) return;
     const res = await fetch(`/api/admin/tours/${tourId}/ai/generations/${id}`, { method: "DELETE" });
     if (res.ok) setCandidates((prev) => prev.filter((c) => c.id !== id));
   }
@@ -157,6 +166,18 @@ export default function AiThumbnailCandidates({
           <option value="max">max（高品質）</option>
         </select>
         <span className="text-xs text-gray-400">本次生成使用；預設為你的偏好/系統值</span>
+      </div>
+      <div className="mb-2">
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+          <input
+            type="checkbox"
+            checked={includePdfs}
+            onChange={(e) => setIncludePdfs(e.target.checked)}
+            className="h-3.5 w-3.5 cursor-pointer accent-[#D12351]"
+          />
+          一併送出已上傳的 PDF 作為參考
+        </label>
+        <p className="mt-1 text-xs text-gray-400">取消勾選則只依行程名稱、地區、標籤等文字資訊生成，不讀取 PDF。</p>
       </div>
       {hasPersonalKey && (
         <div className="mb-2">
@@ -186,11 +207,11 @@ export default function AiThumbnailCandidates({
         />
         <button
           type="button"
-          onClick={openPreview}
+          onClick={() => (previewOpen ? setPreviewOpen(false) : openPreview())}
           disabled={atLimit || previewLoading || generating}
           className="cursor-pointer rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {previewLoading ? "載入中…" : "預覽提示詞"}
+          {previewLoading ? "載入中…" : previewOpen ? "收合提示詞" : "預覽提示詞"}
         </button>
         <button
           type="button"
@@ -212,7 +233,17 @@ export default function AiThumbnailCandidates({
 
       {previewOpen && (
         <div className="mt-3 rounded-lg border border-[#D12351]/40 bg-white p-3">
-          <p className="mb-1.5 text-xs font-medium text-gray-700">送出前可檢視並修改提示詞：</p>
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-gray-700">送出前可檢視並修改提示詞：</p>
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(false)}
+              aria-label="關閉預覽"
+              className="cursor-pointer rounded p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
           <textarea
             rows={8}
             value={previewPrompt}
@@ -246,11 +277,30 @@ export default function AiThumbnailCandidates({
       ) : (
         candidates.length > 0 && (
           <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {candidates.map((c) => (
-              <li key={c.id} className={`overflow-hidden rounded-lg border bg-white ${c.isSelected ? "border-[#D12351]" : "border-gray-200"}`}>
-                <div className="relative flex aspect-[4/3] items-center justify-center bg-gray-100">
-                  {c.isSelected && (
-                    <span className="absolute left-1 top-1 z-10 rounded bg-[#D12351] px-1.5 py-0.5 text-[10px] font-medium text-white">已採用</span>
+            {candidates.map((c) => {
+              const applied = c.isSelected; // saved in DB (live on the site)
+              const picked = selectedKey != null && !!c.imageKey && c.imageKey === selectedKey; // live pick
+              const pendingPick = picked && !applied; // picked but not yet saved
+              // The candidate that will take effect on save (live pick, else the saved one).
+              const effective = selectedKey != null ? picked : applied;
+              return (
+              <li key={c.id} className={`overflow-hidden rounded-lg border bg-white ${
+                pendingPick
+                  ? "border-amber-400 ring-2 ring-amber-300/50"
+                  : applied
+                    ? "border-[#D12351] ring-2 ring-[#D12351]/30"
+                    : "border-gray-200"
+              }`}>
+                <div
+                  className={`relative flex aspect-[4/3] items-center justify-center bg-gray-100 ${c.status === "READY" && c.imageUrl && onZoom ? "cursor-zoom-in" : ""}`}
+                  onClick={c.status === "READY" && c.imageUrl && onZoom ? () => onZoom(c.imageUrl as string) : undefined}
+                  title={c.status === "READY" && c.imageUrl && onZoom ? "點擊放大預覽" : undefined}
+                >
+                  {applied && (
+                    <span className="absolute left-1 top-1 z-10 rounded bg-[#D12351] px-1.5 py-0.5 text-[10px] font-medium text-white">✓ 目前套用</span>
+                  )}
+                  {pendingPick && (
+                    <span className="absolute left-1 top-1 z-10 rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-medium text-white">● 目前選擇・未存</span>
                   )}
                   {c.status === "READY" && c.imageUrl ? (
                     <Image src={c.imageUrl} alt="AI 縮圖候選" fill className="object-cover" unoptimized />
@@ -263,11 +313,11 @@ export default function AiThumbnailCandidates({
                 <div className="flex items-center justify-between gap-2 px-2 py-1.5">
                   <button
                     type="button"
-                    disabled={c.status !== "READY" || !c.imageUrl}
+                    disabled={c.status !== "READY" || !c.imageUrl || effective}
                     onClick={() => c.imageUrl && onSelect({ key: c.imageKey as string, url: c.imageUrl })}
-                    className="cursor-pointer rounded-md border border-[#D12351] px-2 py-0.5 text-xs font-medium text-[#D12351] transition-colors hover:bg-rose-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                    className={`rounded-md border px-2 py-0.5 text-xs font-medium transition-colors ${effective ? "cursor-default border-[#D12351] bg-[#D12351] text-white" : "cursor-pointer border-[#D12351] text-[#D12351] hover:bg-rose-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"}`}
                   >
-                    選用
+                    {effective ? "使用中" : "選用"}
                   </button>
                   <button
                     type="button"
@@ -285,7 +335,8 @@ export default function AiThumbnailCandidates({
                   </p>
                 )}
               </li>
-            ))}
+              );
+            })}
           </ul>
         )
       )}

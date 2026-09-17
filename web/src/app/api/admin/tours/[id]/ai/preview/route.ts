@@ -20,8 +20,10 @@ export async function POST(
     const body = await req.json().catch(() => ({}));
     const kind = body?.kind === "THUMBNAIL" ? "THUMBNAIL" : "DESCRIPTION";
     const hint = typeof body?.hint === "string" && body.hint.trim() ? body.hint.trim() : null;
+    // Attach uploaded PDFs unless the editor opted out (default: include).
+    const includePdfs = body?.includePdfs !== false;
 
-    const ctx = await loadTourAiContext(id, parseContextOverride(body?.context));
+    const ctx = await loadTourAiContext(id, parseContextOverride(body?.context), { includePdfs });
     if (!ctx) return NextResponse.json({ error: "找不到此旅遊方案" }, { status: 404 });
 
     const settings = await getEffectiveAiSettings(session.userId);
