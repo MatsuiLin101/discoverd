@@ -18,7 +18,7 @@ export default function TourDetailActions({ tourId, tourName }: Props) {
     <>
       <div className="m-actions">
         {lineUrl ? (
-          <a className="m-line" href={lineUrl} target="_blank" rel="noopener noreferrer">
+          <a className="m-line" href={lineUrl} data-contact="line" target="_blank" rel="noopener noreferrer">
             <LineIcon />
             加 LINE 諮詢
           </a>

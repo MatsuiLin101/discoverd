@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 interface FormErrors {
   name?: string;
@@ -27,6 +28,11 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
   const emailRef = useRef<HTMLInputElement>(null);
   const lineRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    trackEvent("inquiry_open", { tour_id: tourId ?? "", tour_name: tourName || "" });
+  }, [isOpen, tourId, tourName]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -93,6 +99,7 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
         }),
       });
       if (res.status === 201) {
+        trackEvent("inquiry_submit", { tour_id: tourId ?? "", tour_name: tourName || "" });
         setFormSubmitted(true);
       } else {
         setSubmitError("提交失敗，請稍後再試");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 export default function TourShareButton({ urlId }: { urlId: string }) {
   const [copied, setCopied] = useState(false);
@@ -8,6 +9,7 @@ export default function TourShareButton({ urlId }: { urlId: string }) {
   function copy() {
     const url = `${window.location.origin}/tours/${urlId}`;
     navigator.clipboard.writeText(url).then(() => {
+      trackEvent("share", { method: "copy_link", content_type: "tour", item_id: urlId });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
