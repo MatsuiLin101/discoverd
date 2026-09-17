@@ -29,8 +29,13 @@ export default function TourDetailCard({ tour, headingTag = "h3" }: Props) {
   const Heading = headingTag;
 
   // Fire a GA4 view_item event once per tour shown, whether opened as the
-  // standalone page or the intercepted modal (both render this card).
+  // standalone page or the intercepted modal (both render this card). The ref
+  // guard keeps it to a single event per tour id: React StrictMode re-invokes
+  // effects in dev, and the modal can re-render with a fresh tour object.
+  const viewedTourRef = useRef<string | null>(null);
   useEffect(() => {
+    if (viewedTourRef.current === tour.id) return;
+    viewedTourRef.current = tour.id;
     trackEvent("view_item", {
       tour_id: tour.id,
       tour_name: tour.name,
