@@ -232,17 +232,9 @@ model SiteSetting {
   // Minimum personal Manus credits required to use a user's own key; below this
   // the shared key is used (Manus cost per task isn't known until it runs).
   aiManusPersonalThreshold Int @default(30)
-  // Optional unit prices for the AI usage cost estimate (in NT$). Null = don't
-  // show a cost. Gemini bills input and output tokens (thinking counts as
-  // output) at different rates, per 1,000,000 tokens.
-  aiGeminiInputPricePerM  Float?
-  aiGeminiOutputPricePerM Float?
+  // Manus per-credit price in NT$ for the cost estimate (null = no Manus cost).
+  // Gemini token prices come from the synced GeminiModelPrice table, not here.
   aiManusPricePerCredit   Float?
-  // Assumed Manus credits per successful thumbnail, by agent profile (Manus
-  // doesn't report per-task cost). Used for the cost estimate only.
-  aiManusCreditsLite     Int @default(10)
-  aiManusCreditsStandard Int @default(22)
-  aiManusCreditsMax      Int @default(40)
 
   updatedAt          DateTime @updatedAt
 }
@@ -377,17 +369,41 @@ model AiUsageLog {
   // Manus fields.
   taskId           String?
   agentProfile     String?
-  creditsUsed      Int?             // not attributable per-task yet; reserved
+  creditsUsed      Int?             // real per-task credits from Manus task.detail
   // Which quota paid: "personal" | "shared" | "fallback_quota" | "fallback_error".
   // Personal usage is excluded from the company cost estimate.
   keyOwner         String?
   latencyMs        Int?
   resultRef        String?          // candidate id / image key
   outputChars      Int?             // DESCRIPTION output length
+  // Snapshot cost of this generation, frozen at compute time so later price
+  // changes don't move historical figures. Manus has no USD price (billed in
+  // credits priced in NT$), so costUsd stays null for thumbnails.
+  costUsd          Float?
+  costTwd          Float?
   error            String?
 
   @@index([createdAt])
   @@index([userId])
   @@index([kind])
   @@index([taskId])
+}
+
+// Gemini token prices synced from the Google Cloud Pricing API. Append-only: a
+// new row is inserted per sync, keeping the history. The current price for a
+// (model, currency) is the row with the latest fetchedAt. Prices are per
+// 1,000,000 tokens. A sync run is grouped by `syncId`.
+model GeminiModelPrice {
+  id          String   @id @default(cuid())
+  syncId      String // groups the rows written by one sync run
+  model       String // e.g. "gemini-3.6-flash"
+  currency    String // ISO-4217, e.g. "USD" | "TWD"
+  inputPerM   Float // price per 1M input tokens
+  outputPerM  Float // price per 1M output tokens (thinking billed as output)
+  inputSkuId  String?
+  outputSkuId String?
+  fetchedAt   DateTime @default(now())
+
+  @@index([model, currency, fetchedAt])
+  @@index([fetchedAt])
 }

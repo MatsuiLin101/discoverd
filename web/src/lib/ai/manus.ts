@@ -7,8 +7,11 @@
  *     status is "stopped" (done) or "error"; the produced image arrives as a
  *     message attachment URL.
  *  3. `testManusKey`        -> GET /v2/usage.availableCredits (validity + balance).
+ *  4. `getTaskDetail`       -> GET /v2/task.detail (status + real credit_usage).
  *
- * Auth header is `x-manus-api-key`.
+ * Auth header is `x-manus-api-key`. A task can only be read with a key from the
+ * account that created it (shared vs. personal), so callers must pass the key
+ * matching the task's keyOwner.
  */
 
 const BASE = "https://api.manus.ai";
@@ -41,17 +44,82 @@ export async function testManusKey(
   }
 }
 
-/** Create an image-generation task. Returns the Manus task id. */
+export interface ManusTaskDetail {
+  status?: "running" | "stopped" | "waiting" | "error";
+  /** Total credits consumed by the task. Absent when the task consumed none. */
+  creditUsage?: number;
+  agentProfile?: string;
+}
+
+/**
+ * Fetch a task's metadata, including the real `credit_usage` reported by Manus.
+ * Works for finished (stopped) tasks too, while Manus still retains them.
+ * Returns null on any transport / API error so callers can skip that row.
+ */
+export async function getTaskDetail(opts: {
+  apiKey: string;
+  taskId: string;
+}): Promise<ManusTaskDetail | null> {
+  try {
+    const url = `${BASE}/v2/task.detail?task_id=${encodeURIComponent(opts.taskId)}`;
+    const res = await fetch(url, { headers: headers(opts.apiKey) });
+    const body = await res.json().catch(() => null);
+    if (!res.ok || body?.ok === false) return null;
+    const task = body?.task ?? {};
+    const creditUsage: number | undefined =
+      typeof task.credit_usage === "number" ? task.credit_usage : undefined;
+    return {
+      status: task.status,
+      creditUsage,
+      agentProfile: task.agent_profile,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** A file to attach to the task (inline base64, e.g. a tour PDF). */
+export interface ManusFilePart {
+  data: string; // base64, no data: prefix
+  mimeType?: string;
+  filename?: string;
+}
+
+/**
+ * Create an image-generation task. Returns the Manus task id. When `pdfs` are
+ * given, they are attached to the message so the agent can read them — the same
+ * as dropping the tour PDF into the Manus web UI. Otherwise a plain text prompt
+ * is sent.
+ */
 export async function createThumbnailTask(opts: {
   apiKey: string;
   prompt: string;
   agentProfile?: string;
+  pdfs?: ManusFilePart[];
 }): Promise<string> {
+  const pdfs = opts.pdfs ?? [];
+  // Manus content is either a plain string or an array of typed parts. Attach
+  // files via `file_data` (inline base64), which needs the `data:<mime>;base64,`
+  // prefix and a filename.
+  const content = pdfs.length
+    ? [
+        { type: "text", text: opts.prompt },
+        ...pdfs.map((p, i) => {
+          const mime = p.mimeType ?? "application/pdf";
+          return {
+            type: "file",
+            file_data: `data:${mime};base64,${p.data}`,
+            filename: p.filename?.trim() || `tour-attachment-${i + 1}.pdf`,
+            mime_type: mime,
+          };
+        }),
+      ]
+    : opts.prompt;
   const res = await fetch(`${BASE}/v2/task.create`, {
     method: "POST",
     headers: headers(opts.apiKey),
     body: JSON.stringify({
-      message: { content: opts.prompt },
+      message: { content },
       agent_profile: opts.agentProfile ?? "standard",
       locale: "zh-TW",
       hide_in_task_list: true,

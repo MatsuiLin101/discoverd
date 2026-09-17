@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getAiKeys, getUserAiKeys, getEffectiveAiSettings } from "@/lib/ai/config";
-import { buildDescriptionPrompt } from "@/lib/ai/prompts";
+import { getAiKeys, getUserAiKeys, getEffectiveAiSettings, getSiteAiSetting } from "@/lib/ai/config";
+import { buildDescriptionPrompt, DEFAULT_DESCRIPTION_MODEL } from "@/lib/ai/prompts";
 import { GeminiHttpError } from "@/lib/ai/gemini";
 import { generateDescriptionWithFallback } from "@/lib/ai/fallback";
 import { logAiUsage } from "@/lib/ai/usage";
+import { computeUsageCost } from "@/lib/ai/cost";
 import { loadTourAiContext, parseContextOverride, MAX_CANDIDATES_PER_KIND } from "@/lib/ai/tour-context";
 
 export async function POST(
@@ -38,9 +39,15 @@ export async function POST(
     const hint = typeof body?.hint === "string" && body.hint.trim() ? body.hint.trim() : null;
     const promptOverride =
       typeof body?.promptOverride === "string" && body.promptOverride.trim() ? body.promptOverride : null;
-    // Per-generation model override, else the effective (personal ?? system) model.
+    // The on-screen field is pre-filled with the effective (personal ?? system)
+    // model and sent verbatim. Clearing it means "don't use my preference" — fall
+    // back to the SYSTEM model, not the personal one, so a bad personal model
+    // (e.g. "Toy") can be escaped by emptying the field.
+    const site = await getSiteAiSetting();
     const descriptionModel =
-      typeof body?.model === "string" && body.model.trim() ? body.model.trim() : effective.descriptionModel;
+      typeof body?.model === "string" && body.model.trim()
+        ? body.model.trim()
+        : site.aiDescriptionModel || DEFAULT_DESCRIPTION_MODEL;
     // Quota choice: "shared" forces the shared key; otherwise personal-first.
     const forceShared = body?.quota === "shared";
     const personalGemini = forceShared ? null : personal.gemini;
@@ -107,6 +114,13 @@ export async function POST(
       },
     });
 
+    const cost = await computeUsageCost({
+      provider: "gemini",
+      model: descriptionModel,
+      inputTokens: result.usage.inputTokens,
+      outputTokens: result.usage.outputTokens,
+      thoughtsTokens: result.usage.thoughtsTokens,
+    });
     void logAiUsage({
       ...usageBase,
       status: "SUCCESS",
@@ -118,6 +132,8 @@ export async function POST(
       totalTokens: result.usage.totalTokens,
       resultRef: candidate.id,
       outputChars: trimmed.length,
+      costUsd: cost.costUsd,
+      costTwd: cost.costTwd,
     });
 
     return NextResponse.json({ data: candidate }, { status: 201 });

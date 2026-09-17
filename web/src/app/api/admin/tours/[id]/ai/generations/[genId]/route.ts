@@ -3,9 +3,10 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage, buildKey, MIME_TO_EXT } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
-import { getAiKeys, getSiteAiSetting } from "@/lib/ai/config";
-import { getTaskResult } from "@/lib/ai/manus";
+import { getAiKeys, getUserAiKeys } from "@/lib/ai/config";
+import { getTaskResult, getTaskDetail } from "@/lib/ai/manus";
 import { finishAiUsageByTaskId } from "@/lib/ai/usage";
+import { computeUsageCost } from "@/lib/ai/cost";
 import { serializeGeneration } from "@/lib/ai/serialize";
 
 // A PENDING thumbnail is given up on after this long so it can't occupy the
@@ -43,12 +44,18 @@ export async function GET(
       return NextResponse.json({ data: serializeGeneration(updated) });
     }
 
-    const keys = await getAiKeys();
-    if (!keys.manus) {
+    // A Manus task is only readable with the key of the account that created it.
+    // Personal-key tasks must be polled with that user's personal key; shared and
+    // fallback_* tasks were created with the shared key.
+    const manusKey =
+      gen.keyOwner === "personal" && gen.createdById
+        ? (await getUserAiKeys(gen.createdById)).manus
+        : (await getAiKeys()).manus;
+    if (!manusKey) {
       return NextResponse.json({ data: serializeGeneration(gen) });
     }
 
-    const result = await getTaskResult({ apiKey: keys.manus, taskId: gen.taskId });
+    const result = await getTaskResult({ apiKey: manusKey, taskId: gen.taskId });
     if (result.status === "pending") {
       return NextResponse.json({ data: serializeGeneration(gen) });
     }
@@ -81,12 +88,20 @@ export async function GET(
       where: { id: genId },
       data: { status: "READY", imageKey: key, error: null },
     });
-    const site = await getSiteAiSetting();
-    void finishAiUsageByTaskId(
-      gen.taskId,
-      { status: "SUCCESS", resultRef: key },
-      { lite: site.aiManusCreditsLite, standard: site.aiManusCreditsStandard, max: site.aiManusCreditsMax },
-    );
+    // Record the real credit usage and the exact model Manus ran (as reported,
+    // e.g. "manus-1.6-lite"; free accounts are forced to a lite model). Credits
+    // are only final once the task has stopped; if the agent is still wrapping
+    // up, leave creditsUsed null so the AI-usage page can reconcile it later.
+    const detail = await getTaskDetail({ apiKey: manusKey, taskId: gen.taskId });
+    const creditsUsed = detail?.status === "stopped" ? detail.creditUsage ?? null : null;
+    const cost = await computeUsageCost({ provider: "manus", creditsUsed });
+    void finishAiUsageByTaskId(gen.taskId, {
+      status: "SUCCESS",
+      resultRef: key,
+      creditsUsed,
+      agentProfile: detail?.agentProfile ?? undefined,
+      costTwd: cost.costTwd,
+    });
     return NextResponse.json({ data: serializeGeneration(updated) });
   } catch (e) {
     console.error("[GET /api/admin/tours/[id]/ai/generations/[genId]]", e);

@@ -24,6 +24,8 @@ export interface GeminiPdfPart {
   /** Base64-encoded PDF bytes. */
   data: string;
   mimeType?: string;
+  /** Original filename; unused by Gemini, but Manus needs it for file_data. */
+  filename?: string;
 }
 
 /** Validate an API key by listing models. Returns a friendly result. */
