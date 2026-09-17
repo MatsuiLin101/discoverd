@@ -8,6 +8,7 @@ import type {
   SearchResultItem,
 } from "@/lib/frontend-data";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import { trackEvent } from "@/lib/analytics";
 
 /** Must stay in sync with SEARCH_MAX_LIMIT in frontend-queries.ts. */
 const RESULT_LIMIT = 100;
@@ -88,6 +89,13 @@ export default function SearchExperience({ facets, initialFilters, initialRespon
         );
         const data: SearchResponse = await res.json();
         setResponse({ total: data.total ?? 0, results: data.results ?? [] });
+        trackEvent("search", {
+          search_term: q.trim(),
+          method: "advanced",
+          region: region || "",
+          tags: tags.join(","),
+          result_count: data.total ?? 0,
+        });
       } catch (e) {
         if ((e as Error).name !== "AbortError") {
           setResponse({ total: 0, results: [] });

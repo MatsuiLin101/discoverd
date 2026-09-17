@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocialLinks } from "@/hooks/useSocialLinks";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import { trackEvent } from "@/lib/analytics";
 import type { SearchResultItem, SearchResponse } from "@/lib/frontend-data";
 import LineIcon from "./LineIcon";
 import LineCommunityIcon from "./LineCommunityIcon";
@@ -62,6 +63,7 @@ export default function SiteHeader() {
 
   function goToSearchPage(q: string) {
     const trimmed = q.trim();
+    if (trimmed) trackEvent("search", { search_term: trimmed, method: "header" });
     setOpen(false);
     router.push(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : "/search");
   }
@@ -226,14 +228,14 @@ export default function SiteHeader() {
         {(socialLinks.facebookUrl || socialLinks.instagramUrl || socialLinks.lineUrl || socialLinks.lineCommunityUrl) && (
           <div className="fh-social">
             {socialLinks.facebookUrl && (
-              <a href={socialLinks.facebookUrl} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+              <a href={socialLinks.facebookUrl} data-contact="facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M13.5 21v-7.4h2.5l.37-2.88H13.5V8.88c0-.83.23-1.4 1.43-1.4h1.53V4.9a20.5 20.5 0 0 0-2.23-.11c-2.2 0-3.71 1.34-3.71 3.81v2.12H8v2.88h2.52V21z" />
                 </svg>
               </a>
             )}
             {socialLinks.instagramUrl && (
-              <a href={socialLinks.instagramUrl} aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+              <a href={socialLinks.instagramUrl} data-contact="instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <rect x="4" y="4" width="16" height="16" rx="5" />
                   <circle cx="12" cy="12" r="3.6" />
@@ -242,12 +244,12 @@ export default function SiteHeader() {
               </a>
             )}
             {socialLinks.lineUrl && (
-              <a href={socialLinks.lineUrl} aria-label="LINE" target="_blank" rel="noopener noreferrer">
+              <a href={socialLinks.lineUrl} data-contact="line" aria-label="LINE" target="_blank" rel="noopener noreferrer">
                 <LineIcon />
               </a>
             )}
             {socialLinks.lineCommunityUrl && (
-              <a href={socialLinks.lineCommunityUrl} aria-label="LINE 社群" target="_blank" rel="noopener noreferrer">
+              <a href={socialLinks.lineCommunityUrl} data-contact="line_community" aria-label="LINE 社群" target="_blank" rel="noopener noreferrer">
                 <LineCommunityIcon />
               </a>
             )}

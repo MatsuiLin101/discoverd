@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import CroppedThumb from "./CroppedThumb";
 import type { ThumbCrop } from "@/lib/crop";
+import { trackEvent } from "@/lib/analytics";
 
 export interface CategoryItem {
   href: string;
@@ -41,7 +44,17 @@ export default function CategoryList({ title, stats, categories }: Props) {
 
       <div className="fh-cat-list">
         {categories.map((cat) => (
-          <Link key={cat.href} className="fh-cat-row" href={cat.href}>
+          <Link
+            key={cat.href}
+            className="fh-cat-row"
+            href={cat.href}
+            onClick={() =>
+              trackEvent("select_content", {
+                content_type: "category",
+                item_id: cat.name,
+              })
+            }
+          >
             <div className="cat-txt">
               <span className="cat-nm">{cat.name}</span>
               <span className="cat-ct">{cat.count} 條路線</span>

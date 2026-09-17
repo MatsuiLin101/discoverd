@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { Noto_Sans, Noto_Sans_TC } from "next/font/google";
 import { db } from "@/lib/db";
+import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager";
+import ContactClickTracker from "@/components/analytics/ContactClickTracker";
 import "./frontend.css";
 
 const notoSans = Noto_Sans({
@@ -29,6 +31,10 @@ export const metadata: Metadata = {
   },
 };
 
+// Google Tag Manager is loaded only for the public (frontend) routes so that
+// admin activity is not tracked. GA is configured inside the GTM container.
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID || undefined;
+
 // Read at request time so the boxed layout reflects the current setting. All
 // (frontend) routes are already rendered on demand, so this adds no build-time
 // DB access.
@@ -55,6 +61,9 @@ export default async function FrontendLayout({
 
   return (
     <div className="fh-outer" data-bg={boxed ? outerBg : undefined}>
+      {gtmId && <GTMScript gtmId={gtmId} />}
+      {gtmId && <GTMNoScript gtmId={gtmId} />}
+      {gtmId && <ContactClickTracker />}
       <div
         className={`${notoSans.variable} ${notoSansTC.variable} fh-root`}
         data-layout={boxed ? "boxed" : undefined}

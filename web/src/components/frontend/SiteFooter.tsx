@@ -56,14 +56,14 @@ export default async function SiteFooter() {
               <h5>追蹤我們</h5>
               <div className="fh-footer-social">
                 {setting.facebookUrl && (
-                  <a href={setting.facebookUrl} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+                  <a href={setting.facebookUrl} data-contact="facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                       <path d="M13.5 21v-7.4h2.5l.37-2.88H13.5V8.88c0-.83.23-1.4 1.43-1.4h1.53V4.9a20.5 20.5 0 0 0-2.23-.11c-2.2 0-3.71 1.34-3.71 3.81v2.12H8v2.88h2.52V21z" />
                     </svg>
                   </a>
                 )}
                 {setting.instagramUrl && (
-                  <a href={setting.instagramUrl} aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+                  <a href={setting.instagramUrl} data-contact="instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                       <rect x="4" y="4" width="16" height="16" rx="5" />
                       <circle cx="12" cy="12" r="3.6" />
@@ -72,12 +72,12 @@ export default async function SiteFooter() {
                   </a>
                 )}
                 {setting.lineUrl && (
-                  <a href={setting.lineUrl} aria-label="LINE" target="_blank" rel="noopener noreferrer">
+                  <a href={setting.lineUrl} data-contact="line" aria-label="LINE" target="_blank" rel="noopener noreferrer">
                     <LineIcon />
                   </a>
                 )}
                 {setting.lineCommunityUrl && (
-                  <a href={setting.lineCommunityUrl} aria-label="LINE 社群" target="_blank" rel="noopener noreferrer">
+                  <a href={setting.lineCommunityUrl} data-contact="line_community" aria-label="LINE 社群" target="_blank" rel="noopener noreferrer">
                     <LineCommunityIcon />
                   </a>
                 )}
