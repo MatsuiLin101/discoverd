@@ -140,6 +140,7 @@ export default function AiThumbnailCandidates({
   }
 
   async function remove(id: string) {
+    if (!confirm("確定刪除此縮圖？刪除後無法復原。")) return;
     const res = await fetch(`/api/admin/tours/${tourId}/ai/generations/${id}`, { method: "DELETE" });
     if (res.ok) setCandidates((prev) => prev.filter((c) => c.id !== id));
   }
