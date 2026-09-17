@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { SubRegionWithTours } from "@/lib/frontend-data";
 import CroppedThumb from "./CroppedThumb";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   parent: { name: string };
@@ -31,6 +32,11 @@ export default function TourSection({ parent, regionSlug, regions, initialSlug }
   // push the new URL so the breadcrumb and shareable address stay in sync.
   function selectSub(slug: string) {
     if (slug === activeSlug) return;
+    const picked = regions.find((r) => r.slug === slug);
+    trackEvent("select_content", {
+      content_type: "sub_category",
+      item_id: picked?.name ?? slug,
+    });
     setActiveSlug(slug);
     router.push(`/regions/${regionSlug}/${slug}`, { scroll: false });
   }

@@ -6,6 +6,7 @@ import TourMediaGallery from "./TourMediaGallery";
 import TourShareButton from "./TourShareButton";
 import TourDetailActions from "./TourDetailActions";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   tour: TourDetailData;
@@ -26,6 +27,19 @@ export default function TourDetailCard({ tour, headingTag = "h3" }: Props) {
   // shows everything, so this default has no effect there.
   const [mobileCollapsed, setMobileCollapsed] = useState(true);
   const Heading = headingTag;
+
+  // Fire a GA4 view_item event once per tour shown, whether opened as the
+  // standalone page or the intercepted modal (both render this card).
+  useEffect(() => {
+    trackEvent("view_item", {
+      tour_id: tour.id,
+      tour_name: tour.name,
+      region: tour.regionSlug,
+      tags: tour.tags.join(","),
+      item_id: tour.productId ?? tour.id,
+      content_type: "tour",
+    });
+  }, [tour.id, tour.name, tour.regionSlug, tour.tags, tour.productId]);
 
   // Scroll affordance for the mobile intro: when the expanded intro overflows
   // and isn't scrolled to the end, `moreBelow` fades its bottom edge so users
