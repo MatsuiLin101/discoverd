@@ -24,6 +24,7 @@ export default function AiThumbnailCandidates({
   onSelect,
   getContext,
   selectedKey,
+  onZoom,
 }: {
   tourId: string;
   onSelect: (choice: { key: string; url: string }) => void;
@@ -31,6 +32,8 @@ export default function AiThumbnailCandidates({
   /** Live-adopted candidate image key (parent form state) — highlights the chosen
    * card immediately, before the form is saved. Null means fall back to the saved one. */
   selectedKey?: string | null;
+  /** Open a full-size preview of a candidate image (parent renders the lightbox). */
+  onZoom?: (url: string) => void;
 }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hint, setHint] = useState("");
@@ -278,7 +281,11 @@ export default function AiThumbnailCandidates({
                     ? "border-[#D12351] ring-2 ring-[#D12351]/30"
                     : "border-gray-200"
               }`}>
-                <div className="relative flex aspect-[4/3] items-center justify-center bg-gray-100">
+                <div
+                  className={`relative flex aspect-[4/3] items-center justify-center bg-gray-100 ${c.status === "READY" && c.imageUrl && onZoom ? "cursor-zoom-in" : ""}`}
+                  onClick={c.status === "READY" && c.imageUrl && onZoom ? () => onZoom(c.imageUrl as string) : undefined}
+                  title={c.status === "READY" && c.imageUrl && onZoom ? "點擊放大預覽" : undefined}
+                >
                   {applied && (
                     <span className="absolute left-1 top-1 z-10 rounded bg-[#D12351] px-1.5 py-0.5 text-[10px] font-medium text-white">✓ 目前套用</span>
                   )}

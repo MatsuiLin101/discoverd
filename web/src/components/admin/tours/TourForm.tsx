@@ -455,7 +455,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
             </div>
           </div>
           {isEdit && tourId ? (
-            <AiThumbnailCandidates tourId={tourId} onSelect={handleSelectAiThumb} getContext={getAiContext} selectedKey={aiThumb?.key ?? null} />
+            <AiThumbnailCandidates tourId={tourId} onSelect={handleSelectAiThumb} getContext={getAiContext} selectedKey={aiThumb?.key ?? null} onZoom={setLightbox} />
           ) : (
             <p className="mt-3 text-xs text-gray-400">💡 按下方「儲存草稿並使用 AI」後，即可在此生成行程縮圖。</p>
           )}
