@@ -290,7 +290,7 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
+      <form onSubmit={handleSubmit} className={`max-w-2xl space-y-5 ${selectedDescId || aiThumb ? "pb-24" : ""}`}>
         {/* 行程名稱 */}
         <CharCountField
           label="行程名稱"
@@ -632,6 +632,17 @@ export default function TourForm({ tour, regions, tags, tourId, initialFiles, re
           }}
           onCancel={() => setShowCropper(false)}
         />
+      )}
+
+      {/* Sticky reminder: AI選用內容尚未儲存。固定在視窗底部，捲到任何位置都看得到。 */}
+      {(selectedDescId || aiThumb) && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-amber-300 bg-amber-50/95 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)] backdrop-blur">
+          <p className="mx-auto max-w-2xl text-center text-sm font-medium text-amber-800">
+            ⚠ 已選用 AI 生成的
+            {[selectedDescId && "簡介", aiThumb && "縮圖"].filter(Boolean).join("、")}
+            ，尚未儲存 — 請按「儲存變更」才會生效
+          </p>
+        </div>
       )}
     </>
   );
