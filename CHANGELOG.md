@@ -3,6 +3,34 @@
 本專案的所有重要變更皆記錄於此檔案。
 格式參考 [Keep a Changelog](https://keepachangelog.com/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.1.0] - 2026-09-17
+
+AI 用量成本追蹤與 Manus 縮圖生成修正。
+
+### ✨ 新功能
+
+- **Gemini 費用同步**：從 Google Cloud Pricing API 同步 Gemini token 單價（USD／TWD），存為可追溯的歷史（append，不覆蓋）。後台「AI 設定」提供手動「更新價格」按鈕（每天限一次）、顯示目前價格與最後更新時間。
+- **成本快照**：每次 AI 生成在當下計算成本並凍結於使用紀錄（Gemini 依同步價、Manus 依每 credit 單價），日後調價不影響歷史數字。
+- **Manus 縮圖附加 PDF**：縮圖生成會將行程 PDF 一併附加給 Manus 任務（與網頁手動上傳一致），而非僅送文字提示詞。
+- **AI 使用紀錄強化**：顯示 Manus 實際 credits、Manus 實際執行模型（如 `manus-1.6-lite`）、每筆與總成本（NT$／US$），並標示「使用過但尚未收錄價格」的模型。
+
+### 🐛 修正
+
+- **Manus 任務輪詢金鑰**：改用建立任務時的金鑰輪詢，修正個人金鑰產生的縮圖出現「task not found」而誤判失敗的問題。
+- **Manus 用量改用真實值**：credits 與執行模型改讀 Manus `task.detail` 回報的真實數據，取代原本依 agent profile 的估算。
+- **模型欄位清空 fallback**：行程生成時清空「模型」欄位改回退至系統預設值（而非個人偏好），可擺脫錯誤的個人偏好模型。
+
+### 🧰 維運工具
+
+- `scripts/sync-gemini-prices.ts`：手動同步 Gemini 價格。
+- `scripts/find-gemini-sku.ts`：依關鍵字查詢 Gemini 價格 SKU，方便擴充模型。
+- `scripts/backfill-manus-credits.ts`：回填歷史 Manus credits／模型（支援 `--overwrite`）。
+- 新增環境變數 `GOOGLE_CLOUD_API_KEY`（Cloud Billing Pricing API，公開 SKU 僅需 API key）。
+
+### 🗑️ 移除
+
+- 後台「Manus 每級估算 credits」與「Gemini 手動單價」設定，改由真實 API 數據取代。
+
 ## [1.0.0] - 2026-09-15
 
 首次正式發布 🎉 — 旅遊行程網站（前台）與後台管理系統的完整上線版本。
