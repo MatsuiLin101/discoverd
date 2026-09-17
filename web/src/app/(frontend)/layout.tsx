@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { Noto_Sans, Noto_Sans_TC } from "next/font/google";
 import { db } from "@/lib/db";
 import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager";
+import ContactClickTracker from "@/components/analytics/ContactClickTracker";
 import "./frontend.css";
 
 const notoSans = Noto_Sans({
@@ -62,6 +63,7 @@ export default async function FrontendLayout({
     <div className="fh-outer" data-bg={boxed ? outerBg : undefined}>
       {gtmId && <GTMScript gtmId={gtmId} />}
       {gtmId && <GTMNoScript gtmId={gtmId} />}
+      {gtmId && <ContactClickTracker />}
       <div
         className={`${notoSans.variable} ${notoSansTC.variable} fh-root`}
         data-layout={boxed ? "boxed" : undefined}
