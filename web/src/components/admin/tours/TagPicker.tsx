@@ -87,6 +87,10 @@ export default function TagPicker({ tags, setTags, selectedIds, setSelectedIds }
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
+    // Ignore the Enter that confirms/cancels an IME composition (e.g. Chinese
+    // input) — it must not create or select a tag. keyCode 229 covers browsers
+    // that don't set isComposing on the confirming keydown.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     // Enter here must not submit the surrounding tour form.
     e.preventDefault();
     if (!trimmed) return;
