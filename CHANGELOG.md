@@ -3,6 +3,26 @@
 本專案的所有重要變更皆記錄於此檔案。
 格式參考 [Keep a Changelog](https://keepachangelog.com/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.3.0] - 2026-09-18
+
+前台 GTM／GA4 分析追蹤：GTM 改為僅在前台載入，並埋入關鍵使用者事件（GA4 於 GTM 後台設定，程式碼不含 GA 追蹤碼）。
+
+### ✨ 新功能
+
+- **GTM 僅前台生效**：Google Tag Manager 改為只在前台（公開）頁面載入，後台管理介面不再被追蹤；未設定 `NEXT_PUBLIC_GTM_ID` 時完全不載入。
+- **前台事件追蹤**：新增下列使用者事件（推送至 GTM dataLayer，再由 GTM 轉送 GA4）：
+  - `view_item`：瀏覽行程（獨立頁與 modal 皆計一次），帶行程 ID／名稱／地區／標籤。
+  - `select_content`：點擊主分類（首頁）／次分類（地區頁）。
+  - `search`：站內搜尋（header 快搜與進階搜尋），帶關鍵字／篩選條件／結果數。
+  - `inquiry_open`／`inquiry_submit`：開啟／送出行程諮詢單，帶行程資訊。
+  - `share`：複製分享行程連結。
+  - `contact_click`：點擊社群／LINE 聯絡連結，以 `data-contact` 標記，連結網址變更也不影響追蹤。
+
+### 🧰 維運工具 / 設定
+
+- 新增環境變數 `NEXT_PUBLIC_GTM_ID`（GTM 容器 ID；留空則停用前台 GTM）。
+- 可於 GTM 後台以 Page Hostname 分流，將 dev／正式流量送往不同 GA4 資源，避免測試資料污染正式報表。
+
 ## [1.2.0] - 2026-09-17
 
 後台 AI 行程生成（簡介／縮圖）操作體驗優化。
