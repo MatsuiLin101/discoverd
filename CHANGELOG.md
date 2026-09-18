@@ -3,6 +3,34 @@
 本專案的所有重要變更皆記錄於此檔案。
 格式參考 [Keep a Changelog](https://keepachangelog.com/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.5.0] - 2026-09-19
+
+全站 SEO 優化：結構化資料、meta／OG、sitemap、相關行程內部連結、前台資料快取，以及後台「SEO 設定」頁。
+
+### ✨ 新功能
+
+- **後台「SEO 設定」頁**（所有登入者可用）：品牌名稱、預設網站標題／描述、預設 OG 分享圖上傳、Google Search Console 驗證碼、公司資訊（電話／地址／價格範圍）、「相關行程」顯示開關。
+- **相關行程推薦**：行程頁自動列出同地區其他行程（同子地區優先、排除自己），置於圖片／PDF 捲動內容末端以強化站內連結；可於後台開關。
+- **結構化資料（JSON-LD）**：全站 `TravelAgency`（含社群 `sameAs`、電話、地址、價格範圍、圖片）與 `WebSite`（含站內搜尋 `SearchAction`）；行程頁 `Product`（含 TWD 價格）與 `BreadcrumbList`；地區／子地區 `BreadcrumbList`。
+
+### 🔧 SEO 強化
+
+- 每頁單一 `h1`（首頁、地區、子地區）。
+- `canonical`：首頁、地區、子地區（行程頁沿用 ProductID）。
+- `sitemap` 每筆加入 `lastModified`。
+- Twitter `summary_large_image` 卡片（各頁沿用自身標題／描述／OG 圖）。
+- 站台級預設 OG 圖（可後台上傳，內建 1200×630 墊底圖）與品牌／標題／描述預設值（可後台覆蓋，留空用內建值）。
+- 自動描述斷句與空白正規化、標題縮短品牌後綴；OG 圖在無圖時 fallback 到站台預設圖。
+- `www` → 非-www 由 Cloudflare 301 轉址（正式站設定）。
+
+### ⚡ 效能
+
+- 前台讀取（行程／地區／搜尋／輪播／站台設定／sitemap）以 `unstable_cache` + 標籤快取,後台儲存時以 `revalidateTag` 即時更新,降低 DB 負載、改善 TTFB；頁面維持動態渲染以避開 build 期 DB 連線。
+
+### 🗄️ 資料庫
+
+- `SiteSetting` 新增 SEO 相關欄位：`seoSiteName`、`seoDefaultTitle`、`seoDefaultDescription`、`ogImageKey`、`googleSiteVerification`、`showRelatedTours`、`orgTelephone`、`orgAddress`、`orgPriceRange`（需執行 `prisma migrate deploy`）。
+
 ## [1.4.0] - 2026-09-18
 
 後台首頁改為網站數據總覽：以 GA4 Data API 呈現前台流量與行為分析。
