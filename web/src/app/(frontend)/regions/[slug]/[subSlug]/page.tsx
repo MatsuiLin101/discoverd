@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: sub.seoTitle ?? `${sub.name} ／ ${data.region.name} — 找到了旅遊 FOUND HOLIDAY`,
     description: sub.seoDescription ?? `${sub.name} 旅程精選，共 ${sub.tours.length} 條路線，找到了旅遊為您推薦。`,
+    alternates: { canonical: `/regions/${slug}/${subSlug}` },
     openGraph: {
       url: `/regions/${slug}/${subSlug}`,
       images: sub.ogImage ? [sub.ogImage] : [],

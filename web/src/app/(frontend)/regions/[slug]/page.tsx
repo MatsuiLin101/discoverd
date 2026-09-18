@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: region.seoTitle ?? `${region.name} ／ 找到了旅遊 FOUND HOLIDAY`,
     description: region.seoDescription ?? `探索 ${region.name} 系列旅程，找到最適合你的路線。`,
+    alternates: { canonical: `/regions/${slug}` },
     openGraph: {
       url: `/regions/${slug}`,
       images: ogImageUrl ? [ogImageUrl] : [],
