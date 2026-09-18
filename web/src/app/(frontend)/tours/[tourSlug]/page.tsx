@@ -6,6 +6,8 @@ import TourDetailCard from "@/components/frontend/TourDetailCard";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { getTourDetail, getRegionTours } from "@/lib/frontend-queries";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema, tourSchema } from "@/lib/structured-data";
 
 interface Props {
   params: Promise<{ tourSlug: string }>;
@@ -68,8 +70,32 @@ export default async function TourPage({ params }: Props) {
   const activeSlug = hasSub ? tour.subSlug : data.subRegions[0]?.slug ?? "";
   const listingUrl = `/regions/${tour.regionSlug}/${tour.subSlug}`;
 
+  const canonicalPath = `/tours/${tour.productId ?? tour.slug}`;
+  const tourImages = [
+    tour.thumbnail,
+    ...tour.media.filter((m) => m.kind === "image").map((m) => m.url),
+  ].filter((u): u is string => Boolean(u));
+
   return (
     <>
+      <JsonLd
+        data={[
+          tourSchema({
+            name: tour.name,
+            description: tour.description,
+            path: canonicalPath,
+            images: tourImages,
+            price: tour.price,
+            regionName: tour.regionName,
+          }),
+          breadcrumbSchema([
+            { name: "首頁", path: "/" },
+            { name: tour.regionName, path: `/regions/${tour.regionSlug}` },
+            { name: tour.subRegionName, path: listingUrl },
+            { name: tour.name, path: canonicalPath },
+          ]),
+        ]}
+      />
       <SubRegionListing
         data={data}
         regionSlug={tour.regionSlug}

@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import SubRegionListing from "@/components/frontend/SubRegionListing";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/structured-data";
 import { getRegionTours } from "@/lib/frontend-queries";
 
 interface Props {
@@ -36,12 +38,21 @@ export default async function ToursPage({ params }: Props) {
   if (!currentSub) notFound();
 
   return (
-    <SubRegionListing
-      data={data}
-      regionSlug={slug}
-      activeSlug={validSlug}
-      activeName={currentSub.name}
-      headingLevel="h1"
-    />
+    <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "首頁", path: "/" },
+          { name: data.region.name, path: `/regions/${slug}` },
+          { name: currentSub.name, path: `/regions/${slug}/${validSlug}` },
+        ])}
+      />
+      <SubRegionListing
+        data={data}
+        regionSlug={slug}
+        activeSlug={validSlug}
+        activeName={currentSub.name}
+        headingLevel="h1"
+      />
+    </>
   );
 }

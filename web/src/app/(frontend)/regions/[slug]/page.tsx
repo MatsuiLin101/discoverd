@@ -4,6 +4,8 @@ import Link from "next/link";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import SiteFooter from "@/components/frontend/SiteFooter";
 import CategoryList from "@/components/frontend/CategoryList";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/structured-data";
 import { getRegionDetail } from "@/lib/frontend-queries";
 
 interface Props {
@@ -42,6 +44,12 @@ export default async function RegionPage({ params }: Props) {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "首頁", path: "/" },
+          { name: region.name, path: `/regions/${slug}` },
+        ])}
+      />
       <SiteHeader />
 
       <nav className="fh-page-bar">

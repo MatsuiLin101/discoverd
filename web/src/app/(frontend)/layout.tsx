@@ -4,6 +4,8 @@ import { Noto_Sans, Noto_Sans_TC } from "next/font/google";
 import { db } from "@/lib/db";
 import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager";
 import ContactClickTracker from "@/components/analytics/ContactClickTracker";
+import JsonLd from "@/components/JsonLd";
+import { organizationSchema, websiteSchema } from "@/lib/structured-data";
 import "./frontend.css";
 
 const notoSans = Noto_Sans({
@@ -49,7 +51,14 @@ export default async function FrontendLayout({
 }) {
   const setting = await db.siteSetting.findUnique({
     where: { id: "singleton" },
-    select: { layoutMode: true, boxMaxWidth: true, boxOuterBackground: true },
+    select: {
+      layoutMode: true,
+      boxMaxWidth: true,
+      boxOuterBackground: true,
+      facebookUrl: true,
+      instagramUrl: true,
+      lineUrl: true,
+    },
   });
   const boxed = setting?.layoutMode === "boxed";
   const boxWidth = setting?.boxMaxWidth ?? 1280;
@@ -61,6 +70,14 @@ export default async function FrontendLayout({
 
   return (
     <div className="fh-outer" data-bg={boxed ? outerBg : undefined}>
+      <JsonLd
+        data={[
+          organizationSchema({
+            social: [setting?.facebookUrl, setting?.instagramUrl, setting?.lineUrl],
+          }),
+          websiteSchema(),
+        ]}
+      />
       {gtmId && <GTMScript gtmId={gtmId} />}
       {gtmId && <GTMNoScript gtmId={gtmId} />}
       {gtmId && <ContactClickTracker />}
