@@ -1,9 +1,8 @@
 import { getDashboardStats, isGaConfigured, type RankedItem, type TrendPoint } from "@/lib/ga";
 import { db } from "@/lib/db";
+import TrendChart from "./TrendChart";
 
 const fmt = (n: number) => n.toLocaleString("zh-TW");
-// GA's `date` dimension is "YYYYMMDD" → "M/D".
-const fmtDate = (d: string) => (d.length === 8 ? `${Number(d.slice(4, 6))}/${Number(d.slice(6, 8))}` : d);
 
 const METHOD_LABELS: Record<string, string> = {
   line: "LINE",
@@ -62,35 +61,8 @@ function RankedList({
   );
 }
 
-// One bar per day so each day's value is visible; native <title> gives an
-// on-hover "date: value" tooltip without any client-side JS.
-function DailyBars({ points, max, unit }: { points: TrendPoint[]; max: number; unit: string }) {
-  const slot = 100 / points.length;
-  const barW = slot * 0.7;
-  return (
-    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-16 mt-2" role="img" aria-label="每日數值長條圖">
-      {points.map((p, i) => {
-        const h = (p.value / max) * 29;
-        return (
-          <rect
-            key={i}
-            x={i * slot + (slot - barW) / 2}
-            y={30 - Math.max(h, 0.4)}
-            width={barW}
-            height={Math.max(h, 0.4)}
-            className="fill-indigo-400 hover:fill-indigo-600"
-          >
-            <title>{`${fmtDate(p.date)}：${fmt(p.value)} ${unit}`}</title>
-          </rect>
-        );
-      })}
-    </svg>
-  );
-}
-
 function TrendCard({ title, unit, points }: { title: string; unit: string; points: TrendPoint[] }) {
   const total = points.reduce((s, p) => s + p.value, 0);
-  const peak = points.reduce((m, p) => (p.value > m.value ? p : m), { date: "", value: -1 });
   const hasData = points.length >= 2 && total > 0;
   return (
     <div className="p-4 bg-white border border-gray-200 rounded-xl">
@@ -99,14 +71,9 @@ function TrendCard({ title, unit, points }: { title: string; unit: string; point
         <p className="text-xs text-gray-400">近 30 天合計 {fmt(total)} {unit}</p>
       </div>
       {hasData ? (
-        <>
-          <DailyBars points={points} max={Math.max(peak.value, 1)} unit={unit} />
-          <div className="mt-1 flex items-center justify-between text-[11px] text-gray-400">
-            <span>{fmtDate(points[0].date)}</span>
-            <span>最高 {fmt(peak.value)} {unit}（{fmtDate(peak.date)}）· 游標移到長條看每日</span>
-            <span>{fmtDate(points[points.length - 1].date)}</span>
-          </div>
-        </>
+        <div className="mt-2">
+          <TrendChart points={points} unit={unit} />
+        </div>
       ) : (
         <p className="mt-2 text-xs text-gray-400">資料不足</p>
       )}
