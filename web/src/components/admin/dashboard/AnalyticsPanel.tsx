@@ -62,16 +62,28 @@ function RankedList({
   );
 }
 
-function Sparkline({ points, max }: { points: TrendPoint[]; max: number }) {
-  const step = 100 / (points.length - 1);
-  const coords = points.map((p, i) => ({ x: i * step, y: 30 - (p.value / max) * 28, p }));
-  const line = coords.map((c) => `${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(" ");
+// One bar per day so each day's value is visible; native <title> gives an
+// on-hover "date: value" tooltip without any client-side JS.
+function DailyBars({ points, max, unit }: { points: TrendPoint[]; max: number; unit: string }) {
+  const slot = 100 / points.length;
+  const barW = slot * 0.7;
   return (
-    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-14 mt-2 text-indigo-400" aria-hidden>
-      <polyline points={line} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-      {coords.map((c, i) => (
-        <line key={i} x1={c.x} y1={c.y} x2={c.x} y2="30" stroke="currentColor" strokeWidth="0.4" opacity="0.15" vectorEffect="non-scaling-stroke" />
-      ))}
+    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-16 mt-2" role="img" aria-label="每日數值長條圖">
+      {points.map((p, i) => {
+        const h = (p.value / max) * 29;
+        return (
+          <rect
+            key={i}
+            x={i * slot + (slot - barW) / 2}
+            y={30 - Math.max(h, 0.4)}
+            width={barW}
+            height={Math.max(h, 0.4)}
+            className="fill-indigo-400 hover:fill-indigo-600"
+          >
+            <title>{`${fmtDate(p.date)}：${fmt(p.value)} ${unit}`}</title>
+          </rect>
+        );
+      })}
     </svg>
   );
 }
@@ -88,10 +100,10 @@ function TrendCard({ title, unit, points }: { title: string; unit: string; point
       </div>
       {hasData ? (
         <>
-          <Sparkline points={points} max={Math.max(peak.value, 1)} />
+          <DailyBars points={points} max={Math.max(peak.value, 1)} unit={unit} />
           <div className="mt-1 flex items-center justify-between text-[11px] text-gray-400">
             <span>{fmtDate(points[0].date)}</span>
-            <span>最高 {fmt(peak.value)} {unit}（{fmtDate(peak.date)}）</span>
+            <span>最高 {fmt(peak.value)} {unit}（{fmtDate(peak.date)}）· 游標移到長條看每日</span>
             <span>{fmtDate(points[points.length - 1].date)}</span>
           </div>
         </>
