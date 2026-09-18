@@ -31,6 +31,12 @@ export const metadata: Metadata = {
     locale: "zh_TW",
     type: "website",
   },
+  // Only the card type is set site-wide; Next.js fills twitter:title,
+  // twitter:description and twitter:image from each page's title, description
+  // and OpenGraph image, so per-page cards stay specific.
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 // Google Tag Manager is loaded only for the public (frontend) routes so that
