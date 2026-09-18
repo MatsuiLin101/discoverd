@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const schema = z.object({
   items: z.array(z.object({ id: z.string(), sortOrder: z.number().int() })),
@@ -28,6 +30,7 @@ export async function PATCH(
       )
     );
     void writeLog({ userId: session.userId, userAccount: session.username, action: "REORDER", resource: "TOUR_FILE", resourceId: tourId, resourceName: "行程附件排序", detail: { tourId, count: items.length } });
+    revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[PATCH /api/admin/tours/[id]/files/reorder]", e);

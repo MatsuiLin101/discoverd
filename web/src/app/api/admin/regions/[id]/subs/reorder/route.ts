@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const schema = z.object({
   items: z.array(z.object({ id: z.string(), sortOrder: z.number().int() })).min(1),
@@ -32,5 +34,6 @@ export async function PATCH(
 
   const count = parsed.data.items.length;
   void writeLog({ userId: session.userId, userAccount: session.username, action: "REORDER", resource: "SUB_REGION", resourceId: regionId, resourceName: "次分類排序", detail: { count } });
+  revalidatePublic(CACHE_TAGS.regions);
   return NextResponse.json({ ok: true });
 }

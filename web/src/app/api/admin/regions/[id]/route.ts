@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { parseCropField } from "@/lib/crop";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -89,6 +91,7 @@ export async function PUT(
       ? (existing.ogImageKey ? "replaced" : "added")
       : "unchanged";
   void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnailChange, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageChange } });
+  revalidatePublic(CACHE_TAGS.regions);
   return NextResponse.json({ data: region });
 }
 
@@ -154,6 +157,7 @@ export async function DELETE(
         detail: { id: sub.id, name: sub.name, cascadeFrom: region.name },
       });
     }
+    revalidatePublic(CACHE_TAGS.regions);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[DELETE /api/admin/regions/[id]]", e);

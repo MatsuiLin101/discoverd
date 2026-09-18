@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { loadPending, markCommitted, rowKey } from "@/lib/excel/import-core";
 import { commitTours, type TourImportPayload } from "@/lib/excel/tours";
 
@@ -51,6 +53,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions, CACHE_TAGS.tags);
     return NextResponse.json({
       data: {
         ...counts,

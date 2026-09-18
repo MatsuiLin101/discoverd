@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const schema = z.object({
   tourIds: z.array(z.string()).min(1),
@@ -30,5 +32,6 @@ export async function PATCH(req: NextRequest) {
   );
 
   void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "TOUR", resourceId: "batch", resourceName: `批量${published ? "發布" : "取消發布"}行程（${tourIds.length} 筆）`, detail: { count: tourIds.length, published, items: tours.map((t) => ({ id: t.id, name: t.name })) } });
+  revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions);
   return NextResponse.json({ ok: true, updated: tourIds.length });
 }

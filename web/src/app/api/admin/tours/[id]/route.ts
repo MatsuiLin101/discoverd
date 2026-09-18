@@ -6,6 +6,8 @@ import { Prisma } from "@/generated/prisma/client";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
 import { parseCropField } from "@/lib/crop";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 /**
  * Delete a stored image, unless it is still referenced by an AI candidate
@@ -160,6 +162,7 @@ export async function PUT(
         ? existing.ogImageKey ? "replaced" : "added"
         : "unchanged";
     void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnailChange, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageChange } });
+    revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions);
     return NextResponse.json({ data: tour });
   } catch (e) {
     console.error("[PUT /api/admin/tours/[id]]", e);
@@ -196,6 +199,7 @@ export async function DELETE(
 
     await db.tour.delete({ where: { id } });
     void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR", resourceId: id, resourceName: tour.name, detail: { id, name: tour.name, hadThumbnail: !!tour.thumbnailKey } });
+    revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[DELETE /api/admin/tours/[id]]", e);

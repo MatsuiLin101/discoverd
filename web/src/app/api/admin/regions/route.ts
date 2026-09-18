@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { parseCropField } from "@/lib/crop";
 
 const schema = z.object({
@@ -50,5 +52,6 @@ export async function POST(req: NextRequest) {
     data: { name, slug, sortOrder, thumbnailKey, thumbnailCrop: thumbnailCrop ?? undefined, seoTitle, seoDescription, ogImageKey },
   });
   void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "REGION", resourceId: region.id, resourceName: region.name, detail: { id: region.id, name: region.name, slug: region.slug, thumbnailKey: thumbnailKey ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey: ogImageKey ?? null } });
+  revalidatePublic(CACHE_TAGS.regions);
   return NextResponse.json({ data: region }, { status: 201 });
 }

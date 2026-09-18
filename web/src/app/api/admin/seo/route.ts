@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage, matchUploadFolder } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const SINGLETON_ID = "singleton";
 
@@ -99,6 +101,7 @@ export async function PUT(req: NextRequest) {
     detail: data,
   });
 
+  revalidatePublic(CACHE_TAGS.siteSetting);
   const ogImageUrl = setting.ogImageKey ? storage.publicUrl(setting.ogImageKey) : null;
   return NextResponse.json({ data: { ...setting, ogImageUrl } });
 }

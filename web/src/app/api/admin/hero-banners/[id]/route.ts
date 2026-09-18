@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const schema = z.object({
   title: z.string().min(1, "標題不可為空"),
@@ -52,6 +54,7 @@ export async function PUT(
     resourceName: banner.title,
     detail: { id: banner.id, title: banner.title, imageChange },
   });
+  revalidatePublic(CACHE_TAGS.heroBanners);
   return NextResponse.json({ data: banner });
 }
 
@@ -81,6 +84,7 @@ export async function DELETE(
       resourceName: banner.title,
       detail: { id, title: banner.title },
     });
+    revalidatePublic(CACHE_TAGS.heroBanners);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[DELETE /api/admin/hero-banners/[id]]", e);
