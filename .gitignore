@@ -34,6 +34,10 @@ docs/contracts/
 # Real client tour data for batch import; kept local only. The format template is committed.
 web/scripts/fixtures/*.xlsx
 !web/scripts/fixtures/tours-import-template.xlsx
+# Local secret / credential files (e.g. Google Cloud service-account JSON).
+# Everything here is ignored except the README that documents the folder.
+/secrets/*
+!/secrets/README.md
 
 # Next.js app
 web/.next/
