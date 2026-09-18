@@ -7,6 +7,7 @@ import { HERO_FALLBACK_SLIDES } from "@/lib/frontend-data";
 import { getRegionList } from "@/lib/frontend-queries";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { getSeoSettings } from "@/lib/seo-settings";
 
 // Home reads hero banners / featured tours from the DB at request time and is the
 // only non-parameterized frontend route that would otherwise be prerendered at
@@ -14,12 +15,17 @@ import { storage } from "@/lib/storage";
 // (frontend) are already rendered on demand, so we mark only this page.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "找到了旅遊 FOUND HOLIDAY — 為您而寫的旅程",
-  description: "找到了旅遊，精選日本、歐洲、東南亞等優質行程，由專業旅遊顧問為您量身打造。",
-  alternates: { canonical: "/" },
-  openGraph: { url: "/" },
-};
+// The home page redefines openGraph (to set og:url), which shallowly replaces
+// the layout's openGraph — so it must also re-declare the default OG image.
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSeoSettings();
+  return {
+    title: seo.defaultTitle,
+    description: seo.defaultDescription,
+    alternates: { canonical: "/" },
+    openGraph: { url: "/", siteName: seo.siteName, images: [seo.ogImageUrl] },
+  };
+}
 
 export default async function HomePage() {
   const [regions, dbBanners, siteSetting] = await Promise.all([

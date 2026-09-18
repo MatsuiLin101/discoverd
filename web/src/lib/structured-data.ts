@@ -27,19 +27,21 @@ export function absoluteUrl(path: string): string {
 interface OrganizationInput {
   /** Social profile URLs used for `sameAs`; falsy entries are dropped. */
   social?: (string | null | undefined)[];
+  /** Brand name override (defaults to SITE_NAME). */
+  name?: string;
 }
 
 /**
  * TravelAgency (a subtype of Organization + LocalBusiness). Emitted once,
  * site-wide, from the frontend layout.
  */
-export function organizationSchema({ social }: OrganizationInput = {}) {
+export function organizationSchema({ social, name }: OrganizationInput = {}) {
   const sameAs = (social ?? []).filter((u): u is string => Boolean(u));
   return {
     "@context": "https://schema.org",
     "@type": "TravelAgency",
     "@id": `${siteUrl()}/#organization`,
-    name: SITE_NAME,
+    name: name || SITE_NAME,
     legalName: LEGAL_NAME,
     url: siteUrl(),
     logo: absoluteUrl("/images/tour-placeholder.svg"),
@@ -51,12 +53,12 @@ export function organizationSchema({ social }: OrganizationInput = {}) {
  * WebSite node with a SearchAction so Google can offer a sitelinks search box
  * pointing at the on-site search page.
  */
-export function websiteSchema() {
+export function websiteSchema(name?: string) {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": `${siteUrl()}/#website`,
-    name: SITE_NAME,
+    name: name || SITE_NAME,
     url: siteUrl(),
     inLanguage: "zh-TW",
     publisher: { "@id": `${siteUrl()}/#organization` },

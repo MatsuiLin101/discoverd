@@ -6,6 +6,7 @@ import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager"
 import ContactClickTracker from "@/components/analytics/ContactClickTracker";
 import JsonLd from "@/components/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/structured-data";
+import { getSeoSettings } from "@/lib/seo-settings";
 import "./frontend.css";
 
 const notoSans = Noto_Sans({
@@ -22,22 +23,35 @@ const notoSansTC = Noto_Sans_TC({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-  title: "找到了旅遊 FOUND HOLIDAY — 為您而寫的旅程",
-  description: "找到了旅遊，精選日本、歐洲、東南亞等優質行程，由專業旅遊顧問為您量身打造。",
-  openGraph: {
-    siteName: "找到了旅遊 FOUND HOLIDAY",
-    locale: "zh_TW",
-    type: "website",
-  },
-  // Only the card type is set site-wide; Next.js fills twitter:title,
-  // twitter:description and twitter:image from each page's title, description
-  // and OpenGraph image, so per-page cards stay specific.
-  twitter: {
-    card: "summary_large_image",
-  },
-};
+// Metadata is built at request time from the SEO settings (admin-editable, with
+// built-in fallbacks). Defaults declared here — the default OG image, the
+// site-wide title/description and the Google verification token — are inherited
+// by any page that does not redefine them. Note openGraph is shallowly merged:
+// a page that sets its own `openGraph` replaces this one entirely, so pages that
+// need the default image (e.g. the home page) must include it themselves.
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSeoSettings();
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+    title: seo.defaultTitle,
+    description: seo.defaultDescription,
+    openGraph: {
+      siteName: seo.siteName,
+      locale: "zh_TW",
+      type: "website",
+      images: [seo.ogImageUrl],
+    },
+    // Only the card type is set site-wide; Next.js fills twitter:title,
+    // twitter:description and twitter:image from each page's title, description
+    // and OpenGraph image, so per-page cards stay specific.
+    twitter: {
+      card: "summary_large_image",
+    },
+    ...(seo.googleSiteVerification
+      ? { verification: { google: seo.googleSiteVerification } }
+      : {}),
+  };
+}
 
 // Google Tag Manager is loaded only for the public (frontend) routes so that
 // admin activity is not tracked. GA is configured inside the GTM container.
@@ -55,17 +69,17 @@ export default async function FrontendLayout({
   children: React.ReactNode;
   modal: React.ReactNode;
 }) {
-  const setting = await db.siteSetting.findUnique({
-    where: { id: "singleton" },
-    select: {
-      layoutMode: true,
-      boxMaxWidth: true,
-      boxOuterBackground: true,
-      facebookUrl: true,
-      instagramUrl: true,
-      lineUrl: true,
-    },
-  });
+  const [setting, seo] = await Promise.all([
+    db.siteSetting.findUnique({
+      where: { id: "singleton" },
+      select: {
+        layoutMode: true,
+        boxMaxWidth: true,
+        boxOuterBackground: true,
+      },
+    }),
+    getSeoSettings(),
+  ]);
   const boxed = setting?.layoutMode === "boxed";
   const boxWidth = setting?.boxMaxWidth ?? 1280;
   const outerBg = setting?.boxOuterBackground ?? "neutral";
@@ -78,10 +92,8 @@ export default async function FrontendLayout({
     <div className="fh-outer" data-bg={boxed ? outerBg : undefined}>
       <JsonLd
         data={[
-          organizationSchema({
-            social: [setting?.facebookUrl, setting?.instagramUrl, setting?.lineUrl],
-          }),
-          websiteSchema(),
+          organizationSchema({ social: seo.social, name: seo.siteName }),
+          websiteSchema(seo.siteName),
         ]}
       />
       {gtmId && <GTMScript gtmId={gtmId} />}
