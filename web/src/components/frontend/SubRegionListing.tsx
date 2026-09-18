@@ -12,6 +12,12 @@ interface Props {
   activeSlug: string;
   /** Display name of the active sub-region, shown in the breadcrumb. */
   activeName: string;
+  /**
+   * Heading level for the listing title. Defaults to "h2". The standalone
+   * sub-region page passes "h1"; the tour page leaves it as "h2" since the
+   * open tour card is that page's h1.
+   */
+  headingLevel?: "h1" | "h2";
 }
 
 /**
@@ -19,7 +25,7 @@ interface Props {
  * Shared by the sub-region page and the standalone tour page, so a shared
  * tour link opens the modal over exactly the same listing as an in-site click.
  */
-export default function SubRegionListing({ data, regionSlug, activeSlug, activeName }: Props) {
+export default function SubRegionListing({ data, regionSlug, activeSlug, activeName, headingLevel = "h2" }: Props) {
   return (
     <>
       <SiteHeader />
@@ -43,6 +49,7 @@ export default function SubRegionListing({ data, regionSlug, activeSlug, activeN
             regionSlug={regionSlug}
             regions={data.subRegions}
             initialSlug={activeSlug}
+            headingLevel={headingLevel}
           />
         </Suspense>
       </section>

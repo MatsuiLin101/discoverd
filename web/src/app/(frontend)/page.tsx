@@ -4,9 +4,9 @@ import SiteFooter from "@/components/frontend/SiteFooter";
 import HeroCarousel from "@/components/frontend/HeroCarousel";
 import CategoryList from "@/components/frontend/CategoryList";
 import { HERO_FALLBACK_SLIDES } from "@/lib/frontend-data";
-import { getRegionList } from "@/lib/frontend-queries";
-import { db } from "@/lib/db";
-import { storage } from "@/lib/storage";
+import { getRegionList, getHeroBanners } from "@/lib/frontend-queries";
+import { getSiteSettingCached } from "@/lib/site-setting";
+import { getSeoSettings } from "@/lib/seo-settings";
 
 // Home reads hero banners / featured tours from the DB at request time and is the
 // only non-parameterized frontend route that would otherwise be prerendered at
@@ -14,32 +14,26 @@ import { storage } from "@/lib/storage";
 // (frontend) are already rendered on demand, so we mark only this page.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "找到了旅遊 FOUND HOLIDAY — 為您而寫的旅程",
-  description: "找到了旅遊，精選日本、歐洲、東南亞等優質行程，由專業旅遊顧問為您量身打造。",
-  openGraph: { url: "/" },
-};
+// The home page redefines openGraph (to set og:url), which shallowly replaces
+// the layout's openGraph — so it must also re-declare the default OG image.
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getSeoSettings();
+  return {
+    title: seo.defaultTitle,
+    description: seo.defaultDescription,
+    alternates: { canonical: "/" },
+    openGraph: { url: "/", siteName: seo.siteName, images: [seo.ogImageUrl] },
+  };
+}
 
 export default async function HomePage() {
   const [regions, dbBanners, siteSetting] = await Promise.all([
     getRegionList(),
-    db.heroBanner.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.siteSetting.findUnique({
-      where: { id: "singleton" },
-      select: {
-        layoutMode: true,
-        heroPauseOnHover: true,
-        heroMaxHeight: true,
-        heroRatio: true,
-        mobileHeroRatio: true,
-      },
-    }),
+    getHeroBanners(),
+    getSiteSettingCached(),
   ]);
 
-  const heroSlides =
-    dbBanners.length > 0
-      ? dbBanners.map((b) => ({ img: storage.publicUrl(b.imageKey), alt: b.title }))
-      : HERO_FALLBACK_SLIDES;
+  const heroSlides = dbBanners.length > 0 ? dbBanners : HERO_FALLBACK_SLIDES;
 
   const layoutMode = siteSetting?.layoutMode ?? "original";
   const heroPauseOnHover = siteSetting?.heroPauseOnHover ?? true;
@@ -79,6 +73,7 @@ export default async function HomePage() {
       </nav>
 
       <CategoryList
+        headingLevel="h1"
         title={`<em>挑一個方向</em> <span class="ph">開始你的下一段旅程</span>`}
         stats={[
           `<b>${regions.length}</b> 個系列`,

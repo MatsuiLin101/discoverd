@@ -4,7 +4,11 @@ import Link from "next/link";
 import SiteHeader from "@/components/frontend/SiteHeader";
 import SiteFooter from "@/components/frontend/SiteFooter";
 import CategoryList from "@/components/frontend/CategoryList";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/structured-data";
 import { getRegionDetail } from "@/lib/frontend-queries";
+import { metaDescription } from "@/lib/seo-text";
+import { getSeoSettings, BRAND_SHORT } from "@/lib/seo-settings";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -14,13 +18,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const region = await getRegionDetail(slug);
   if (!region) return {};
-  const ogImageUrl = region.ogImage ?? region.thumbnail;
+  const seo = await getSeoSettings();
+  const ogImageUrl = region.ogImage ?? region.thumbnail ?? seo.ogImageUrl;
   return {
-    title: region.seoTitle ?? `${region.name} ／ 找到了旅遊 FOUND HOLIDAY`,
-    description: region.seoDescription ?? `探索 ${region.name} 系列旅程，找到最適合你的路線。`,
+    title: region.seoTitle ?? `${region.name}｜${BRAND_SHORT}`,
+    description: metaDescription(region.seoDescription, {
+      fallback: `探索 ${region.name} 系列旅程，精選優質行程，找到了旅遊為您規劃最適合的路線。`,
+    }),
+    alternates: { canonical: `/regions/${slug}` },
     openGraph: {
       url: `/regions/${slug}`,
-      images: ogImageUrl ? [ogImageUrl] : [],
+      images: [ogImageUrl],
     },
   };
 }
@@ -42,6 +50,12 @@ export default async function RegionPage({ params }: Props) {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "首頁", path: "/" },
+          { name: region.name, path: `/regions/${slug}` },
+        ])}
+      />
       <SiteHeader />
 
       <nav className="fh-page-bar">
@@ -55,6 +69,7 @@ export default async function RegionPage({ params }: Props) {
       </nav>
 
       <CategoryList
+        headingLevel="h1"
         title={`<span class="ph" style="color: var(--accent);">縮小範圍</span> <span class="ph">遇見最適合你的旅程</span>`}
         stats={[
           `<b>${region.subRegions.length}</b> 個選擇`,

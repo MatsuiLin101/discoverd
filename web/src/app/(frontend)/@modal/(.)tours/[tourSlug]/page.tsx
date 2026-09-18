@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import TourModalShell from "@/components/frontend/TourModalShell";
 import TourDetailCard from "@/components/frontend/TourDetailCard";
-import { getTourDetail } from "@/lib/frontend-queries";
+import { getTourDetail, getRelatedTours } from "@/lib/frontend-queries";
+import { getSiteSettingCached } from "@/lib/site-setting";
 
 interface Props {
   params: Promise<{ tourSlug: string }>;
@@ -17,9 +18,16 @@ export default async function InterceptedTourModal({ params }: Props) {
   const tour = await getTourDetail(tourSlug);
   if (!tour) notFound();
 
+  const setting = await getSiteSettingCached();
+  // Default on: only an explicit false hides the related-tours section.
+  const related =
+    setting?.showRelatedTours !== false
+      ? await getRelatedTours(tour.regionSlug, tour.subSlug, tour.id)
+      : [];
+
   return (
     <TourModalShell>
-      <TourDetailCard tour={tour} headingTag="h3" />
+      <TourDetailCard tour={tour} headingTag="h3" related={related} />
     </TourModalShell>
   );
 }

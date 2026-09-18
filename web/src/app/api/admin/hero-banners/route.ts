@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const schema = z.object({
   title: z.string().min(1, "標題不可為空"),
@@ -41,5 +43,6 @@ export async function POST(req: NextRequest) {
     resourceName: banner.title,
     detail: { id: banner.id, title: banner.title, imageKey: banner.imageKey },
   });
+  revalidatePublic(CACHE_TAGS.heroBanners);
   return NextResponse.json({ data: banner }, { status: 201 });
 }

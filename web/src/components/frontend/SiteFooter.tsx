@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { db } from "@/lib/db";
+import { getSiteSettingCached } from "@/lib/site-setting";
 import FooterContactActions from "./FooterContactActions";
 import LineIcon from "./LineIcon";
 import LineCommunityIcon from "./LineCommunityIcon";
@@ -14,7 +14,7 @@ export default async function SiteFooter() {
   // the homepage — but it works from inside this shared component, including the
   // special not-found file where route segment config isn't honored.
   await connection();
-  const setting = await db.siteSetting.findUnique({ where: { id: "singleton" } });
+  const setting = await getSiteSettingCached();
 
   return (
     <footer className="fh-footer">

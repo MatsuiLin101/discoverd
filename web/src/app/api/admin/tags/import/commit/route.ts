@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { loadPending, markCommitted } from "@/lib/excel/import-core";
 import { commitTagImport, type TagImportPayload } from "@/lib/excel/tags";
 
@@ -43,6 +45,7 @@ export async function POST(req: NextRequest) {
       detail: { module: "TAG", filename: res.log.filename, ...counts },
     });
 
+    revalidatePublic(CACHE_TAGS.tags);
     return NextResponse.json({ data: counts });
   } catch (e) {
     console.error("[POST /api/admin/tags/import/commit]", e);

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { loadPending, markCommitted } from "@/lib/excel/import-core";
 import { commitRegions, type RegionImportPayload } from "@/lib/excel/regions";
 
@@ -42,6 +44,7 @@ export async function POST(req: NextRequest) {
       detail: { module: "REGION", filename: res.log.filename, ...counts },
     });
 
+    revalidatePublic(CACHE_TAGS.regions, CACHE_TAGS.tours);
     return NextResponse.json({ data: counts });
   } catch (e) {
     console.error("[POST /api/admin/regions/import/commit]", e);

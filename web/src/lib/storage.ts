@@ -64,6 +64,7 @@ export const ALLOWED_UPLOAD_FOLDERS = new Set([
   "seo-og/tours",
   "seo-og/regions",
   "seo-og/subregions",
+  "seo-og/site",
 ]);
 
 /** Subset of upload folders restricted to ADMIN role (STAFF cannot write here). */

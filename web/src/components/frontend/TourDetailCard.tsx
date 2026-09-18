@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { TourDetailData } from "@/lib/frontend-data";
+import type { TourDetailData, RelatedTour } from "@/lib/frontend-data";
 import TourMediaGallery from "./TourMediaGallery";
 import TourShareButton from "./TourShareButton";
 import TourDetailActions from "./TourDetailActions";
@@ -12,6 +12,8 @@ interface Props {
   tour: TourDetailData;
   /** Heading level for the tour name: h1 on the standalone page, h3 in the modal. */
   headingTag?: "h1" | "h3";
+  /** Auto-picked same-region recommendations; hidden when empty. */
+  related?: RelatedTour[];
 }
 
 /**
@@ -20,7 +22,7 @@ interface Props {
  * The card owns the mobile collapse toggle; the outer frame (page vs overlay)
  * is provided by the caller.
  */
-export default function TourDetailCard({ tour, headingTag = "h3" }: Props) {
+export default function TourDetailCard({ tour, headingTag = "h3", related = [] }: Props) {
   // Collapsed by default so mobile opens showing the gallery with a compact
   // info bar; the user expands to read the full intro. Desktop ignores the
   // `.collapsed` class (styled only under the mobile media query) and always
@@ -70,7 +72,7 @@ export default function TourDetailCard({ tour, headingTag = "h3" }: Props) {
 
   return (
     <>
-      <TourMediaGallery media={tour.media} thumbnail={tour.thumbnail} alt={tour.name} />
+      <TourMediaGallery media={tour.media} thumbnail={tour.thumbnail} alt={tour.name} related={related} />
 
       <aside
         className={`fh-modal-side${mobileCollapsed ? " collapsed" : ""}${moreBelow ? " more-below" : ""}`}

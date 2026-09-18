@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { parseCropField } from "@/lib/crop";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -89,6 +91,7 @@ export async function PUT(
       ? (existing.ogImageKey ? "replaced" : "added")
       : "unchanged";
   void writeLog({ userId: session.userId, userAccount: session.username, action: "UPDATE", resource: "SUB_REGION", resourceId: sub.id, resourceName: sub.name, detail: { id: sub.id, name: sub.name, slug: sub.slug, thumbnailChange, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageChange } });
+  revalidatePublic(CACHE_TAGS.regions);
   return NextResponse.json({ data: sub });
 }
 
@@ -120,5 +123,6 @@ export async function DELETE(
   if (sub.ogImageKey) await storage.delete(sub.ogImageKey).catch(() => {});
   await db.subRegion.delete({ where: { id: subId } });
   void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "SUB_REGION", resourceId: subId, resourceName: sub.name, detail: { id: subId, name: sub.name, hadThumbnail: !!sub.thumbnailKey } });
+  revalidatePublic(CACHE_TAGS.regions);
   return NextResponse.json({ ok: true });
 }
