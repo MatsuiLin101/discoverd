@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { TourDetailData } from "@/lib/frontend-data";
+import type { TourDetailData, RelatedTour } from "@/lib/frontend-data";
 import TourMediaGallery from "./TourMediaGallery";
 import TourShareButton from "./TourShareButton";
 import TourDetailActions from "./TourDetailActions";
+import CroppedThumb from "./CroppedThumb";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 import { trackEvent } from "@/lib/analytics";
 
@@ -12,6 +14,8 @@ interface Props {
   tour: TourDetailData;
   /** Heading level for the tour name: h1 on the standalone page, h3 in the modal. */
   headingTag?: "h1" | "h3";
+  /** Auto-picked same-region recommendations; hidden when empty. */
+  related?: RelatedTour[];
 }
 
 /**
@@ -20,7 +24,7 @@ interface Props {
  * The card owns the mobile collapse toggle; the outer frame (page vs overlay)
  * is provided by the caller.
  */
-export default function TourDetailCard({ tour, headingTag = "h3" }: Props) {
+export default function TourDetailCard({ tour, headingTag = "h3", related = [] }: Props) {
   // Collapsed by default so mobile opens showing the gallery with a compact
   // info bar; the user expands to read the full intro. Desktop ignores the
   // `.collapsed` class (styled only under the mobile media query) and always
@@ -125,6 +129,45 @@ export default function TourDetailCard({ tour, headingTag = "h3" }: Props) {
           <TourDetailActions tourId={tour.id} tourName={tour.name} />
         </div>
       </aside>
+
+      {related.length > 0 && (
+        <section className="fh-related" aria-label="相關行程">
+          <h2 className="fh-related-title">相關行程</h2>
+          <div className="fh-related-list">
+            {related.map((r) => (
+              <Link
+                key={r.productId ?? r.slug}
+                className="fh-related-item"
+                href={`/tours/${r.productId ?? r.slug}`}
+                onClick={() =>
+                  trackEvent("select_content", {
+                    content_type: "related_tour",
+                    item_id: r.productId ?? r.slug,
+                  })
+                }
+              >
+                <div className="fh-related-thumb">
+                  <CroppedThumb
+                    src={r.thumbnail ?? "/images/tour-placeholder.svg"}
+                    alt={r.name}
+                    crop={r.thumbnail ? r.crop : null}
+                    sizes="200px"
+                  />
+                </div>
+                <div className="fh-related-body">
+                  <span className="fh-related-sub">{r.subRegionName}</span>
+                  <span className="fh-related-name">{r.name}</span>
+                  <span className="fh-related-price">
+                    {isCustomQuote(r.price)
+                      ? CUSTOM_QUOTE_LABEL
+                      : `NT$ ${r.price.toLocaleString("zh-TW")} 起`}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }

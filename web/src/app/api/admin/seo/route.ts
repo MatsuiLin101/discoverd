@@ -21,6 +21,7 @@ const schema = z.object({
     .refine((k) => matchUploadFolder(k) === "seo-og/site", "OG 圖片路徑不合法")
     .optional(),
   clearOgImage: z.boolean().optional(),
+  showRelatedTours: z.boolean().optional(),
 });
 
 export async function GET() {
@@ -39,6 +40,7 @@ export async function GET() {
       seoDefaultDescription: true,
       googleSiteVerification: true,
       ogImageKey: true,
+      showRelatedTours: true,
     },
   });
 
@@ -65,6 +67,7 @@ export async function PUT(req: NextRequest) {
     googleSiteVerification,
     ogImageKey,
     clearOgImage,
+    showRelatedTours,
   } = parsed.data;
 
   const data = {
@@ -76,6 +79,7 @@ export async function PUT(req: NextRequest) {
     // requested; otherwise leave the stored image untouched.
     ...(ogImageKey ? { ogImageKey } : {}),
     ...(clearOgImage ? { ogImageKey: null } : {}),
+    ...(showRelatedTours === undefined ? {} : { showRelatedTours }),
   };
 
   const setting = await db.siteSetting.upsert({
@@ -88,6 +92,7 @@ export async function PUT(req: NextRequest) {
       seoDefaultDescription: true,
       googleSiteVerification: true,
       ogImageKey: true,
+      showRelatedTours: true,
     },
   });
 

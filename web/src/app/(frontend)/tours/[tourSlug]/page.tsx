@@ -5,7 +5,8 @@ import TourModalShell from "@/components/frontend/TourModalShell";
 import TourDetailCard from "@/components/frontend/TourDetailCard";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
-import { getTourDetail, getRegionTours } from "@/lib/frontend-queries";
+import { getTourDetail, getRegionTours, getRelatedTours } from "@/lib/frontend-queries";
+import { getSiteSettingCached } from "@/lib/site-setting";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbSchema, tourSchema } from "@/lib/structured-data";
 import { metaDescription } from "@/lib/seo-text";
@@ -82,6 +83,13 @@ export default async function TourPage({ params }: Props) {
   const data = await getRegionTours(tour.regionSlug);
   if (!data) notFound();
 
+  const setting = await getSiteSettingCached();
+  // Default on: only an explicit false hides the related-tours section.
+  const related =
+    setting?.showRelatedTours !== false
+      ? await getRelatedTours(tour.regionSlug, tour.subSlug, tour.id)
+      : [];
+
   const hasSub = data.subRegions.some((sr) => sr.slug === tour.subSlug);
   const activeSlug = hasSub ? tour.subSlug : data.subRegions[0]?.slug ?? "";
   const listingUrl = `/regions/${tour.regionSlug}/${tour.subSlug}`;
@@ -119,7 +127,7 @@ export default async function TourPage({ params }: Props) {
         activeName={tour.subRegionName}
       />
       <TourModalShell closeHref={listingUrl}>
-        <TourDetailCard tour={tour} headingTag="h1" />
+        <TourDetailCard tour={tour} headingTag="h1" related={related} />
       </TourModalShell>
     </>
   );

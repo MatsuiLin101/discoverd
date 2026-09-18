@@ -32,6 +32,7 @@ export const getSiteSettingCached = unstable_cache(
         seoDefaultDescription: true,
         ogImageKey: true,
         googleSiteVerification: true,
+        showRelatedTours: true,
       },
     });
   },

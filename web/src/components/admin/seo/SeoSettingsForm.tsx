@@ -10,6 +10,7 @@ export default function SeoSettingsForm() {
   const [seoDefaultTitle, setSeoDefaultTitle] = useState("");
   const [seoDefaultDescription, setSeoDefaultDescription] = useState("");
   const [googleSiteVerification, setGoogleSiteVerification] = useState("");
+  const [showRelatedTours, setShowRelatedTours] = useState(true);
 
   // OG image: server-stored URL, a locally-picked preview, and a clear flag.
   const [initialOgImage, setInitialOgImage] = useState<string | null>(null);
@@ -31,6 +32,7 @@ export default function SeoSettingsForm() {
           setSeoDefaultTitle(data.seoDefaultTitle ?? "");
           setSeoDefaultDescription(data.seoDefaultDescription ?? "");
           setGoogleSiteVerification(data.googleSiteVerification ?? "");
+          setShowRelatedTours(data.showRelatedTours ?? true);
           setInitialOgImage(data.ogImageUrl ?? null);
         }
       })
@@ -62,6 +64,7 @@ export default function SeoSettingsForm() {
         seoDefaultTitle,
         seoDefaultDescription,
         googleSiteVerification,
+        showRelatedTours,
       };
 
       const ogFile = ogFileRef.current?.files?.[0];
@@ -187,6 +190,21 @@ export default function SeoSettingsForm() {
             hint="貼上 HTML 標籤驗證的 content 值（google-site-verification）"
             placeholder="例如：AbCdEf123..."
           />
+
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={showRelatedTours}
+              onChange={(e) => setShowRelatedTours(e.target.checked)}
+              className="mt-0.5 h-4 w-4 cursor-pointer accent-[#D12351]"
+            />
+            <span>
+              <span className="block text-sm font-medium text-gray-700">在行程頁顯示「相關行程」</span>
+              <span className="mt-0.5 block text-xs text-gray-400">
+                自動推薦同地區的其他行程；關閉後前台將不顯示此區塊。
+              </span>
+            </span>
+          </label>
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
           {success && <p className="text-sm text-emerald-600">已成功儲存</p>}

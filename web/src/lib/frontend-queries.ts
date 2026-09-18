@@ -9,6 +9,7 @@ import type {
   RegionListItem,
   RegionDetail,
   RegionTours,
+  RelatedTour,
   TourMedia,
   TourDetailData,
   SearchFilters,
@@ -337,6 +338,53 @@ export const getSearchFilters = unstable_cache(
   },
   ["getSearchFilters"],
   { tags: [CACHE_TAGS.tags, CACHE_TAGS.regions], revalidate: CACHE_BACKSTOP },
+);
+
+// ── Related tours ───────────────────────────────────────────
+// Used by: the tour detail card's "相關行程" section (standalone page + modal).
+// Automatically picks other published tours in the same region, prioritising
+// the same sub-region, excluding the current tour.
+export const getRelatedTours = unstable_cache(
+  async (
+    regionSlug: string,
+    subSlug: string,
+    excludeTourId: string,
+    limit = 6,
+  ): Promise<RelatedTour[]> => {
+    const rows = await db.tour.findMany({
+      where: {
+        published: true,
+        id: { not: excludeTourId },
+        subRegion: { region: { slug: regionSlug } },
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      take: 48,
+      select: {
+        productId: true,
+        slug: true,
+        name: true,
+        thumbnailKey: true,
+        thumbnailCrop: true,
+        price: true,
+        subRegion: { select: { slug: true, name: true } },
+      },
+    });
+
+    // Same sub-region first, then the rest of the region, keeping DB order.
+    const sameSub = rows.filter((r) => r.subRegion.slug === subSlug);
+    const otherSub = rows.filter((r) => r.subRegion.slug !== subSlug);
+    return [...sameSub, ...otherSub].slice(0, limit).map((r) => ({
+      productId: r.productId,
+      slug: r.slug,
+      name: r.name,
+      thumbnail: urlOf(r.thumbnailKey),
+      crop: normalizeCrop(r.thumbnailCrop),
+      price: r.price,
+      subRegionName: r.subRegion.name,
+    }));
+  },
+  ["getRelatedTours"],
+  { tags: [CACHE_TAGS.tours, CACHE_TAGS.regions], revalidate: CACHE_BACKSTOP },
 );
 
 // ── Function 6 ──────────────────────────────────────────────

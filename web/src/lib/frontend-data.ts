@@ -522,6 +522,17 @@ export interface TourItem {
  * (`@modal/(.)tours/[tourSlug]`), so the two stay visually identical. Region /
  * sub-region slugs are included for the standalone page's breadcrumb.
  */
+/** A single "相關行程" recommendation shown at the bottom of a tour card. */
+export interface RelatedTour {
+  productId: string | null;
+  slug: string;
+  name: string;
+  thumbnail: string | null;
+  crop: ThumbCrop | null;
+  price: number;
+  subRegionName: string;
+}
+
 export interface TourDetailData {
   id: string;
   slug: string;

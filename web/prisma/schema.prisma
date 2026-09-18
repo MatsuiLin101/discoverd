@@ -200,6 +200,8 @@ model SiteSetting {
   seoDefaultDescription  String? // 未自訂頁面的預設 meta description
   ogImageKey             String? // 站台級預設 OG 分享圖（未設定則用 /og-default.jpg）
   googleSiteVerification String? // Google Search Console 驗證碼
+  // 是否在行程頁顯示「相關行程」推薦區塊（同時是使用者可見度與內部連結的開關）。
+  showRelatedTours       Boolean @default(true)
   // Site-wide layout mode:
   //   "original" — full-bleed site; carousel is desktop full-bleed cover and
   //                mobile follows mobileHeroRatio.
