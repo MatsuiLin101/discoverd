@@ -22,6 +22,9 @@ const schema = z.object({
     .optional(),
   clearOgImage: z.boolean().optional(),
   showRelatedTours: z.boolean().optional(),
+  orgTelephone: z.string().max(50, "電話過長").or(z.literal("")).optional(),
+  orgAddress: z.string().max(200, "地址過長").or(z.literal("")).optional(),
+  orgPriceRange: z.string().max(50, "價格範圍過長").or(z.literal("")).optional(),
 });
 
 export async function GET() {
@@ -41,6 +44,9 @@ export async function GET() {
       googleSiteVerification: true,
       ogImageKey: true,
       showRelatedTours: true,
+      orgTelephone: true,
+      orgAddress: true,
+      orgPriceRange: true,
     },
   });
 
@@ -68,6 +74,9 @@ export async function PUT(req: NextRequest) {
     ogImageKey,
     clearOgImage,
     showRelatedTours,
+    orgTelephone,
+    orgAddress,
+    orgPriceRange,
   } = parsed.data;
 
   const data = {
@@ -80,6 +89,10 @@ export async function PUT(req: NextRequest) {
     ...(ogImageKey ? { ogImageKey } : {}),
     ...(clearOgImage ? { ogImageKey: null } : {}),
     ...(showRelatedTours === undefined ? {} : { showRelatedTours }),
+    ...(orgTelephone === undefined ? {} : { orgTelephone: orgTelephone || null }),
+    ...(orgAddress === undefined ? {} : { orgAddress: orgAddress || null }),
+    // priceRange is non-nullable (defaults to $$); empty input resets to $$.
+    ...(orgPriceRange === undefined ? {} : { orgPriceRange: orgPriceRange || "$$" }),
   };
 
   const setting = await db.siteSetting.upsert({
@@ -93,6 +106,9 @@ export async function PUT(req: NextRequest) {
       googleSiteVerification: true,
       ogImageKey: true,
       showRelatedTours: true,
+      orgTelephone: true,
+      orgAddress: true,
+      orgPriceRange: true,
     },
   });
 

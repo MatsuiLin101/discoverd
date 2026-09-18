@@ -82,7 +82,14 @@ export default async function FrontendLayout({
     <div className="fh-outer" data-bg={boxed ? outerBg : undefined}>
       <JsonLd
         data={[
-          organizationSchema({ social: seo.social, name: seo.siteName }),
+          organizationSchema({
+            social: seo.social,
+            name: seo.siteName,
+            telephone: seo.org.telephone,
+            address: seo.org.address,
+            priceRange: seo.org.priceRange,
+            image: seo.ogImageUrl,
+          }),
           websiteSchema(seo.siteName),
         ]}
       />

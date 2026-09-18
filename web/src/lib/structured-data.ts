@@ -29,13 +29,22 @@ interface OrganizationInput {
   social?: (string | null | undefined)[];
   /** Brand name override (defaults to SITE_NAME). */
   name?: string;
+  /** Company phone (optional). */
+  telephone?: string;
+  /** Company address, single line (optional). */
+  address?: string;
+  /** Coarse price-range indicator, e.g. "$$" (optional). */
+  priceRange?: string;
+  /** Company image URL (raster). Falls back to the logo when unset. */
+  image?: string;
 }
 
 /**
  * TravelAgency (a subtype of Organization + LocalBusiness). Emitted once,
- * site-wide, from the frontend layout.
+ * site-wide, from the frontend layout. The contact fields are optional and only
+ * appear when configured in the admin SEO settings.
  */
-export function organizationSchema({ social, name }: OrganizationInput = {}) {
+export function organizationSchema({ social, name, telephone, address, priceRange, image }: OrganizationInput = {}) {
   const sameAs = (social ?? []).filter((u): u is string => Boolean(u));
   return {
     "@context": "https://schema.org",
@@ -45,6 +54,10 @@ export function organizationSchema({ social, name }: OrganizationInput = {}) {
     legalName: LEGAL_NAME,
     url: siteUrl(),
     logo: absoluteUrl("/images/tour-placeholder.svg"),
+    ...(image ? { image: absoluteUrl(image) } : {}),
+    ...(telephone ? { telephone } : {}),
+    ...(address ? { address: { "@type": "PostalAddress", streetAddress: address } } : {}),
+    ...(priceRange ? { priceRange } : {}),
     ...(sameAs.length > 0 ? { sameAs } : {}),
   };
 }

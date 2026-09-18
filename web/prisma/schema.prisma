@@ -202,6 +202,11 @@ model SiteSetting {
   googleSiteVerification String? // Google Search Console 驗證碼
   // 是否在行程頁顯示「相關行程」推薦區塊（同時是使用者可見度與內部連結的開關）。
   showRelatedTours       Boolean @default(true)
+  // 公司資訊：寫入全站 TravelAgency 結構化資料（JSON-LD）。留空則該欄位不輸出。
+  // 公司 image 沿用 ogImageKey（預設 OG 圖），不另設欄位。
+  orgTelephone           String? // 公司電話
+  orgAddress             String? // 公司地址（單行）
+  orgPriceRange          String  @default("$$") // 價格範圍指標，如 $$ 或 NT$20,000–150,000
   // Site-wide layout mode:
   //   "original" — full-bleed site; carousel is desktop full-bleed cover and
   //                mobile follows mobileHeroRatio.

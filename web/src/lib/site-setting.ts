@@ -33,6 +33,9 @@ export const getSiteSettingCached = unstable_cache(
         ogImageKey: true,
         googleSiteVerification: true,
         showRelatedTours: true,
+        orgTelephone: true,
+        orgAddress: true,
+        orgPriceRange: true,
       },
     });
   },

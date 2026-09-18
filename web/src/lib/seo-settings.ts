@@ -30,6 +30,12 @@ export interface ResolvedSeoSettings {
   googleSiteVerification: string | undefined;
   /** Social profile URLs for JSON-LD sameAs (may contain falsy entries). */
   social: (string | null | undefined)[];
+  /** Company contact / info for the TravelAgency JSON-LD (undefined when unset). */
+  org: {
+    telephone: string | undefined;
+    address: string | undefined;
+    priceRange: string | undefined;
+  };
 }
 
 export const getSeoSettings = cache(async (): Promise<ResolvedSeoSettings> => {
@@ -42,5 +48,10 @@ export const getSeoSettings = cache(async (): Promise<ResolvedSeoSettings> => {
     ogImageUrl: s?.ogImageKey ? storage.publicUrl(s.ogImageKey) : FALLBACK_OG_IMAGE,
     googleSiteVerification: s?.googleSiteVerification || undefined,
     social: [s?.facebookUrl, s?.instagramUrl, s?.lineUrl],
+    org: {
+      telephone: s?.orgTelephone || undefined,
+      address: s?.orgAddress || undefined,
+      priceRange: s?.orgPriceRange || undefined,
+    },
   };
 });

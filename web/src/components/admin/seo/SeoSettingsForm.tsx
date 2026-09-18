@@ -11,6 +11,9 @@ export default function SeoSettingsForm() {
   const [seoDefaultDescription, setSeoDefaultDescription] = useState("");
   const [googleSiteVerification, setGoogleSiteVerification] = useState("");
   const [showRelatedTours, setShowRelatedTours] = useState(true);
+  const [orgTelephone, setOrgTelephone] = useState("");
+  const [orgAddress, setOrgAddress] = useState("");
+  const [orgPriceRange, setOrgPriceRange] = useState("$$");
 
   // OG image: server-stored URL, a locally-picked preview, and a clear flag.
   const [initialOgImage, setInitialOgImage] = useState<string | null>(null);
@@ -33,6 +36,9 @@ export default function SeoSettingsForm() {
           setSeoDefaultDescription(data.seoDefaultDescription ?? "");
           setGoogleSiteVerification(data.googleSiteVerification ?? "");
           setShowRelatedTours(data.showRelatedTours ?? true);
+          setOrgTelephone(data.orgTelephone ?? "");
+          setOrgAddress(data.orgAddress ?? "");
+          setOrgPriceRange(data.orgPriceRange ?? "$$");
           setInitialOgImage(data.ogImageUrl ?? null);
         }
       })
@@ -65,6 +71,9 @@ export default function SeoSettingsForm() {
         seoDefaultDescription,
         googleSiteVerification,
         showRelatedTours,
+        orgTelephone,
+        orgAddress,
+        orgPriceRange,
       };
 
       const ogFile = ogFileRef.current?.files?.[0];
@@ -190,6 +199,39 @@ export default function SeoSettingsForm() {
             hint="貼上 HTML 標籤驗證的 content 值（google-site-verification）"
             placeholder="例如：AbCdEf123..."
           />
+
+          <div className="border-t border-gray-100 pt-5">
+            <p className="mb-3 text-sm font-medium text-gray-700">公司資訊（結構化資料）</p>
+            <p className="-mt-2 mb-4 text-xs text-gray-400">
+              寫入全站的旅行社結構化資料（JSON-LD），有助於 Google 商家/知識面板呈現；留空則不輸出。公司圖片沿用上方的預設分享圖。
+            </p>
+            <div className="space-y-5">
+              <CharCountField
+                label="公司電話"
+                type="text"
+                value={orgTelephone}
+                onChange={setOrgTelephone}
+                maxLength={50}
+                placeholder="例如：02-1234-5678"
+              />
+              <CharCountField
+                label="公司地址"
+                value={orgAddress}
+                onChange={setOrgAddress}
+                maxLength={200}
+                placeholder="例如：台北市中山區XX路XX號X樓"
+              />
+              <CharCountField
+                label="價格範圍"
+                type="text"
+                value={orgPriceRange}
+                onChange={setOrgPriceRange}
+                maxLength={50}
+                hint="整間旅行社的大致價位帶（非單一行程），如 $ / $$ / $$$，留空預設 $$"
+                placeholder="$$"
+              />
+            </div>
+          </div>
 
           <label className="flex cursor-pointer items-start gap-3">
             <input
