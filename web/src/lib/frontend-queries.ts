@@ -1,12 +1,15 @@
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { normalizeCrop } from "@/lib/crop";
 import { compareTagName } from "@/lib/tag-sort";
+import { CACHE_TAGS, CACHE_BACKSTOP } from "@/lib/cache-tags";
 import type { Prisma } from "@/generated/prisma/client";
 import type {
   RegionListItem,
   RegionDetail,
   RegionTours,
+  RelatedTour,
   TourMedia,
   TourDetailData,
   SearchFilters,
@@ -24,9 +27,24 @@ export const toTourMedia = (f: { key: string; mimeType: string; filename: string
   filename: f.filename,
 });
 
+// ── Hero banners ────────────────────────────────────────────
+// Used by: app/(frontend)/page.tsx (homepage carousel)
+export const getHeroBanners = unstable_cache(
+  async (): Promise<{ img: string; alt: string }[]> => {
+    const rows = await db.heroBanner.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { imageKey: true, title: true },
+    });
+    return rows.map((b) => ({ img: storage.publicUrl(b.imageKey), alt: b.title }));
+  },
+  ["getHeroBanners"],
+  { tags: [CACHE_TAGS.heroBanners], revalidate: CACHE_BACKSTOP },
+);
+
 // ── Function 1 ──────────────────────────────────────────────
 // Used by: app/(frontend)/page.tsx (homepage)
-export async function getRegionList(): Promise<RegionListItem[]> {
+export const getRegionList = unstable_cache(
+  async (): Promise<RegionListItem[]> => {
   const rows = await db.region.findMany({
     orderBy: { sortOrder: "asc" },
     select: {
@@ -48,12 +66,16 @@ export async function getRegionList(): Promise<RegionListItem[]> {
     crop: normalizeCrop(r.thumbnailCrop),
     tourCount: r.subRegions.reduce((sum, sr) => sum + sr._count.tours, 0),
   }));
-}
+  },
+  ["getRegionList"],
+  { tags: [CACHE_TAGS.regions, CACHE_TAGS.tours], revalidate: CACHE_BACKSTOP },
+);
 
 // ── Function 2 ──────────────────────────────────────────────
 // Used by: app/(frontend)/regions/[slug]/page.tsx (region page)
 // Returns null when slug not found (caller calls notFound())
-export async function getRegionDetail(slug: string): Promise<RegionDetail | null> {
+export const getRegionDetail = unstable_cache(
+  async (slug: string): Promise<RegionDetail | null> => {
   const region = await db.region.findUnique({
     where: { slug },
     select: {
@@ -93,12 +115,16 @@ export async function getRegionDetail(slug: string): Promise<RegionDetail | null
       tourCount: sr._count.tours,
     })),
   };
-}
+  },
+  ["getRegionDetail"],
+  { tags: [CACHE_TAGS.regions, CACHE_TAGS.tours], revalidate: CACHE_BACKSTOP },
+);
 
 // ── Function 3 ──────────────────────────────────────────────
 // Used by: app/(frontend)/regions/[slug]/[subSlug]/page.tsx (tour page)
 // Returns null when slug not found (caller calls notFound())
-export async function getRegionTours(slug: string): Promise<RegionTours | null> {
+export const getRegionTours = unstable_cache(
+  async (slug: string): Promise<RegionTours | null> => {
   const region = await db.region.findUnique({
     where: { slug },
     select: {
@@ -158,7 +184,10 @@ export async function getRegionTours(slug: string): Promise<RegionTours | null> 
       })),
     })),
   };
-}
+  },
+  ["getRegionTours"],
+  { tags: [CACHE_TAGS.regions, CACHE_TAGS.tours, CACHE_TAGS.tags], revalidate: CACHE_BACKSTOP },
+);
 
 // ── Function 4 ──────────────────────────────────────────────
 // Used by: GET /api/search (quick dropdown + full page fetches)
@@ -215,7 +244,8 @@ function buildSearchWhere(f: SearchFilters): Prisma.TourWhereInput | null {
  * Run a search. `limit` caps the returned rows (clamped to SEARCH_MAX_LIMIT);
  * `total` is always the full hit count so callers can show "N 筆 / 檢視全部".
  */
-export async function searchTours(f: SearchFilters, limit = 8): Promise<SearchResponse> {
+export const searchTours = unstable_cache(
+  async (f: SearchFilters, limit = 8): Promise<SearchResponse> => {
   const where = buildSearchWhere(f);
   if (!where) return { total: 0, results: [] };
 
@@ -267,12 +297,16 @@ export async function searchTours(f: SearchFilters, limit = 8): Promise<SearchRe
       subRegionSlug: t.subRegion.slug,
     })),
   };
-}
+  },
+  ["searchTours"],
+  { tags: [CACHE_TAGS.tours, CACHE_TAGS.regions, CACHE_TAGS.tags], revalidate: CACHE_BACKSTOP },
+);
 
 // ── Function 5 ──────────────────────────────────────────────
 // Used by: app/(frontend)/search/page.tsx — the facets that populate
 // the advanced-search controls (main category → sub category → tags).
-export async function getSearchFilters(): Promise<SearchFilterData> {
+export const getSearchFilters = unstable_cache(
+  async (): Promise<SearchFilterData> => {
   const [regions, tags] = await Promise.all([
     db.region.findMany({
       orderBy: { sortOrder: "asc" },
@@ -301,7 +335,57 @@ export async function getSearchFilters(): Promise<SearchFilterData> {
     })),
     tags: sortedTags,
   };
-}
+  },
+  ["getSearchFilters"],
+  { tags: [CACHE_TAGS.tags, CACHE_TAGS.regions], revalidate: CACHE_BACKSTOP },
+);
+
+// ── Related tours ───────────────────────────────────────────
+// Used by: the tour detail card's "相關行程" section (standalone page + modal).
+// Automatically picks other published tours in the same region, prioritising
+// the same sub-region, excluding the current tour.
+export const getRelatedTours = unstable_cache(
+  async (
+    regionSlug: string,
+    subSlug: string,
+    excludeTourId: string,
+    limit = 4,
+  ): Promise<RelatedTour[]> => {
+    const rows = await db.tour.findMany({
+      where: {
+        published: true,
+        id: { not: excludeTourId },
+        subRegion: { region: { slug: regionSlug } },
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      take: 48,
+      select: {
+        productId: true,
+        slug: true,
+        name: true,
+        thumbnailKey: true,
+        thumbnailCrop: true,
+        price: true,
+        subRegion: { select: { slug: true, name: true } },
+      },
+    });
+
+    // Same sub-region first, then the rest of the region, keeping DB order.
+    const sameSub = rows.filter((r) => r.subRegion.slug === subSlug);
+    const otherSub = rows.filter((r) => r.subRegion.slug !== subSlug);
+    return [...sameSub, ...otherSub].slice(0, limit).map((r) => ({
+      productId: r.productId,
+      slug: r.slug,
+      name: r.name,
+      thumbnail: urlOf(r.thumbnailKey),
+      crop: normalizeCrop(r.thumbnailCrop),
+      price: r.price,
+      subRegionName: r.subRegion.name,
+    }));
+  },
+  ["getRelatedTours"],
+  { tags: [CACHE_TAGS.tours, CACHE_TAGS.regions], revalidate: CACHE_BACKSTOP },
+);
 
 // ── Function 6 ──────────────────────────────────────────────
 // Used by: app/(frontend)/tours/[tourSlug]/page.tsx (standalone tour page)
@@ -309,7 +393,8 @@ export async function getSearchFilters(): Promise<SearchFilterData> {
 //          modal). Both render the shared <TourDetailCard> from this payload so
 //          they stay visually identical. Matches by productId first, then slug.
 // Returns null when not found / unpublished (caller calls notFound()).
-export async function getTourDetail(idOrSlug: string): Promise<TourDetailData | null> {
+export const getTourDetail = unstable_cache(
+  async (idOrSlug: string): Promise<TourDetailData | null> => {
   const tour = await db.tour.findFirst({
     where: { published: true, OR: [{ productId: idOrSlug }, { slug: idOrSlug }] },
     select: {
@@ -354,4 +439,7 @@ export async function getTourDetail(idOrSlug: string): Promise<TourDetailData | 
     subRegionName: tour.subRegion.name,
     subSlug: tour.subRegion.slug,
   };
-}
+  },
+  ["getTourDetail"],
+  { tags: [CACHE_TAGS.tours, CACHE_TAGS.regions, CACHE_TAGS.tags], revalidate: CACHE_BACKSTOP },
+);

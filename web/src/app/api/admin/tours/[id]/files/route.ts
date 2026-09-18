@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 type IncomingFile = { key: string; filename: string; mimeType: string };
 
@@ -44,6 +46,7 @@ export async function POST(
       void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR_FILE", resourceId: tourFile.id, resourceName: file.filename, detail: { tourId, tourName: tour.name, filename: file.filename, mimeType: file.mimeType } });
     }
 
+    revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions);
     return NextResponse.json({ data: created }, { status: 201 });
   } catch (e) {
     console.error("[POST /api/admin/tours/[id]/files]", e);

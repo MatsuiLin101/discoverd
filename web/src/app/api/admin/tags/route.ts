@@ -3,6 +3,8 @@ import * as z from "zod";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const createSchema = z.object({
   name: z.string().trim().min(1, { error: "請輸入標籤名稱" }),
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
     });
 
     void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TAG", resourceId: tag.id, resourceName: tag.name, detail: { id: tag.id, name: tag.name } });
+    revalidatePublic(CACHE_TAGS.tags);
     return NextResponse.json({ data: tag }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "伺服器錯誤，請稍後再試" }, { status: 500 });

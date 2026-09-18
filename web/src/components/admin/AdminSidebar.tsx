@@ -32,6 +32,7 @@ const navGroups: NavGroup[] = [
       { label: "旅遊方案", href: "/tours" },
       { label: "業務資訊", href: "/sales", adminOnly: true },
       { label: "社群連結", href: "/settings", adminOnly: true },
+      { label: "SEO 設定", href: "/seo" },
     ],
   },
   {

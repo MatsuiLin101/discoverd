@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const schema = z.object({
   items: z.array(z.object({ id: z.string(), sortOrder: z.number().int() })).min(1),
@@ -36,5 +38,6 @@ export async function PATCH(req: NextRequest) {
     resourceName: "輪播圖排序",
     detail: { count },
   });
+  revalidatePublic(CACHE_TAGS.heroBanners);
   return NextResponse.json({ ok: true });
 }

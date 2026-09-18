@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const schema = z.object({
   tourIds: z.array(z.string()).min(1),
@@ -41,5 +43,6 @@ export async function DELETE(req: NextRequest) {
   await db.$transaction(tourIds.map((id) => db.tour.delete({ where: { id } })));
 
   void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR", resourceId: "batch", resourceName: `批量刪除行程（${tourIds.length} 筆）`, detail: { count: tourIds.length, items: tours.map((t) => ({ id: t.id, name: t.name })) } });
+  revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions);
   return NextResponse.json({ ok: true, deleted: tourIds.length });
 }

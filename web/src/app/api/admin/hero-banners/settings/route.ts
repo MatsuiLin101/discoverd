@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const SINGLETON_ID = "singleton";
 
@@ -72,5 +74,6 @@ export async function PUT(req: NextRequest) {
     detail: data,
   });
 
+  revalidatePublic(CACHE_TAGS.siteSetting);
   return NextResponse.json({ data: setting });
 }

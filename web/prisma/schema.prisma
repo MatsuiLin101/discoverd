@@ -192,6 +192,21 @@ model SiteSetting {
   instagramUrl     String?
   lineUrl          String?
   lineCommunityUrl String?
+
+  // --- SEO 全站預設（後台「SEO 設定」頁維護）------------------------------
+  // 各欄位留空時，前台改用程式內建的預設字串 / 墊底圖（見 src/lib/seo-settings.ts）。
+  seoSiteName            String? // 品牌名稱：OG siteName 與 JSON-LD 使用
+  seoDefaultTitle        String? // 首頁與未自訂頁面的預設標題
+  seoDefaultDescription  String? // 未自訂頁面的預設 meta description
+  ogImageKey             String? // 站台級預設 OG 分享圖（未設定則用 /og-default.jpg）
+  googleSiteVerification String? // Google Search Console 驗證碼
+  // 是否在行程頁顯示「相關行程」推薦區塊（同時是使用者可見度與內部連結的開關）。
+  showRelatedTours       Boolean @default(true)
+  // 公司資訊：寫入全站 TravelAgency 結構化資料（JSON-LD）。留空則該欄位不輸出。
+  // 公司 image 沿用 ogImageKey（預設 OG 圖），不另設欄位。
+  orgTelephone           String? // 公司電話
+  orgAddress             String? // 公司地址（單行）
+  orgPriceRange          String  @default("$$") // 價格範圍指標，如 $$ 或 NT$20,000–150,000
   // Site-wide layout mode:
   //   "original" — full-bleed site; carousel is desktop full-bleed cover and
   //                mobile follows mobileHeroRatio.

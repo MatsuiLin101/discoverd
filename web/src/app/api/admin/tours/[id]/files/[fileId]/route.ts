@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 export async function DELETE(
   _req: NextRequest,
@@ -20,6 +22,7 @@ export async function DELETE(
     await db.tourFile.delete({ where: { id: fileId } });
 
     void writeLog({ userId: session.userId, userAccount: session.username, action: "DELETE", resource: "TOUR_FILE", resourceId: fileId, resourceName: file.filename ?? fileId, detail: { tourId, filename: file.filename } });
+    revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[DELETE /api/admin/tours/[id]/files/[fileId]]", e);

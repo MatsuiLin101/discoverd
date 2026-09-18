@@ -17,6 +17,12 @@ interface Props {
   title: string;
   stats: string[];
   categories: CategoryItem[];
+  /**
+   * Heading level for the section title. Defaults to "h2"; pages that use this
+   * section as their primary heading (home, region listing) pass "h1" so each
+   * page exposes a single top-level heading for SEO.
+   */
+  headingLevel?: "h1" | "h2";
 }
 
 const ArrowSvg = () => (
@@ -25,12 +31,13 @@ const ArrowSvg = () => (
   </svg>
 );
 
-export default function CategoryList({ title, stats, categories }: Props) {
+export default function CategoryList({ title, stats, categories, headingLevel = "h2" }: Props) {
+  const Heading = headingLevel;
   return (
     <section className="fh-cats">
       <div className="fh-sec-head">
         <div className="mid">
-          <h2
+          <Heading
             className="t"
             dangerouslySetInnerHTML={{ __html: title }}
           />

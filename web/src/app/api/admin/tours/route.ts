@@ -5,6 +5,8 @@ import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
 import { parseCropField } from "@/lib/crop";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { allocateTourProductId, DailyQuotaError } from "@/lib/excel/product-id";
 
 const createSchema = z.object({
@@ -116,6 +118,7 @@ export async function POST(req: NextRequest) {
     }
 
     void writeLog({ userId: session.userId, userAccount: session.username, action: "CREATE", resource: "TOUR", resourceId: tour.id, resourceName: tour.name, detail: { id: tour.id, name: tour.name, price, subRegionId, published, thumbnailKey: thumbnailKey ?? null, seoTitle: seoTitle ?? null, seoDescription: seoDescription ?? null, ogImageKey: ogImageKey ?? null } });
+    revalidatePublic(CACHE_TAGS.tours, CACHE_TAGS.regions);
     return NextResponse.json({ data: { id: tour.id } }, { status: 201 });
   } catch (e) {
     console.error("[POST /api/admin/tours]", e);

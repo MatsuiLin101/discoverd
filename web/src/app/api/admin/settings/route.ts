@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { writeLog } from "@/lib/log";
+import { revalidatePublic } from "@/lib/revalidate";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 
 const schema = z.object({
   facebookUrl: z.string().url("請輸入有效的 Facebook 網址").or(z.literal("")).optional(),
@@ -69,5 +71,6 @@ export async function PUT(req: NextRequest) {
     detail: { facebookUrl, instagramUrl, lineUrl, lineCommunityUrl },
   });
 
+  revalidatePublic(CACHE_TAGS.siteSetting);
   return NextResponse.json({ data: setting });
 }
