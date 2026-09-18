@@ -349,7 +349,7 @@ export const getRelatedTours = unstable_cache(
     regionSlug: string,
     subSlug: string,
     excludeTourId: string,
-    limit = 6,
+    limit = 4,
   ): Promise<RelatedTour[]> => {
     const rows = await db.tour.findMany({
       where: {

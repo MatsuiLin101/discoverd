@@ -151,7 +151,7 @@ export default function TourDetailCard({ tour, headingTag = "h3", related = [] }
                     src={r.thumbnail ?? "/images/tour-placeholder.svg"}
                     alt={r.name}
                     crop={r.thumbnail ? r.crop : null}
-                    sizes="200px"
+                    sizes="50px"
                   />
                 </div>
                 <div className="fh-related-body">
