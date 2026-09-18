@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { adminUrl } from "@/lib/admin-path";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import AnalyticsPanel, { AnalyticsPanelSkeleton } from "@/components/admin/dashboard/AnalyticsPanel";
 
 const quickLinks = [
   { label: "地區管理", sub: "/regions", desc: "管理地區與子地區" },
@@ -27,6 +29,10 @@ export default async function AdminDashboardPage() {
         </h1>
         <p className="mt-1 text-sm text-gray-500">選擇一個功能開始管理</p>
       </div>
+
+      <Suspense fallback={<AnalyticsPanelSkeleton />}>
+        <AnalyticsPanel />
+      </Suspense>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {quickLinks.map((link) => (
