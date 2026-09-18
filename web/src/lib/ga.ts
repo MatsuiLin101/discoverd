@@ -44,9 +44,10 @@ export interface TrendPoint {
 export interface DashboardStats {
   last7: OverviewStats;
   last30: OverviewStats;
-  inquiryOpens: number; // inquiry_open, last 30 days
   inquiries: number; // inquiry_submit, last 30 days
+  inquiries7: number; // inquiry_submit, last 7 days
   contactClicks: number; // contact_click, last 30 days
+  contactClicks7: number; // contact_click, last 7 days
   topTours: RankedItem[]; // view_item by tour_name
   topSearches: RankedItem[]; // search by search_term
   channels: RankedItem[]; // sessions by default channel group
@@ -120,7 +121,7 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
       dateRanges: R30,
       dimensions: [{ name: "eventName" }],
       metrics: [{ name: "eventCount" }],
-      dimensionFilter: { filter: { fieldName: "eventName", inListFilter: { values: ["inquiry_open", "inquiry_submit", "contact_click"] } } },
+      dimensionFilter: { filter: { fieldName: "eventName", inListFilter: { values: ["inquiry_submit", "contact_click"] } } },
     },
     /* 3 */ paramReport("view_item", "tour_name"),
     /* 4 */ paramReport("search", "search_term"),
@@ -144,17 +145,25 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
     /* 10 */ { dateRanges: R30, dimensions: [{ name: "deviceCategory" }], metrics: [{ name: "activeUsers" }], orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }] },
     /* 11 */ { dateRanges: R30, dimensions: [{ name: "city" }], metrics: [{ name: "activeUsers" }], orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }], limit: 6 },
     /* 12 */ { dateRanges: R30, dimensions: [{ name: "newVsReturning" }], metrics: [{ name: "activeUsers" }] },
+    /* 13 */ {
+      dateRanges: R7,
+      dimensions: [{ name: "eventName" }],
+      metrics: [{ name: "eventCount" }],
+      dimensionFilter: { filter: { fieldName: "eventName", inListFilter: { values: ["inquiry_submit", "contact_click"] } } },
+    },
   ];
 
   const r = await runReports(requests);
   const events = eventMapOf(r[2]);
+  const events7 = eventMapOf(r[13]);
 
   const data: DashboardStats = {
     last7: overviewOf(r[0]),
     last30: overviewOf(r[1]),
-    inquiryOpens: events["inquiry_open"] ?? 0,
     inquiries: events["inquiry_submit"] ?? 0,
+    inquiries7: events7["inquiry_submit"] ?? 0,
     contactClicks: events["contact_click"] ?? 0,
+    contactClicks7: events7["contact_click"] ?? 0,
     topTours: rankedOf(r[3]),
     topSearches: rankedOf(r[4]),
     channels: rankedOf(r[5]),

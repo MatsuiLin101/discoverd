@@ -133,8 +133,6 @@ export default async function AnalyticsPanel() {
   }
   if (!stats) return null;
 
-  const conversion = stats.inquiryOpens > 0 ? Math.round((stats.inquiries / stats.inquiryOpens) * 100) : null;
-
   // Map region slugs (sent by the view_item event) to their Chinese names.
   const regions = await db.region.findMany({ select: { slug: true, name: true } });
   const regionNames = Object.fromEntries(regions.map((r) => [r.slug, r.name]));
@@ -148,12 +146,8 @@ export default async function AnalyticsPanel() {
         <StatCard label="使用者" value={stats.last30.activeUsers} sub={`近 7 天 ${fmt(stats.last7.activeUsers)}`} />
         <StatCard label="工作階段" value={stats.last30.sessions} sub={`近 7 天 ${fmt(stats.last7.sessions)}`} />
         <StatCard label="頁面瀏覽" value={stats.last30.pageViews} sub={`近 7 天 ${fmt(stats.last7.pageViews)}`} />
-        <StatCard
-          label="諮詢送出"
-          value={stats.inquiries}
-          sub={`開啟 ${fmt(stats.inquiryOpens)}${conversion !== null ? `・轉換 ${conversion}%` : ""}`}
-        />
-        <StatCard label="LINE／社群點擊" value={stats.contactClicks} />
+        <StatCard label="諮詢送出" value={stats.inquiries} sub={`近 7 天 ${fmt(stats.inquiries7)}`} />
+        <StatCard label="LINE／社群點擊" value={stats.contactClicks} sub={`近 7 天 ${fmt(stats.contactClicks7)}`} />
       </div>
 
       {/* Daily trends */}
