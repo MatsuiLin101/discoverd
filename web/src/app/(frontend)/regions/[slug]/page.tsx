@@ -55,6 +55,7 @@ export default async function RegionPage({ params }: Props) {
       </nav>
 
       <CategoryList
+        headingLevel="h1"
         title={`<span class="ph" style="color: var(--accent);">縮小範圍</span> <span class="ph">遇見最適合你的旅程</span>`}
         stats={[
           `<b>${region.subRegions.length}</b> 個選擇`,

@@ -41,6 +41,7 @@ export default async function ToursPage({ params }: Props) {
       regionSlug={slug}
       activeSlug={validSlug}
       activeName={currentSub.name}
+      headingLevel="h1"
     />
   );
 }

@@ -13,9 +13,16 @@ interface Props {
   regionSlug: string;
   regions: SubRegionWithTours[];
   initialSlug: string;
+  /**
+   * Heading level for the section title. Defaults to "h2". The standalone
+   * sub-region page passes "h1" (this section is its primary heading); the
+   * tour page keeps "h2" because the open tour card already owns the h1.
+   */
+  headingLevel?: "h1" | "h2";
 }
 
-export default function TourSection({ parent, regionSlug, regions, initialSlug }: Props) {
+export default function TourSection({ parent, regionSlug, regions, initialSlug, headingLevel = "h2" }: Props) {
+  const Heading = headingLevel;
   const [activeSlug, setActiveSlug] = useState(initialSlug);
   const router = useRouter();
 
@@ -46,9 +53,9 @@ export default function TourSection({ parent, regionSlug, regions, initialSlug }
       {/* Section head */}
       <div className="fh-sec-head">
         <div className="mid">
-          <h2 className="t">
+          <Heading className="t">
             遇見<em>旅程</em>的每一種可能
-          </h2>
+          </Heading>
         </div>
         <div className="r">
           <span>

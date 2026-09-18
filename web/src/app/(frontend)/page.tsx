@@ -79,6 +79,7 @@ export default async function HomePage() {
       </nav>
 
       <CategoryList
+        headingLevel="h1"
         title={`<em>挑一個方向</em> <span class="ph">開始你的下一段旅程</span>`}
         stats={[
           `<b>${regions.length}</b> 個系列`,
