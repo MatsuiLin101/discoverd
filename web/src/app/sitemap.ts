@@ -1,24 +1,35 @@
 import type { MetadataRoute } from "next";
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
+import { CACHE_TAGS, CACHE_BACKSTOP } from "@/lib/cache-tags";
 
 export const dynamic = "force-dynamic";
+
+// Sitemap entries change only when regions/tours change, so cache them under the
+// same tags the admin mutations revalidate.
+const getSitemapData = unstable_cache(
+  async () =>
+    Promise.all([
+      db.region.findMany({
+        select: {
+          slug: true,
+          updatedAt: true,
+          subRegions: { select: { slug: true, updatedAt: true } },
+        },
+      }),
+      db.tour.findMany({
+        where: { published: true },
+        select: { slug: true, productId: true, updatedAt: true },
+      }),
+    ]),
+  ["sitemap-data"],
+  { tags: [CACHE_TAGS.regions, CACHE_TAGS.tours], revalidate: CACHE_BACKSTOP },
+);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-  const [regions, tours] = await Promise.all([
-    db.region.findMany({
-      select: {
-        slug: true,
-        updatedAt: true,
-        subRegions: { select: { slug: true, updatedAt: true } },
-      },
-    }),
-    db.tour.findMany({
-      where: { published: true },
-      select: { slug: true, productId: true, updatedAt: true },
-    }),
-  ]);
+  const [regions, tours] = await getSitemapData();
 
   const regionEntries: MetadataRoute.Sitemap = regions.map((r) => ({
     url: `${base}/regions/${r.slug}`,

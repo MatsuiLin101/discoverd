@@ -1,6 +1,6 @@
 import { cache } from "react";
-import { db } from "@/lib/db";
 import { storage } from "@/lib/storage";
+import { getSiteSettingCached } from "@/lib/site-setting";
 
 /**
  * Site-wide SEO defaults.
@@ -31,19 +31,7 @@ export interface ResolvedSeoSettings {
 }
 
 export const getSeoSettings = cache(async (): Promise<ResolvedSeoSettings> => {
-  const s = await db.siteSetting.findUnique({
-    where: { id: "singleton" },
-    select: {
-      seoSiteName: true,
-      seoDefaultTitle: true,
-      seoDefaultDescription: true,
-      ogImageKey: true,
-      googleSiteVerification: true,
-      facebookUrl: true,
-      instagramUrl: true,
-      lineUrl: true,
-    },
-  });
+  const s = await getSiteSettingCached();
 
   return {
     siteName: s?.seoSiteName || DEFAULT_SITE_NAME,

@@ -4,9 +4,8 @@ import SiteFooter from "@/components/frontend/SiteFooter";
 import HeroCarousel from "@/components/frontend/HeroCarousel";
 import CategoryList from "@/components/frontend/CategoryList";
 import { HERO_FALLBACK_SLIDES } from "@/lib/frontend-data";
-import { getRegionList } from "@/lib/frontend-queries";
-import { db } from "@/lib/db";
-import { storage } from "@/lib/storage";
+import { getRegionList, getHeroBanners } from "@/lib/frontend-queries";
+import { getSiteSettingCached } from "@/lib/site-setting";
 import { getSeoSettings } from "@/lib/seo-settings";
 
 // Home reads hero banners / featured tours from the DB at request time and is the
@@ -30,23 +29,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const [regions, dbBanners, siteSetting] = await Promise.all([
     getRegionList(),
-    db.heroBanner.findMany({ orderBy: { sortOrder: "asc" } }),
-    db.siteSetting.findUnique({
-      where: { id: "singleton" },
-      select: {
-        layoutMode: true,
-        heroPauseOnHover: true,
-        heroMaxHeight: true,
-        heroRatio: true,
-        mobileHeroRatio: true,
-      },
-    }),
+    getHeroBanners(),
+    getSiteSettingCached(),
   ]);
 
-  const heroSlides =
-    dbBanners.length > 0
-      ? dbBanners.map((b) => ({ img: storage.publicUrl(b.imageKey), alt: b.title }))
-      : HERO_FALLBACK_SLIDES;
+  const heroSlides = dbBanners.length > 0 ? dbBanners : HERO_FALLBACK_SLIDES;
 
   const layoutMode = siteSetting?.layoutMode ?? "original";
   const heroPauseOnHover = siteSetting?.heroPauseOnHover ?? true;

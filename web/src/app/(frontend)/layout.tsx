@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { Noto_Sans, Noto_Sans_TC } from "next/font/google";
-import { db } from "@/lib/db";
 import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager";
 import ContactClickTracker from "@/components/analytics/ContactClickTracker";
 import JsonLd from "@/components/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/structured-data";
 import { getSeoSettings } from "@/lib/seo-settings";
+import { getSiteSettingCached } from "@/lib/site-setting";
 import "./frontend.css";
 
 const notoSans = Noto_Sans({
@@ -69,17 +69,7 @@ export default async function FrontendLayout({
   children: React.ReactNode;
   modal: React.ReactNode;
 }) {
-  const [setting, seo] = await Promise.all([
-    db.siteSetting.findUnique({
-      where: { id: "singleton" },
-      select: {
-        layoutMode: true,
-        boxMaxWidth: true,
-        boxOuterBackground: true,
-      },
-    }),
-    getSeoSettings(),
-  ]);
+  const [setting, seo] = await Promise.all([getSiteSettingCached(), getSeoSettings()]);
   const boxed = setting?.layoutMode === "boxed";
   const boxWidth = setting?.boxMaxWidth ?? 1280;
   const outerBg = setting?.boxOuterBackground ?? "neutral";
