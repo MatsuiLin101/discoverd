@@ -4,6 +4,8 @@ import SubRegionListing from "@/components/frontend/SubRegionListing";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbSchema } from "@/lib/structured-data";
 import { getRegionTours } from "@/lib/frontend-queries";
+import { metaDescription } from "@/lib/seo-text";
+import { getSeoSettings, BRAND_SHORT } from "@/lib/seo-settings";
 
 interface Props {
   params: Promise<{ slug: string; subSlug: string }>;
@@ -15,13 +17,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!data) return {};
   const sub = data.subRegions.find((sr) => sr.slug === subSlug);
   if (!sub) return {};
+  const seo = await getSeoSettings();
+  const ogImageUrl = sub.ogImage ?? seo.ogImageUrl;
   return {
-    title: sub.seoTitle ?? `${sub.name} ／ ${data.region.name} — 找到了旅遊 FOUND HOLIDAY`,
-    description: sub.seoDescription ?? `${sub.name} 旅程精選，共 ${sub.tours.length} 條路線，找到了旅遊為您推薦。`,
+    title: sub.seoTitle ?? `${sub.name}｜${data.region.name}｜${BRAND_SHORT}`,
+    description: metaDescription(sub.seoDescription, {
+      fallback: `${sub.name} 旅程精選，共 ${sub.tours.length} 條路線，找到了旅遊為您推薦最適合的行程。`,
+    }),
     alternates: { canonical: `/regions/${slug}/${subSlug}` },
     openGraph: {
       url: `/regions/${slug}/${subSlug}`,
-      images: sub.ogImage ? [sub.ogImage] : [],
+      images: [ogImageUrl],
     },
   };
 }

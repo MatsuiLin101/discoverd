@@ -12,6 +12,8 @@ import { getSiteSettingCached } from "@/lib/site-setting";
  */
 
 export const DEFAULT_SITE_NAME = "找到了旅遊 FOUND HOLIDAY";
+/** Short brand for per-page <title> suffixes (keeps titles from truncating). */
+export const BRAND_SHORT = "找到了旅遊";
 export const DEFAULT_TITLE = "找到了旅遊 FOUND HOLIDAY — 為您而寫的旅程";
 export const DEFAULT_DESCRIPTION =
   "找到了旅遊，精選日本、歐洲、東南亞等優質行程，由專業旅遊顧問為您量身打造。";

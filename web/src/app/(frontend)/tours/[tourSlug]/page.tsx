@@ -8,6 +8,8 @@ import { storage } from "@/lib/storage";
 import { getTourDetail, getRegionTours } from "@/lib/frontend-queries";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbSchema, tourSchema } from "@/lib/structured-data";
+import { metaDescription } from "@/lib/seo-text";
+import { getSeoSettings, BRAND_SHORT } from "@/lib/seo-settings";
 
 interface Props {
   params: Promise<{ tourSlug: string }>;
@@ -34,20 +36,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         select: { key: true },
         take: 1,
       },
+      subRegion: {
+        select: { name: true, region: { select: { name: true } } },
+      },
     },
   });
   if (!tour) return {};
-  const ogImageUrl = urlOf(tour.ogImageKey) ?? urlOf(tour.thumbnailKey) ?? (tour.files[0] ? storage.publicUrl(tour.files[0].key) : undefined);
+  const seo = await getSeoSettings();
+  // Prefer the tour's own image, then its thumbnail/first photo, and finally the
+  // site-wide default OG image so every tour has a share image.
+  const ogImageUrl =
+    urlOf(tour.ogImageKey) ??
+    urlOf(tour.thumbnailKey) ??
+    (tour.files[0] ? storage.publicUrl(tour.files[0].key) : undefined) ??
+    seo.ogImageUrl;
+  const regionName = tour.subRegion.region.name;
+  const subName = tour.subRegion.name;
   // Canonical URL uses the ProductID (falls back to slug when not yet assigned),
   // so old random-string links stay valid but point search engines at the new URL.
   const canonicalPath = `/tours/${tour.productId ?? tour.slug}`;
   return {
-    title: tour.seoTitle ?? `${tour.name} ／ 找到了旅遊 FOUND HOLIDAY`,
-    description: tour.seoDescription ?? tour.description?.slice(0, 150) ?? undefined,
+    title: tour.seoTitle ?? `${tour.name}｜${BRAND_SHORT}`,
+    description: metaDescription(tour.seoDescription ?? tour.description, {
+      fallback: `${tour.name}｜${regionName}${subName}旅遊行程，找到了旅遊為您精心規劃，帶您探索當地風景與文化。`,
+    }),
     alternates: { canonical: canonicalPath },
     openGraph: {
       url: canonicalPath,
-      images: ogImageUrl ? [ogImageUrl] : [],
+      images: [ogImageUrl],
     },
   };
 }
