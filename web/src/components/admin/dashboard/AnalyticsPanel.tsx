@@ -1,6 +1,9 @@
 import { getDashboardStats, isGaConfigured, type RankedItem, type TrendPoint } from "@/lib/ga";
+import { db } from "@/lib/db";
 
 const fmt = (n: number) => n.toLocaleString("zh-TW");
+// GA's `date` dimension is "YYYYMMDD" → "M/D".
+const fmtDate = (d: string) => (d.length === 8 ? `${Number(d.slice(4, 6))}/${Number(d.slice(6, 8))}` : d);
 
 const METHOD_LABELS: Record<string, string> = {
   line: "LINE",
@@ -59,27 +62,42 @@ function RankedList({
   );
 }
 
-function Sparkline({ points }: { points: TrendPoint[] }) {
-  if (points.length < 2) return <p className="mt-2 text-xs text-gray-400">資料不足</p>;
-  const max = Math.max(...points.map((p) => p.value), 1);
+function Sparkline({ points, max }: { points: TrendPoint[]; max: number }) {
   const step = 100 / (points.length - 1);
-  const line = points.map((p, i) => `${(i * step).toFixed(2)},${(30 - (p.value / max) * 28).toFixed(2)}`).join(" ");
+  const coords = points.map((p, i) => ({ x: i * step, y: 30 - (p.value / max) * 28, p }));
+  const line = coords.map((c) => `${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(" ");
   return (
-    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-12 mt-2 text-indigo-400" aria-hidden>
+    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-14 mt-2 text-indigo-400" aria-hidden>
       <polyline points={line} fill="none" stroke="currentColor" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      {coords.map((c, i) => (
+        <line key={i} x1={c.x} y1={c.y} x2={c.x} y2="30" stroke="currentColor" strokeWidth="0.4" opacity="0.15" vectorEffect="non-scaling-stroke" />
+      ))}
     </svg>
   );
 }
 
-function TrendCard({ title, points }: { title: string; points: TrendPoint[] }) {
+function TrendCard({ title, unit, points }: { title: string; unit: string; points: TrendPoint[] }) {
   const total = points.reduce((s, p) => s + p.value, 0);
+  const peak = points.reduce((m, p) => (p.value > m.value ? p : m), { date: "", value: -1 });
+  const hasData = points.length >= 2 && total > 0;
   return (
     <div className="p-4 bg-white border border-gray-200 rounded-xl">
       <div className="flex items-baseline justify-between">
         <p className="text-sm font-medium text-gray-700">{title}</p>
-        <p className="text-xs text-gray-400">近 30 天合計 {fmt(total)}</p>
+        <p className="text-xs text-gray-400">近 30 天合計 {fmt(total)} {unit}</p>
       </div>
-      <Sparkline points={points} />
+      {hasData ? (
+        <>
+          <Sparkline points={points} max={Math.max(peak.value, 1)} />
+          <div className="mt-1 flex items-center justify-between text-[11px] text-gray-400">
+            <span>{fmtDate(points[0].date)}</span>
+            <span>最高 {fmt(peak.value)} {unit}（{fmtDate(peak.date)}）</span>
+            <span>{fmtDate(points[points.length - 1].date)}</span>
+          </div>
+        </>
+      ) : (
+        <p className="mt-2 text-xs text-gray-400">資料不足</p>
+      )}
     </div>
   );
 }
@@ -117,6 +135,10 @@ export default async function AnalyticsPanel() {
 
   const conversion = stats.inquiryOpens > 0 ? Math.round((stats.inquiries / stats.inquiryOpens) * 100) : null;
 
+  // Map region slugs (sent by the view_item event) to their Chinese names.
+  const regions = await db.region.findMany({ select: { slug: true, name: true } });
+  const regionNames = Object.fromEntries(regions.map((r) => [r.slug, r.name]));
+
   return (
     <section className="mb-8 space-y-3">
       <h2 className="text-sm font-semibold text-gray-500">網站分析（近 30 天）</h2>
@@ -131,13 +153,13 @@ export default async function AnalyticsPanel() {
           value={stats.inquiries}
           sub={`開啟 ${fmt(stats.inquiryOpens)}${conversion !== null ? `・轉換 ${conversion}%` : ""}`}
         />
-        <StatCard label="LINE／社群點擊" value={stats.contactClicks} sub="contact_click" />
+        <StatCard label="LINE／社群點擊" value={stats.contactClicks} />
       </div>
 
       {/* Daily trends */}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <TrendCard title="每日使用者" points={stats.dailyUsers} />
-        <TrendCard title="每日諮詢送出" points={stats.dailyInquiries} />
+        <TrendCard title="每日使用者" unit="人" points={stats.dailyUsers} />
+        <TrendCard title="每日諮詢送出" unit="筆" points={stats.dailyInquiries} />
       </div>
 
       {/* Breakdowns */}
@@ -145,7 +167,7 @@ export default async function AnalyticsPanel() {
         <RankedList title="熱門行程 Top 10（瀏覽）" items={stats.topTours} emptyText="近 30 天尚無行程瀏覽資料。" />
         <RankedList title="熱門搜尋詞 Top 10" items={stats.topSearches} emptyText="近 30 天尚無搜尋資料。" />
         <RankedList title="流量來源（管道）" items={stats.channels} emptyText="近 30 天尚無來源資料。" />
-        <RankedList title="熱門地區（瀏覽）" items={stats.topRegions} emptyText="近 30 天尚無地區瀏覽資料。" />
+        <RankedList title="熱門地區（瀏覽）" items={stats.topRegions} emptyText="近 30 天尚無地區瀏覽資料。" labelMap={regionNames} />
         <RankedList title="LINE／社群點擊細分" items={stats.contactByMethod} emptyText="近 30 天尚無點擊資料。" labelMap={METHOD_LABELS} />
         <RankedList title="裝置" items={stats.devices} emptyText="近 30 天尚無裝置資料。" />
         <RankedList title="城市 Top" items={stats.cities} emptyText="近 30 天尚無城市資料。" />
