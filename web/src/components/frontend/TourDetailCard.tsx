@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TourDetailData, RelatedTour } from "@/lib/frontend-data";
 import TourMediaGallery from "./TourMediaGallery";
 import TourShareButton from "./TourShareButton";
 import TourDetailActions from "./TourDetailActions";
-import CroppedThumb from "./CroppedThumb";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 import { trackEvent } from "@/lib/analytics";
 
@@ -74,7 +72,7 @@ export default function TourDetailCard({ tour, headingTag = "h3", related = [] }
 
   return (
     <>
-      <TourMediaGallery media={tour.media} thumbnail={tour.thumbnail} alt={tour.name} />
+      <TourMediaGallery media={tour.media} thumbnail={tour.thumbnail} alt={tour.name} related={related} />
 
       <aside
         className={`fh-modal-side${mobileCollapsed ? " collapsed" : ""}${moreBelow ? " more-below" : ""}`}
@@ -129,45 +127,6 @@ export default function TourDetailCard({ tour, headingTag = "h3", related = [] }
           <TourDetailActions tourId={tour.id} tourName={tour.name} />
         </div>
       </aside>
-
-      {related.length > 0 && (
-        <section className="fh-related" aria-label="相關行程">
-          <h2 className="fh-related-title">相關行程</h2>
-          <div className="fh-related-list">
-            {related.map((r) => (
-              <Link
-                key={r.productId ?? r.slug}
-                className="fh-related-item"
-                href={`/tours/${r.productId ?? r.slug}`}
-                onClick={() =>
-                  trackEvent("select_content", {
-                    content_type: "related_tour",
-                    item_id: r.productId ?? r.slug,
-                  })
-                }
-              >
-                <div className="fh-related-thumb">
-                  <CroppedThumb
-                    src={r.thumbnail ?? "/images/tour-placeholder.svg"}
-                    alt={r.name}
-                    crop={r.thumbnail ? r.crop : null}
-                    sizes="50px"
-                  />
-                </div>
-                <div className="fh-related-body">
-                  <span className="fh-related-sub">{r.subRegionName}</span>
-                  <span className="fh-related-name">{r.name}</span>
-                  <span className="fh-related-price">
-                    {isCustomQuote(r.price)
-                      ? CUSTOM_QUOTE_LABEL
-                      : `NT$ ${r.price.toLocaleString("zh-TW")} 起`}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
     </>
   );
 }

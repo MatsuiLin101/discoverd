@@ -550,7 +550,7 @@
 .fh-modal {
   position: relative;
   width: min(1180px, 100%); height: min(860px, 92vh);
-  display: grid; grid-template-columns: 1fr 392px; grid-template-rows: minmax(0, 1fr) auto;
+  display: grid; grid-template-columns: 1fr 392px; grid-template-rows: minmax(0, 1fr);
   background: linear-gradient(180deg, #ffffff 0%, #FBF2F5 100%);
   border: 1px solid var(--line-2); border-radius: 22px; overflow: hidden;
   box-shadow: 0 50px 120px -40px rgba(42, 34, 51, 0.6);
@@ -566,7 +566,7 @@
 .fh-modal-x:hover { background: var(--ink); color: #fff; transform: rotate(90deg); }
 .fh-modal-x svg { width: 18px; height: 18px; }
 
-.fh-modal-gallery { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: #ECE6EE; }
+.fh-modal-gallery { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: #ECE6EE; }
 .fh-gallery-scroll {
   flex: 1; min-height: 0; overflow-y: auto; padding: 24px;
   display: flex; flex-direction: column; gap: 16px;
@@ -585,17 +585,16 @@
 .fh-pdf-loading { padding: 24px; text-align: center; font-size: 13px; color: var(--ink-3); }
 .fh-pdf-fallback { display: inline-block; padding: 12px 16px; font-size: 14px; color: var(--accent-2); text-decoration: underline; }
 
-/* "相關行程" band: a compact, wrapping row of mini-cards below the gallery +
-   info panel (spans both columns). Wraps instead of scrolling so it works with
-   a mouse on desktop and stays short. */
+/* "相關行程": appended to the end of the gallery scroll content, so it appears
+   only after the tour's images / PDF pages have been scrolled through. */
 .fh-related {
-  grid-column: 1; grid-row: 2; min-width: 0;
-  padding: 9px 20px 11px; border-top: 1px solid var(--line);
+  min-width: 0; padding-top: 12px; margin-top: 4px;
+  border-top: 1px solid var(--line-2);
 }
 .fh-related-title {
   font-family: var(--fh-sans); font-size: 10.5px; font-weight: 500;
   letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3);
-  margin: 0 0 7px;
+  margin: 0 0 8px;
 }
 .fh-related-list {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 8px;
@@ -614,7 +613,6 @@
 .fh-related-price { font-size: 11px; color: var(--ink-2); }
 
 .fh-modal-side {
-  grid-column: 2; grid-row: 1 / -1;
   display: flex; flex-direction: column; justify-content: space-between; gap: 28px;
   padding: 52px 40px 36px; border-left: 1px solid var(--line); overflow-y: auto;
 }
@@ -911,10 +909,7 @@
   .fh-footer-brand { grid-column: 1 / -1; }
   .fh-car-nav { display: none; }
   .fh-modal { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: 92vh; }
-  /* Stack single-column on mobile: images, info panel, then related. */
-  .fh-modal-gallery { grid-column: auto; grid-row: auto; min-height: 0; }
-  .fh-modal-side { grid-column: auto; grid-row: auto; }
-  .fh-related { grid-column: auto; grid-row: auto; }
+  .fh-modal-gallery { min-height: 0; }
   .fh-modal-side {
     position: relative; border-left: 0; border-top: 1px solid var(--line);
     /* Cap the side so a long intro never eats the whole modal: the gallery
