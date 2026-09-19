@@ -1,10 +1,18 @@
 /**
  * Region + SubRegion (two-level) import/export in a single sheet.
  *
- * Columns: 主分類代碼 | 主分類名稱 | 次分類代碼 | 次分類名稱 | SEO標題 | SEO描述
+ * Columns: 主分類代碼 | 主分類名稱 | 次分類代碼 | 次分類名稱 | SEO標題 | SEO描述 | 主分類網址 | 次分類網址
  *   - Each row optionally defines a subRegion under a region.
  *   - A row with the subRegion columns blank defines only the region.
  *   - SEO columns apply to the subRegion when present, otherwise to the region.
+ *   - Slug columns are the URL segments (/regions/[slug]/[subSlug]). They are
+ *     appended last so a legacy 6-column export still imports correctly.
+ *     - Blank on a new entity  -> derived from the name, else a random slug.
+ *     - Blank on an existing entity -> left unchanged.
+ *     - Present -> validated (lowercase a-z0-9-, unique) and applied.
+ *     - 主分類網址 is applied on the region's first appearing row (whether or
+ *       not that row also carries a subRegion), so regions that only ever
+ *       appear with subRegions remain editable.
  *
  * Identity (mirrors the frozen-code philosophy):
  *   - code present & found  -> that entity (may be updated)
@@ -17,6 +25,7 @@ import { randomBytes } from "crypto";
 import { readFirstSheetRows, buildWorkbook, type SheetRow } from "./xlsx";
 import type { Prisma } from "@/generated/prisma/client";
 import { nextRegionCode, nextSubCode } from "./product-id";
+import { slugify, isValidSlug } from "@/lib/slug";
 import type { ImportPreview, PreviewRowDisplay, RowIssue } from "./import-core";
 
 export const REGION_SHEET = "地區";
@@ -27,6 +36,8 @@ export const REGION_HEADERS = [
   "次分類名稱",
   "SEO標題",
   "SEO描述",
+  "主分類網址",
+  "次分類網址",
 ];
 
 export interface RegionRow {
@@ -37,6 +48,8 @@ export interface RegionRow {
   subName: string;
   seoTitle: string;
   seoDescription: string;
+  regionSlug: string;
+  subSlug: string;
 }
 
 export interface RegionImportPayload {
@@ -53,6 +66,8 @@ function parseRow(sr: SheetRow): RegionRow {
     subName: c(3),
     seoTitle: c(4),
     seoDescription: c(5),
+    regionSlug: c(6),
+    subSlug: c(7),
   };
 }
 
@@ -60,6 +75,7 @@ interface RegionInfo {
   id: string;
   name: string;
   code: string | null;
+  slug: string;
   seoTitle: string | null;
   seoDescription: string | null;
 }
@@ -68,6 +84,7 @@ interface SubInfo {
   regionId: string;
   name: string;
   code: string | null;
+  slug: string;
   seoTitle: string | null;
   seoDescription: string | null;
 }
@@ -77,17 +94,19 @@ export async function analyzeRegions(
   rows: SheetRow[],
 ): Promise<{ preview: ImportPreview; payload: RegionImportPayload }> {
   const regions = await db.region.findMany({
-    select: { id: true, name: true, code: true, seoTitle: true, seoDescription: true },
+    select: { id: true, name: true, code: true, slug: true, seoTitle: true, seoDescription: true },
   });
   const subs = await db.subRegion.findMany({
-    select: { id: true, regionId: true, name: true, code: true, seoTitle: true, seoDescription: true },
+    select: { id: true, regionId: true, name: true, code: true, slug: true, seoTitle: true, seoDescription: true },
   });
 
   const regionByCode = new Map<string, RegionInfo>();
   const regionByName = new Map<string, RegionInfo>();
+  const regionBySlug = new Map<string, RegionInfo>();
   for (const r of regions) {
     if (r.code) regionByCode.set(r.code, r);
     regionByName.set(r.name, r);
+    regionBySlug.set(r.slug, r);
   }
   const subsByRegion = new Map<string, SubInfo[]>();
   for (const s of subs) {
@@ -109,6 +128,10 @@ export async function analyzeRegions(
   const newRegionKeys = new Set<string>(); // key by name
   const seenRegionOnly = new Set<string>();
   const seenSubKeys = new Set<string>();
+
+  // Track slugs claimed within this file to catch in-file conflicts.
+  const reservedRegionSlugs = new Map<string, string>(); // slug -> owning regionKey
+  const reservedSubSlugs = new Map<string, string>(); // `${regionKey}|${slug}` -> owning subKey
 
   for (const sr of rows) {
     if (sr.rowNumber === 1) continue; // header
@@ -136,6 +159,26 @@ export async function analyzeRegions(
       errors.push({ row: r.row, message: "要新增主分類但缺少主分類名稱" });
       continue;
     }
+
+    // Validate the region slug (applied at commit on the region's first row).
+    if (r.regionSlug) {
+      if (!isValidSlug(r.regionSlug)) {
+        errors.push({ row: r.row, message: `主分類網址「${r.regionSlug}」格式錯誤（僅允許小寫英文、數字、連字號）` });
+        continue;
+      }
+      const slugOwner = regionBySlug.get(r.regionSlug);
+      if (slugOwner && (!region || slugOwner.id !== region.id)) {
+        errors.push({ row: r.row, message: `主分類網址「${r.regionSlug}」已被其他主分類使用` });
+        continue;
+      }
+      const reservedBy = reservedRegionSlugs.get(r.regionSlug);
+      if (reservedBy && reservedBy !== regionKey) {
+        errors.push({ row: r.row, message: `主分類網址「${r.regionSlug}」在檔案內被多個主分類使用` });
+        continue;
+      }
+      reservedRegionSlugs.set(r.regionSlug, regionKey);
+    }
+
     // Count a new region once (whether introduced by a region-only or a sub row).
     if (regionIsNew && !newRegionKeys.has(regionKey)) {
       newRegionKeys.add(regionKey);
@@ -160,9 +203,32 @@ export async function analyzeRegions(
       }
       seenSubKeys.add(subKey);
 
+      // Validate the sub slug (unique within its parent region).
+      if (r.subSlug) {
+        if (!isValidSlug(r.subSlug)) {
+          errors.push({ row: r.row, message: `次分類網址「${r.subSlug}」格式錯誤（僅允許小寫英文、數字、連字號）` });
+          continue;
+        }
+        if (region) {
+          const slugOwner = (subsByRegion.get(region.id) ?? []).find((s) => s.slug === r.subSlug);
+          if (slugOwner && (!sub || slugOwner.id !== sub.id)) {
+            errors.push({ row: r.row, message: `次分類網址「${r.subSlug}」在此主分類下已被使用` });
+            continue;
+          }
+        }
+        const reservedKey = `${regionKey}|${r.subSlug}`;
+        const reservedBy = reservedSubSlugs.get(reservedKey);
+        if (reservedBy && reservedBy !== subKey) {
+          errors.push({ row: r.row, message: `次分類網址「${r.subSlug}」在同一主分類下於檔案內重複` });
+          continue;
+        }
+        reservedSubSlugs.set(reservedKey, subKey);
+      }
+
       if (sub) {
         const changed =
           (!!r.subName && r.subName !== sub.name) ||
+          (!!r.subSlug && r.subSlug !== sub.slug) ||
           r.seoTitle !== (sub.seoTitle ?? "") ||
           r.seoDescription !== (sub.seoDescription ?? "");
         if (changed) {
@@ -196,6 +262,7 @@ export async function analyzeRegions(
       } else {
         const changed =
           (!!r.regionName && r.regionName !== region!.name) ||
+          (!!r.regionSlug && r.regionSlug !== region!.slug) ||
           r.seoTitle !== (region!.seoTitle ?? "") ||
           r.seoDescription !== (region!.seoDescription ?? "");
         if (changed) {
@@ -242,6 +309,41 @@ async function uniqueSubSlug(tx: Prisma.TransactionClient, regionId: string): Pr
 }
 
 /**
+ * Slug for a region being created. A provided slug wins (re-checked for
+ * uniqueness to guard against batch races); otherwise derive from the name,
+ * falling back to a random slug when the name yields nothing usable (e.g. a
+ * purely Chinese name). Provided slugs are format-validated in analyzeRegions.
+ */
+async function pickRegionSlug(tx: Prisma.TransactionClient, r: RegionRow): Promise<string> {
+  if (r.regionSlug) {
+    if (await tx.region.findUnique({ where: { slug: r.regionSlug }, select: { id: true } })) {
+      throw new Error(`主分類網址「${r.regionSlug}」已被使用`);
+    }
+    return r.regionSlug;
+  }
+  const derived = slugify(r.regionName);
+  if (derived && !(await tx.region.findUnique({ where: { slug: derived }, select: { id: true } }))) {
+    return derived;
+  }
+  return uniqueRegionSlug(tx);
+}
+
+/** Slug for a subRegion being created (see pickRegionSlug). Unique per region. */
+async function pickSubSlug(tx: Prisma.TransactionClient, regionId: string, r: RegionRow): Promise<string> {
+  if (r.subSlug) {
+    if (await tx.subRegion.findFirst({ where: { regionId, slug: r.subSlug }, select: { id: true } })) {
+      throw new Error(`次分類網址「${r.subSlug}」已被使用`);
+    }
+    return r.subSlug;
+  }
+  const derived = slugify(r.subName);
+  if (derived && !(await tx.subRegion.findFirst({ where: { regionId, slug: derived }, select: { id: true } }))) {
+    return derived;
+  }
+  return uniqueSubSlug(tx, regionId);
+}
+
+/**
  * Match an existing region/sub whose stored name only differs from `name` by
  * surrounding whitespace. Fallback after an exact lookup misses, so legacy dirty
  * rows are reused (and their names cleaned on update) rather than duplicated.
@@ -258,8 +360,8 @@ async function findSubRecordByTrimmedName(
   tx: Prisma.TransactionClient,
   regionId: string,
   name: string,
-): Promise<{ id: string; name: string } | null> {
-  const all = await tx.subRegion.findMany({ where: { regionId }, select: { id: true, name: true } });
+): Promise<{ id: string; name: string; slug: string } | null> {
+  const all = await tx.subRegion.findMany({ where: { regionId }, select: { id: true, name: true, slug: true } });
   return all.find((s) => s.name.trim() === name) ?? null;
 }
 
@@ -268,6 +370,10 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
   await db.$transaction(async (tx) => {
     // Resolve/create a region by the row, updating region-level fields for region-only rows.
     const regionIdByKey = new Map<string, string>();
+    // Regions whose slug has already been applied this batch (once per region,
+    // on its first appearing row) so regions that only appear with subRegions
+    // stay editable and we don't repeatedly re-check the same slug.
+    const regionSlugApplied = new Set<string>();
 
     for (const r of rows) {
       // --- region ---
@@ -294,7 +400,7 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
       } else if (!regionId) {
         // create new region (mint fresh code, ignore any provided code)
         const code = await nextRegionCode(tx);
-        const slug = await uniqueRegionSlug(tx);
+        const slug = await pickRegionSlug(tx, r);
         const max = await tx.region.aggregate({ _max: { sortOrder: true } });
         const created = await tx.region.create({
           data: {
@@ -305,7 +411,22 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
           },
         });
         regionId = created.id;
+        regionSlugApplied.add(regionId); // slug set at creation
         if (keyName) regionIdByKey.set(keyName, regionId);
+      }
+
+      // Apply a provided slug to an existing region, once, on its first row
+      // (whether or not that row also carries a subRegion).
+      if (r.regionSlug && regionId && !regionSlugApplied.has(regionId)) {
+        regionSlugApplied.add(regionId);
+        const cur = await tx.region.findUnique({ where: { id: regionId }, select: { slug: true } });
+        if (cur && cur.slug !== r.regionSlug) {
+          const conflict = await tx.region.findUnique({ where: { slug: r.regionSlug }, select: { id: true } });
+          if (conflict && conflict.id !== regionId) {
+            throw new Error(`主分類網址「${r.regionSlug}」已被使用`);
+          }
+          await tx.region.update({ where: { id: regionId }, data: { slug: r.regionSlug } });
+        }
       }
 
       const hasSub = !!(r.subCode || r.subName);
@@ -325,25 +446,32 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
       }
 
       // --- sub ---
-      let sub = null as null | { id: string; name: string };
+      let sub = null as null | { id: string; name: string; slug: string };
       if (r.subCode) {
-        sub = await tx.subRegion.findFirst({ where: { regionId: regionId!, code: r.subCode }, select: { id: true, name: true } });
+        sub = await tx.subRegion.findFirst({ where: { regionId: regionId!, code: r.subCode }, select: { id: true, name: true, slug: true } });
       }
       if (!sub && r.subName) {
         sub =
-          (await tx.subRegion.findFirst({ where: { regionId: regionId!, name: r.subName }, select: { id: true, name: true } })) ??
+          (await tx.subRegion.findFirst({ where: { regionId: regionId!, name: r.subName }, select: { id: true, name: true, slug: true } })) ??
           (await findSubRecordByTrimmedName(tx, regionId!, r.subName));
       }
 
       if (sub) {
         const data: Prisma.SubRegionUpdateInput = {};
         if (r.subName && r.subName !== sub.name) data.name = r.subName;
+        if (r.subSlug && r.subSlug !== sub.slug) {
+          const conflict = await tx.subRegion.findFirst({ where: { regionId: regionId!, slug: r.subSlug }, select: { id: true } });
+          if (conflict && conflict.id !== sub.id) {
+            throw new Error(`次分類網址「${r.subSlug}」已被使用`);
+          }
+          data.slug = r.subSlug;
+        }
         data.seoTitle = r.seoTitle || null;
         data.seoDescription = r.seoDescription || null;
         await tx.subRegion.update({ where: { id: sub.id }, data });
       } else {
         const code = await nextSubCode(tx, regionId!);
-        const slug = await uniqueSubSlug(tx, regionId!);
+        const slug = await pickSubSlug(tx, regionId!, r);
         const max = await tx.subRegion.aggregate({ where: { regionId: regionId! }, _max: { sortOrder: true } });
         await tx.subRegion.create({
           data: {
@@ -369,10 +497,10 @@ export async function buildRegionExport(): Promise<Buffer> {
   const rows: (string | number | null)[][] = [];
   for (const region of regions) {
     if (region.subRegions.length === 0) {
-      rows.push([region.code ?? "", region.name, "", "", region.seoTitle ?? "", region.seoDescription ?? ""]);
+      rows.push([region.code ?? "", region.name, "", "", region.seoTitle ?? "", region.seoDescription ?? "", region.slug, ""]);
     } else {
       for (const sub of region.subRegions) {
-        rows.push([region.code ?? "", region.name, sub.code ?? "", sub.name, sub.seoTitle ?? "", sub.seoDescription ?? ""]);
+        rows.push([region.code ?? "", region.name, sub.code ?? "", sub.name, sub.seoTitle ?? "", sub.seoDescription ?? "", region.slug, sub.slug]);
       }
     }
   }
@@ -381,8 +509,8 @@ export async function buildRegionExport(): Promise<Buffer> {
 
 export async function buildRegionTemplate(): Promise<Buffer> {
   return buildWorkbook(REGION_SHEET, REGION_HEADERS, [
-    ["", "範例主分類", "", "範例次分類甲", "", ""],
-    ["", "範例主分類", "", "範例次分類乙", "", ""],
+    ["", "範例主分類", "", "範例次分類甲", "", "", "example-region", "example-sub-a"],
+    ["", "範例主分類", "", "範例次分類乙", "", "", "example-region", "example-sub-b"],
   ]);
 }
 
