@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useSocialLinks } from "@/hooks/useSocialLinks";
+import { useSocialLinks, type SocialLinks } from "@/hooks/useSocialLinks";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 import { trackEvent } from "@/lib/analytics";
 import type { SearchResultItem, SearchResponse } from "@/lib/frontend-data";
@@ -23,7 +23,7 @@ function highlight(name: string, q: string): string {
   );
 }
 
-export default function SiteHeader() {
+export default function SiteHeader({ social }: { social?: SocialLinks }) {
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<SearchResult[]>([]);
   const [total, setTotal] = useState(0);
@@ -32,7 +32,7 @@ export default function SiteHeader() {
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const socialLinks = useSocialLinks();
+  const socialLinks = useSocialLinks(social);
   const router = useRouter();
 
   const search = useCallback((q: string) => {
