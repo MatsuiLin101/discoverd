@@ -156,6 +156,9 @@ export async function analyzeRegions(
   // Track slugs claimed within this file to catch in-file conflicts.
   const reservedRegionSlugs = new Map<string, string>(); // slug -> owning regionKey
   const reservedSubSlugs = new Map<string, string>(); // `${regionKey}|${slug}` -> owning subKey
+  // Regions whose slug change we've already surfaced (applied once, on the
+  // region's first appearing row — even when that row carries a subRegion).
+  const regionSlugChangeShown = new Set<string>();
 
   const col = buildColIndex(rows.find((r) => r.rowNumber === 1));
 
@@ -213,6 +216,27 @@ export async function analyzeRegions(
 
     const hasSub = !!(r.subCode || r.subName);
 
+    // Per-column values shown in the rich preview table (echo the file input).
+    const values: Record<string, string> = {
+      regionName: r.regionName || region?.name || "",
+      regionSlug: r.regionSlug,
+      subName: r.subName,
+      subSlug: r.subSlug,
+      seoTitle: r.seoTitle,
+      seoDescription: r.seoDescription,
+    };
+
+    // Does this row change the (existing) region's slug? It is applied once, on
+    // the region's first appearing row, so surface it even on a subRegion row.
+    let regionSlugChangeHere = false;
+    if (region && !regionIsNew && r.regionSlug && r.regionSlug !== region.slug && !regionSlugChangeShown.has(regionKey)) {
+      regionSlugChangeShown.add(regionKey);
+      regionSlugChangeHere = true;
+    }
+
+    // Only rows that actually create/update something enter the commit payload.
+    let willApply = false;
+
     if (hasSub) {
       const existingSubs = region ? subsByRegion.get(region.id) ?? [] : [];
       let sub: SubInfo | undefined;
@@ -223,7 +247,7 @@ export async function analyzeRegions(
       const subKey = `${regionKey}|${r.subCode ? `c:${r.subCode}` : `n:${r.subName}`}`;
       if (seenSubKeys.has(subKey)) {
         duplicates.push({ row: r.row, message: `檔案內重複的次分類（${r.regionName || region?.name} / ${r.subName}），已略過` });
-        display.push({ row: r.row, action: "skip", label: `${r.regionName || region?.name} / ${r.subName}`, detail: "檔案內重複", duplicate: true });
+        display.push({ row: r.row, action: "skip", label: `${r.regionName || region?.name} / ${r.subName}`, detail: "檔案內重複", duplicate: true, values });
         skippedCount++;
         continue;
       }
@@ -252,17 +276,21 @@ export async function analyzeRegions(
       }
 
       if (sub) {
-        const changed =
+        const subChanged =
           (!!r.subName && r.subName !== sub.name) ||
           (!!r.subSlug && r.subSlug !== sub.slug) ||
           r.seoTitle !== (sub.seoTitle ?? "") ||
           r.seoDescription !== (sub.seoDescription ?? "");
-        if (changed) {
+        if (subChanged || regionSlugChangeHere) {
           updatedCount++;
-          display.push({ row: r.row, action: "update", label: `${region!.name} / ${sub.name}`, detail: sub.code ? `代碼 ${region!.code}${sub.code}` : undefined });
+          willApply = true;
+          const bits: string[] = [];
+          if (sub.code) bits.push(`代碼 ${region!.code}${sub.code}`);
+          if (regionSlugChangeHere) bits.push(`主分類網址 → ${r.regionSlug}`);
+          display.push({ row: r.row, action: "update", label: `${region!.name} / ${sub.name}`, detail: bits.join("・") || undefined, values });
         } else {
           skippedCount++;
-          display.push({ row: r.row, action: "skip", label: `${region!.name} / ${sub.name}`, detail: "無變更" });
+          display.push({ row: r.row, action: "skip", label: `${region!.name} / ${sub.name}`, detail: "無變更", values });
         }
       } else {
         if (!r.subName) {
@@ -270,20 +298,22 @@ export async function analyzeRegions(
           continue;
         }
         createdCount++;
-        display.push({ row: r.row, action: "create", label: `${r.regionName || region?.name} / ${r.subName}`, detail: "新次分類" });
+        willApply = true;
+        display.push({ row: r.row, action: "create", label: `${r.regionName || region?.name} / ${r.subName}`, detail: "新次分類", values });
       }
     } else {
       // Region-only row.
       if (seenRegionOnly.has(regionKey)) {
         duplicates.push({ row: r.row, message: `檔案內重複的主分類（${r.regionName || region?.name}），已略過` });
-        display.push({ row: r.row, action: "skip", label: `${r.regionName || region?.name}`, detail: "檔案內重複", duplicate: true });
+        display.push({ row: r.row, action: "skip", label: `${r.regionName || region?.name}`, detail: "檔案內重複", duplicate: true, values });
         skippedCount++;
         continue;
       }
       seenRegionOnly.add(regionKey);
 
       if (regionIsNew) {
-        display.push({ row: r.row, action: "create", label: r.regionName, detail: "新主分類" });
+        willApply = true;
+        display.push({ row: r.row, action: "create", label: r.regionName, detail: "新主分類", values });
         // already counted above
       } else {
         const changed =
@@ -293,19 +323,28 @@ export async function analyzeRegions(
           r.seoDescription !== (region!.seoDescription ?? "");
         if (changed) {
           updatedCount++;
-          display.push({ row: r.row, action: "update", label: region!.name, detail: `代碼 ${region!.code ?? ""}` });
+          willApply = true;
+          display.push({ row: r.row, action: "update", label: region!.name, detail: `代碼 ${region!.code ?? ""}`, values });
         } else {
           skippedCount++;
-          display.push({ row: r.row, action: "skip", label: region!.name, detail: "無變更" });
+          display.push({ row: r.row, action: "skip", label: region!.name, detail: "無變更", values });
         }
       }
     }
 
-    valid.push(r);
+    if (willApply) valid.push(r);
   }
 
   const preview: ImportPreview = {
     rows: display,
+    columns: [
+      { key: "regionName", label: "主分類" },
+      { key: "regionSlug", label: "主分類網址" },
+      { key: "subName", label: "次分類" },
+      { key: "subSlug", label: "次分類網址" },
+      { key: "seoTitle", label: "SEO標題" },
+      { key: "seoDescription", label: "SEO描述" },
+    ],
     createdCount,
     updatedCount,
     skippedCount,
