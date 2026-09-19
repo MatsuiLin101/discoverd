@@ -68,7 +68,7 @@ export default function CategoryList({ title, stats, categories, headingLevel = 
             </div>
             <div className="cat-thumb">
               {cat.img ? (
-                <CroppedThumb src={cat.img} alt={cat.name} crop={cat.crop} sizes="240px" />
+                <CroppedThumb src={cat.img} alt={cat.name} crop={cat.crop} sizes="240px" width={240} />
               ) : (
                 <div style={{ width: "100%", height: "100%", background: "var(--line)" }} />
               )}

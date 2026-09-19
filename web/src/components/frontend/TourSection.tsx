@@ -97,6 +97,7 @@ export default function TourSection({ parent, regionSlug, regions, initialSlug, 
                   alt={tour.name}
                   crop={tour.thumbnail ? tour.crop : null}
                   sizes="(max-width: 767px) 100vw, (max-width: 1080px) 50vw, 33vw"
+                  width={560}
                 />
               </div>
               <div className="t-body">
