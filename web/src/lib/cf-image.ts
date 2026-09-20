@@ -19,11 +19,16 @@ const MAX_SOURCE_WIDTH = 2400;
 /**
  * Build a Cloudflare-transformed URL for a stored image at the given width.
  * Returns `src` unchanged when it is not on our storage zone.
+ *
+ * `onerror=redirect` makes Cloudflare fall back to the original image whenever a
+ * transformation cannot be produced — most importantly once the monthly free
+ * transformation allowance is exhausted (new variants would otherwise 9422 into
+ * a broken image). The original is on the same zone, so the redirect resolves.
  */
 export function cfImageUrl(src: string, width: number, quality = 75): string {
   if (!STORAGE_BASE || !src.startsWith(STORAGE_BASE)) return src;
   const path = src.slice(STORAGE_BASE.length).replace(/^\/+/, "");
   const w = Math.min(Math.round(width), MAX_SOURCE_WIDTH);
-  const opts = `width=${w},quality=${quality},format=auto,fit=scale-down`;
+  const opts = `width=${w},quality=${quality},format=auto,fit=scale-down,onerror=redirect`;
   return `${STORAGE_BASE}/cdn-cgi/image/${opts}/${path}`;
 }
