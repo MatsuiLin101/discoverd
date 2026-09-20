@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocialLinks, type SocialLinks } from "@/hooks/useSocialLinks";
+import { cfImageUrl } from "@/lib/cf-image";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 import { trackEvent } from "@/lib/analytics";
 import type { SearchResultItem, SearchResponse } from "@/lib/frontend-data";
@@ -191,7 +192,11 @@ export default function SiteHeader({ social }: { social?: SocialLinks }) {
                     >
                       <div className="fh-sr-thumb">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={m.thumbnail ?? ""} alt="" />
+                        <img
+                          src={m.thumbnail ? cfImageUrl(m.thumbnail, 104) : ""}
+                          alt=""
+                          loading="lazy"
+                        />
                       </div>
                       <div className="fh-sr-txt">
                         <div
