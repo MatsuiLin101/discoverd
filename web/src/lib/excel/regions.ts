@@ -19,9 +19,11 @@
  *
  * Identity (mirrors the frozen-code philosophy):
  *   - code present & found  -> that entity (may be updated)
- *   - code present & absent -> treated as new (a fresh code is minted)
- *   - code blank            -> match by name within scope; else create
- * Codes are minted at commit via lib/excel/product-id helpers.
+ *   - code present & absent -> new; the provided code is kept when still free
+ *                             (so an export re-imported into a fresh/different DB
+ *                             preserves its codes), otherwise a fresh code is minted
+ *   - code blank            -> match by name within scope; else create (minted code)
+ * Codes are assigned at commit via lib/excel/product-id helpers.
  */
 import { db } from "@/lib/db";
 import { randomBytes } from "crypto";
@@ -413,6 +415,26 @@ async function pickSubSlug(tx: Prisma.TransactionClient, regionId: string, r: Re
 }
 
 /**
+ * Code for a region/sub being created. Honour the code from the file when it's
+ * still free so an export re-imported into a fresh or different database keeps
+ * its codes; otherwise mint the next sequential code. Reusing the provided code
+ * also prevents a later row's file code from colliding with a freshly-minted one
+ * (which previously mis-routed subRegions under the wrong region).
+ */
+async function pickRegionCode(tx: Prisma.TransactionClient, provided: string): Promise<string> {
+  if (provided && !(await tx.region.findUnique({ where: { code: provided }, select: { id: true } }))) {
+    return provided;
+  }
+  return nextRegionCode(tx);
+}
+async function pickSubCode(tx: Prisma.TransactionClient, regionId: string, provided: string): Promise<string> {
+  if (provided && !(await tx.subRegion.findFirst({ where: { regionId, code: provided }, select: { id: true } }))) {
+    return provided;
+  }
+  return nextSubCode(tx, regionId);
+}
+
+/**
  * Match an existing region/sub whose stored name only differs from `name` by
  * surrounding whitespace. Fallback after an exact lookup misses, so legacy dirty
  * rows are reused (and their names cleaned on update) rather than duplicated.
@@ -469,8 +491,8 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
       if (regionRecord) {
         regionId = regionRecord.id;
       } else if (!regionId) {
-        // create new region (mint fresh code, ignore any provided code)
-        const code = await nextRegionCode(tx);
+        // create new region, keeping the file's code when it's still free
+        const code = await pickRegionCode(tx, r.regionCode);
         const slug = await pickRegionSlug(tx, r);
         const max = await tx.region.aggregate({ _max: { sortOrder: true } });
         const created = await tx.region.create({
@@ -541,7 +563,7 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
         data.seoDescription = r.seoDescription || null;
         await tx.subRegion.update({ where: { id: sub.id }, data });
       } else {
-        const code = await nextSubCode(tx, regionId!);
+        const code = await pickSubCode(tx, regionId!, r.subCode);
         const slug = await pickSubSlug(tx, regionId!, r);
         const max = await tx.subRegion.aggregate({ where: { regionId: regionId! }, _max: { sortOrder: true } });
         await tx.subRegion.create({
