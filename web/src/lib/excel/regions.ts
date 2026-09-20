@@ -169,12 +169,14 @@ export async function analyzeRegions(
       continue; // blank row
     }
 
-    // Resolve region.
+    // Resolve region. A code that isn't found falls back to a name match, so an
+    // unknown/mismatched code with an existing name updates that region instead
+    // of trying to create a duplicate (region names are unique).
     let region: RegionInfo | undefined;
     let regionIsNew = false;
     if (r.regionCode) {
-      region = regionByCode.get(r.regionCode);
-      if (!region) regionIsNew = true; // code not found -> new (fresh code minted later)
+      region = regionByCode.get(r.regionCode) ?? (r.regionName ? regionByName.get(r.regionName) : undefined);
+      if (!region) regionIsNew = true; // code and name both unknown -> new
     } else if (r.regionName) {
       region = regionByName.get(r.regionName);
       if (!region) regionIsNew = true;
@@ -242,7 +244,9 @@ export async function analyzeRegions(
       let sub: SubInfo | undefined;
       if (!regionIsNew) {
         if (r.subCode) sub = existingSubs.find((s) => s.code === r.subCode);
-        else sub = existingSubs.find((s) => s.name === r.subName);
+        // Fall back to a name match when the code is absent or not found, so a
+        // mismatched sub code updates the existing sub instead of duplicating it.
+        if (!sub && r.subName) sub = existingSubs.find((s) => s.name === r.subName);
       }
       const subKey = `${regionKey}|${r.subCode ? `c:${r.subCode}` : `n:${r.subName}`}`;
       if (seenSubKeys.has(subKey)) {
@@ -448,9 +452,11 @@ export async function commitRegions(rows: RegionRow[]): Promise<void> {
       if (r.regionCode) {
         regionRecord = await tx.region.findUnique({ where: { code: r.regionCode }, select: { id: true, name: true, code: true } });
       }
-      if (!regionRecord && !r.regionCode && r.regionName) {
-        // Exact match first; fall back to a whitespace-trimmed match so legacy
-        // dirty names (e.g. "日本 ") are reused instead of duplicated.
+      if (!regionRecord && r.regionName) {
+        // Fall back to a name match whenever the code lookup missed (unknown or
+        // mismatched code), then to a whitespace-trimmed match so legacy dirty
+        // names (e.g. "日本 ") are reused instead of duplicated. Region names are
+        // unique, so creating with an existing name would otherwise crash.
         regionRecord =
           (await tx.region.findUnique({ where: { name: r.regionName }, select: { id: true, name: true, code: true } })) ??
           (await findRegionRecordByTrimmedName(tx, r.regionName));
