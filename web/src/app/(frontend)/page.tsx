@@ -53,7 +53,14 @@ export default async function HomePage() {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader
+        social={{
+          facebookUrl: siteSetting?.facebookUrl ?? null,
+          instagramUrl: siteSetting?.instagramUrl ?? null,
+          lineUrl: siteSetting?.lineUrl ?? null,
+          lineCommunityUrl: siteSetting?.lineCommunityUrl ?? null,
+        }}
+      />
 
       <HeroCarousel
         slides={heroSlides}

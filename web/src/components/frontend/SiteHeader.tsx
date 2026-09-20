@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useSocialLinks } from "@/hooks/useSocialLinks";
+import { useSocialLinks, type SocialLinks } from "@/hooks/useSocialLinks";
+import { cfImageUrl } from "@/lib/cf-image";
 import { isCustomQuote, CUSTOM_QUOTE_LABEL } from "@/lib/tour-price";
 import { trackEvent } from "@/lib/analytics";
 import type { SearchResultItem, SearchResponse } from "@/lib/frontend-data";
@@ -23,7 +24,7 @@ function highlight(name: string, q: string): string {
   );
 }
 
-export default function SiteHeader() {
+export default function SiteHeader({ social }: { social?: SocialLinks }) {
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<SearchResult[]>([]);
   const [total, setTotal] = useState(0);
@@ -32,31 +33,43 @@ export default function SiteHeader() {
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const socialLinks = useSocialLinks();
+  const abortRef = useRef<AbortController | null>(null);
+  const socialLinks = useSocialLinks(social);
   const router = useRouter();
 
   const search = useCallback((q: string) => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (!q.trim()) {
+      abortRef.current?.abort();
       setMatches([]);
       setTotal(0);
       setOpen(false);
       return;
     }
     timerRef.current = setTimeout(async () => {
+      // Cancel any in-flight request so a slower earlier response can never
+      // overwrite the results for what the user has now typed.
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
       setLoading(true);
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`, {
+          signal: controller.signal,
+        });
         const data: SearchResponse = await res.json();
         setMatches(data.results ?? []);
         setTotal(data.total ?? 0);
         setActiveIndex(-1);
         setOpen(true);
-      } catch {
+      } catch (e) {
+        // A superseded request was aborted — leave the newer request's state alone.
+        if ((e as Error).name === "AbortError") return;
         setMatches([]);
         setTotal(0);
       } finally {
-        setLoading(false);
+        // Only the latest request clears the loading state.
+        if (abortRef.current === controller) setLoading(false);
       }
     }, 300);
   }, []);
@@ -179,7 +192,11 @@ export default function SiteHeader() {
                     >
                       <div className="fh-sr-thumb">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={m.thumbnail ?? ""} alt="" />
+                        <img
+                          src={m.thumbnail ? cfImageUrl(m.thumbnail, 104) : ""}
+                          alt=""
+                          loading="lazy"
+                        />
                       </div>
                       <div className="fh-sr-txt">
                         <div

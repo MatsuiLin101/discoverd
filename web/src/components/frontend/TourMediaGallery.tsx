@@ -69,6 +69,7 @@ export default function TourMediaGallery({ media, thumbnail, alt, related = [] }
                       alt={r.name}
                       crop={r.thumbnail ? r.crop : null}
                       sizes="50px"
+                      width={50}
                     />
                   </div>
                   <div className="fh-related-body">
