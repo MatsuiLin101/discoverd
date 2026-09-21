@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
-import { notoSans, notoSansTC } from "@/lib/frontend-fonts";
 import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager";
 import ContactClickTracker from "@/components/analytics/ContactClickTracker";
 import JsonLd from "@/components/JsonLd";
@@ -83,7 +82,7 @@ export default async function FrontendLayout({
       {gtmId && <GTMNoScript gtmId={gtmId} />}
       {gtmId && <ContactClickTracker />}
       <div
-        className={`${notoSans.variable} ${notoSansTC.variable} fh-root`}
+        className="fh-root"
         data-layout={boxed ? "boxed" : undefined}
         style={rootStyle}
       >

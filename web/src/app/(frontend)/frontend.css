@@ -14,7 +14,12 @@
   --accent-2: #7166D6;
   --panel: rgba(255, 255, 255, 0.58);
   --panel-solid: rgba(255, 255, 255, 0.78);
-  --fh-sans: var(--font-noto-sans, "Noto Sans"), var(--font-noto-sans-tc, "Noto Sans TC"), sans-serif;
+  /* Native system font stack — no webfont download. Latin glyphs come from the
+     OS UI font; Traditional-Chinese glyphs fall through to the platform's own
+     high-quality CJK face (PingFang TC on Apple, Microsoft JhengHei on Windows,
+     Noto Sans TC on Android/Linux). This removes the render-blocking Noto Sans TC
+     @font-face manifest and its font downloads entirely. */
+  --fh-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Heiti TC", sans-serif;
   --max: 1280px;
   --gutter: 48px;
 
