@@ -146,6 +146,7 @@ export default function HeroCarousel({
               fill
               priority={i === 0}
               fetchPriority={i === 0 ? "high" : undefined}
+              quality={60}
               sizes="100vw"
             />
           </div>
