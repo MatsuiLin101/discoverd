@@ -23,10 +23,14 @@ export function isAllowedContentType(contentType: string): boolean {
 }
 
 /**
- * Cache-Control applied to every stored object. Object keys are content-addressed
- * (a random hash per upload — see `buildKey`), so a given key's bytes never change
- * and the file can be cached forever. Without this the CDN falls back to a short
- * default TTL (~4h), forcing repeat downloads of large hero/region images.
+ * Cache-Control applied to server-side object writes. Object keys are
+ * content-addressed (a random hash per upload — see `buildKey`), so a given
+ * key's bytes never change and the file can be cached forever.
+ *
+ * Note: browser direct-to-R2 uploads (presigned PUT) intentionally do NOT send
+ * this — Cache-Control is not CORS-safelisted and would break the upload
+ * preflight. Those objects get their long-lived cache from an edge Cloudflare
+ * Cache Rule instead, which also covers pre-existing objects.
  */
 export const STORAGE_CACHE_CONTROL = "public, max-age=31536000, immutable";
 
@@ -115,22 +119,15 @@ class R2Driver implements StorageDriver {
   }
 
   async createUploadAuth(key: string, contentType: string): Promise<UploadAuth> {
-    // CacheControl is part of the signed request, so the client must echo the
-    // matching `Cache-Control` header (it forwards `headers` verbatim) or R2
-    // rejects the PUT with a signature mismatch.
-    const cmd = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      ContentType: contentType,
-      CacheControl: STORAGE_CACHE_CONTROL,
-    });
+    // Only Content-Type is signed/sent. We deliberately do NOT set Cache-Control
+    // here: it is not a CORS-safelisted request header, so echoing it on the
+    // browser's direct-to-R2 PUT makes the preflight fail unless the bucket CORS
+    // policy explicitly allows it. The long-lived cache for stored assets is
+    // applied at the edge via a Cloudflare Cache Rule instead (which also covers
+    // objects uploaded before this change).
+    const cmd = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType });
     const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: 600 });
-    return {
-      key,
-      uploadUrl,
-      method: "PUT",
-      headers: { "Content-Type": contentType, "Cache-Control": STORAGE_CACHE_CONTROL },
-    };
+    return { key, uploadUrl, method: "PUT", headers: { "Content-Type": contentType } };
   }
 
   async put(key: string, body: Buffer, contentType: string): Promise<void> {
