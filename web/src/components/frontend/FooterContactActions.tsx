@@ -10,7 +10,7 @@ export default function FooterContactActions() {
 
   return (
     <div className="fh-footer-col">
-      <h5>聯絡</h5>
+      <h2>聯絡</h2>
       <ul>
         <li>
           <button type="button" className="fh-footer-link" onClick={() => setInquiryOpen(true)}>

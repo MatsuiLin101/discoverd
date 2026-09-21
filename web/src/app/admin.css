@@ -1,0 +1,19 @@
+/* Full Tailwind build for the admin panel only.
+ *
+ * The public (frontend) routes deliberately do NOT load Tailwind's utility layer
+ * — the shared root stylesheet (globals.css) ships only Preflight. The admin
+ * panel is utility-class heavy, so it imports the complete Tailwind build here
+ * and it is pulled in exclusively by the admin layouts. This keeps the ~350 KiB
+ * of admin-only utilities off every public page load.
+ */
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-brand-coral: #E0506B;
+  --color-brand-violet: #7166D6;
+}

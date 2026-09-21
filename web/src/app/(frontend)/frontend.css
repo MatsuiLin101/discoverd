@@ -14,7 +14,12 @@
   --accent-2: #7166D6;
   --panel: rgba(255, 255, 255, 0.58);
   --panel-solid: rgba(255, 255, 255, 0.78);
-  --fh-sans: var(--font-noto-sans, "Noto Sans"), var(--font-noto-sans-tc, "Noto Sans TC"), sans-serif;
+  /* Native system font stack — no webfont download. Latin glyphs come from the
+     OS UI font; Traditional-Chinese glyphs fall through to the platform's own
+     high-quality CJK face (PingFang TC on Apple, Microsoft JhengHei on Windows,
+     Noto Sans TC on Android/Linux). This removes the render-blocking Noto Sans TC
+     @font-face manifest and its font downloads entirely. */
+  --fh-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Heiti TC", sans-serif;
   --max: 1280px;
   --gutter: 48px;
 
@@ -760,6 +765,9 @@
 .fh-f-error { font-size: 11.5px; color: var(--accent); letter-spacing: 0.02em; min-height: 1em; opacity: 0; }
 .fh-f-field.invalid .fh-f-error { opacity: 1; }
 .fh-form-foot { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+/* Standalone submit-error message in the form footer (was Tailwind text-sm
+   text-rose-600 before the frontend stopped shipping the utility layer). */
+.fh-form-submit-error { font-size: 14px; color: #e11d48; }
 .fh-form-submit {
   flex: 1; border: 0; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
@@ -810,7 +818,7 @@
 .fh-footer-brand .company-name { font-weight: 600; font-size: 15px; color: var(--ink); margin-bottom: 12px; }
 .fh-footer-brand .company-meta { font-size: 12.5px; line-height: 2; color: var(--ink-3); }
 .fh-footer-brand .company-addr { font-size: 12.5px; line-height: 2; color: var(--ink-3); margin-top: 14px; }
-.fh-footer-col h5 { font-family: var(--fh-sans); font-size: 10px; letter-spacing: 0.26em; color: var(--ink-3); text-transform: uppercase; margin: 0 0 18px; }
+.fh-footer-col h2 { font-family: var(--fh-sans); font-size: 10px; letter-spacing: 0.26em; color: var(--ink-3); text-transform: uppercase; margin: 0 0 18px; }
 .fh-footer-col ul { list-style: none; padding: 0; margin: 0; }
 .fh-footer-col li { font-size: 13.5px; line-height: 2.15; color: var(--ink-2); }
 .fh-footer-col a:hover { color: var(--accent); }

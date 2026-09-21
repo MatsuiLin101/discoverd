@@ -62,32 +62,34 @@ export default async function SearchPage({ searchParams }: Props) {
     <>
       <SiteHeader social={social} />
 
-      <nav className="fh-page-bar">
-        <div className="fh-page-bar-inner">
-          <span className="crumb">
-            <Link href="/">首頁</Link>
-            <span className="sep">／</span>
-            <span className="cur">搜尋行程</span>
-          </span>
-        </div>
-      </nav>
+      <main>
+        <nav className="fh-page-bar">
+          <div className="fh-page-bar-inner">
+            <span className="crumb">
+              <Link href="/">首頁</Link>
+              <span className="sep">／</span>
+              <span className="cur">搜尋行程</span>
+            </span>
+          </div>
+        </nav>
 
-      <section className="fh-listing">
-        <Suspense fallback={null}>
-          <SearchExperience
-            key={experienceKey}
-            facets={facets}
-            initialFilters={{
-              q: filters.q ?? "",
-              region: filters.region ?? "",
-              sub: filters.sub ?? "",
-              tags: filters.tags ?? [],
-              tagMode,
-            }}
-            initialResponse={initial}
-          />
-        </Suspense>
-      </section>
+        <section className="fh-listing">
+          <Suspense fallback={null}>
+            <SearchExperience
+              key={experienceKey}
+              facets={facets}
+              initialFilters={{
+                q: filters.q ?? "",
+                region: filters.region ?? "",
+                sub: filters.sub ?? "",
+                tags: filters.tags ?? [],
+                tagMode,
+              }}
+              initialResponse={initial}
+            />
+          </Suspense>
+        </section>
+      </main>
 
       <SiteFooter />
     </>

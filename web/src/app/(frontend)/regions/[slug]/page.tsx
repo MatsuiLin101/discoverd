@@ -61,25 +61,27 @@ export default async function RegionPage({ params }: Props) {
       />
       <SiteHeader social={social} />
 
-      <nav className="fh-page-bar">
-        <div className="fh-page-bar-inner">
-          <span className="crumb">
-            <Link href="/">首頁</Link>
-            <span className="sep">／</span>
-            <span className="cur">{region.name}</span>
-          </span>
-        </div>
-      </nav>
+      <main>
+        <nav className="fh-page-bar">
+          <div className="fh-page-bar-inner">
+            <span className="crumb">
+              <Link href="/">首頁</Link>
+              <span className="sep">／</span>
+              <span className="cur">{region.name}</span>
+            </span>
+          </div>
+        </nav>
 
-      <CategoryList
-        headingLevel="h1"
-        title={`<span class="ph" style="color: var(--accent);">縮小範圍</span> <span class="ph">遇見最適合你的旅程</span>`}
-        stats={[
-          `<b>${region.subRegions.length}</b> 個選擇`,
-          `共 <b>${totalTours}</b> 條路線`,
-        ]}
-        categories={subCategories}
-      />
+        <CategoryList
+          headingLevel="h1"
+          title={`<span class="ph" style="color: var(--accent);">縮小範圍</span> <span class="ph">遇見最適合你的旅程</span>`}
+          stats={[
+            `<b>${region.subRegions.length}</b> 個選擇`,
+            `共 <b>${totalTours}</b> 條路線`,
+          ]}
+          categories={subCategories}
+        />
+      </main>
 
       <SiteFooter />
     </>

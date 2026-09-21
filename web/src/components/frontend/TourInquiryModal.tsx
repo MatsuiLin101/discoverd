@@ -218,7 +218,7 @@ export default function TourInquiryModal({ tourId, tourName, isOpen, onClose }: 
 
             <div className="fh-form-foot">
               {submitError && (
-                <p className="text-sm text-rose-600">{submitError}</p>
+                <p className="fh-form-submit-error">{submitError}</p>
               )}
               <button type="button" className="fh-form-cancel" onClick={onClose} disabled={isSubmitting}>
                 取消

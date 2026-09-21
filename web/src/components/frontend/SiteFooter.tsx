@@ -53,7 +53,7 @@ export default async function SiteFooter() {
 
           {(setting?.facebookUrl || setting?.instagramUrl || setting?.lineUrl || setting?.lineCommunityUrl) && (
             <div className="fh-footer-col">
-              <h5>追蹤我們</h5>
+              <h2>追蹤我們</h2>
               <div className="fh-footer-social">
                 {setting.facebookUrl && (
                   <a href={setting.facebookUrl} data-contact="facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
