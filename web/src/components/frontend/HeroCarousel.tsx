@@ -145,6 +145,7 @@ export default function HeroCarousel({
               alt={slide.alt}
               fill
               priority={i === 0}
+              fetchPriority={i === 0 ? "high" : undefined}
               sizes="100vw"
             />
           </div>
