@@ -22,6 +22,14 @@ export function isAllowedContentType(contentType: string): boolean {
   return contentType in MIME_TO_EXT;
 }
 
+/**
+ * Cache-Control applied to every stored object. Object keys are content-addressed
+ * (a random hash per upload — see `buildKey`), so a given key's bytes never change
+ * and the file can be cached forever. Without this the CDN falls back to a short
+ * default TTL (~4h), forcing repeat downloads of large hero/region images.
+ */
+export const STORAGE_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
 export interface UploadAuth {
   /** Object key the file will be stored under. */
   key: string;
@@ -107,13 +115,32 @@ class R2Driver implements StorageDriver {
   }
 
   async createUploadAuth(key: string, contentType: string): Promise<UploadAuth> {
-    const cmd = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType });
+    // CacheControl is part of the signed request, so the client must echo the
+    // matching `Cache-Control` header (it forwards `headers` verbatim) or R2
+    // rejects the PUT with a signature mismatch.
+    const cmd = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ContentType: contentType,
+      CacheControl: STORAGE_CACHE_CONTROL,
+    });
     const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: 600 });
-    return { key, uploadUrl, method: "PUT", headers: { "Content-Type": contentType } };
+    return {
+      key,
+      uploadUrl,
+      method: "PUT",
+      headers: { "Content-Type": contentType, "Cache-Control": STORAGE_CACHE_CONTROL },
+    };
   }
 
   async put(key: string, body: Buffer, contentType: string): Promise<void> {
-    await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType }));
+    await this.client.send(new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: STORAGE_CACHE_CONTROL,
+    }));
   }
 
   async get(key: string): Promise<Buffer> {
