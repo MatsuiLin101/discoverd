@@ -44,3 +44,18 @@ export const getSiteSettingCached = unstable_cache(
 );
 
 export type CachedSiteSetting = Awaited<ReturnType<typeof getSiteSettingCached>>;
+
+/**
+ * Just the public social links, derived from the cached site setting. Used by
+ * server-rendered frontend pages (passed to the header) and the public
+ * `/api/settings` route, so the links never trigger an uncached DB read.
+ */
+export async function getSocialLinks() {
+  const s = await getSiteSettingCached();
+  return {
+    facebookUrl: s?.facebookUrl ?? null,
+    instagramUrl: s?.instagramUrl ?? null,
+    lineUrl: s?.lineUrl ?? null,
+    lineCommunityUrl: s?.lineCommunityUrl ?? null,
+  };
+}

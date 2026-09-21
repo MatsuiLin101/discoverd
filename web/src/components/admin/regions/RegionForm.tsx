@@ -9,16 +9,10 @@ import CroppedPreview from "@/components/admin/CroppedPreview";
 import { uploadFile } from "@/lib/upload-client";
 import { useAdminPath } from "@/components/admin/AdminPathProvider";
 import CharCountField from "@/components/admin/CharCountField";
+import { slugify as autoSlug } from "@/lib/slug";
 import type { ThumbCrop } from "@/lib/crop";
 
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
-
-function autoSlug(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
 
 interface Props {
   regionId?: string;

@@ -54,7 +54,7 @@ export default async function RegionsPage() {
           templateHref="/api/admin/regions/export?template=1"
           previewUrl="/api/admin/regions/import/preview"
           commitUrl="/api/admin/regions/import/commit"
-          columnsHint="主分類代碼、主分類名稱、次分類代碼、次分類名稱、SEO標題、SEO描述"
+          columnsHint="主分類代碼、主分類名稱、主分類網址、次分類代碼、次分類名稱、次分類網址、SEO標題、SEO描述（網址欄留空時，新項目會依名稱自動產生、既有項目則維持不變）"
         />
       </div>
 

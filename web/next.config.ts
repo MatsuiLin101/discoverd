@@ -1,18 +1,4 @@
 import type { NextConfig } from "next";
-import type { RemotePattern } from "next/dist/shared/lib/image-config";
-
-// Derive the file host from the configured public base URL so next/image trusts it.
-// Local driver serves files via relative `/uploads/...` paths (no remote pattern needed).
-const storageBase = process.env.NEXT_PUBLIC_STORAGE_PUBLIC_BASE_URL;
-const storagePattern: RemotePattern[] = (() => {
-  if (!storageBase) return [];
-  try {
-    const { protocol, hostname } = new URL(storageBase);
-    return [{ protocol: protocol.replace(":", "") as "http" | "https", hostname }];
-  } catch {
-    return [];
-  }
-})();
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -20,13 +6,20 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   images: {
-    remotePatterns: [
-      ...storagePattern,
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-    ],
+    // All next/image requests are served through Cloudflare Image
+    // Transformations at the edge (see src/lib/cf-image-loader.ts). The custom
+    // loader bypasses the built-in optimizer entirely, so `remotePatterns` is no
+    // longer consulted — the loader itself decides which hosts to transform.
+    loader: "custom",
+    loaderFile: "./src/lib/cf-image-loader.ts",
+    // Each distinct width a browser requests is one Cloudflare transformation
+    // counted against the monthly free allowance, so keep the candidate set
+    // small. These few widths still cover phones → desktops, and AVIF makes the
+    // "slightly larger than strictly needed" penalty negligible. (Next defaults
+    // to 8 device + 7 image widths.) imageSizes must stay below the smallest
+    // deviceSize (640).
+    deviceSizes: [640, 828, 1200, 1920],
+    imageSizes: [128, 256],
   },
 };
 

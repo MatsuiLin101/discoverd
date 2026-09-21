@@ -1,7 +1,9 @@
 /**
  * Tour import/export. Identity is the frozen productId only (never name):
  *   - productId present & found  -> update that tour
- *   - productId present & absent -> create new (mint a fresh productId)
+ *   - productId present & absent -> create new; a well-formed (13-digit) id is
+ *                                   kept when still free (so a re-imported export
+ *                                   preserves ids), otherwise a fresh id is minted
  *   - productId blank            -> create new (mint a fresh productId)
  *
  * Rows without a productId additionally get a soft "possible duplicate" warning
@@ -45,7 +47,7 @@ export interface TourOpRow {
   row: number;
   sheet?: string;
   action: "create" | "update";
-  productId: string | null; // update: existing id; create: null
+  productId: string | null; // update: existing id; create: provided id to keep, else null (allocate)
   regionName: string;
   subName: string;
   name: string;
@@ -168,8 +170,19 @@ export async function analyzeTours(
         valid.push({ ...base, action: "update", productId });
       } else {
         createdCount++;
-        display.push({ row: sr.rowNumber, sheet, action: "create", label: name, detail: `填入的編號 ${productId} 不存在，將配發新編號`, values });
-        valid.push({ ...base, action: "create", productId: null });
+        // Keep a well-formed provided productId (13 digits) so an export
+        // re-imported into a fresh/different DB preserves its ids and stays
+        // idempotent; otherwise a fresh id is allocated at commit.
+        const keepId = /^\d{13}$/.test(productId);
+        display.push({
+          row: sr.rowNumber,
+          sheet,
+          action: "create",
+          label: name,
+          detail: keepId ? `新行程（沿用編號 ${productId}）` : `填入的編號 ${productId} 格式不符，將配發新編號`,
+          values,
+        });
+        valid.push({ ...base, action: "create", productId: keepId ? productId : null });
       }
     } else {
       // No productId -> new tour, with a possible-duplicate warning.
@@ -368,16 +381,23 @@ export async function commitTours(rows: TourOpRow[]): Promise<{
           continue;
         }
 
-        // Create (mint a fresh productId).
+        // Create. Keep the provided productId when it's still free (so a
+        // re-imported export preserves its ids); otherwise allocate a fresh one.
         let productId: string;
-        try {
-          productId = await allocateTourProductId(tx, subRegionId);
-        } catch (e) {
-          if (e instanceof DailyQuotaError) {
-            quotaSkipped.push({ row: r.row, message: e.message });
-            continue;
+        const providedFree =
+          r.productId && !(await tx.tour.findUnique({ where: { productId: r.productId }, select: { id: true } }));
+        if (providedFree) {
+          productId = r.productId!;
+        } else {
+          try {
+            productId = await allocateTourProductId(tx, subRegionId);
+          } catch (e) {
+            if (e instanceof DailyQuotaError) {
+              quotaSkipped.push({ row: r.row, message: e.message });
+              continue;
+            }
+            throw e;
           }
-          throw e;
         }
         const slug = await uniqueTourSlug(tx);
         const max = await tx.tour.aggregate({ where: { subRegionId }, _max: { sortOrder: true } });

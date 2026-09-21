@@ -3,6 +3,27 @@
 本專案的所有重要變更皆記錄於此檔案。
 格式參考 [Keep a Changelog](https://keepachangelog.com/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.6.0] - 2026-09-21
+
+前台效能與體驗優化，以及地區 Excel 匯入匯出支援 slug 欄位。
+
+### ✨ 新功能
+
+- **地區 Excel 匯入／匯出支援 slug 欄位**：slug 欄位置於各自名稱欄旁；更豐富的匯入預覽與最新欄位提示。
+
+### ⚡ 效能
+
+- **圖片走 Cloudflare Image Transformations**：全站 `next/image` 改用自訂 loader，將縮放與 AVIF／WebP 協商卸載到 Cloudflare 邊緣；裁切縮圖以對應尺寸的 1×／2× `srcset` 取代原圖直出（單張地區縮圖由約 1.8MB 降至數 KB）；header 快搜下拉縮圖一併導向轉換。
+- **收斂圖片變體寬度**：`next/image` 候選寬度由預設（8 裝置 + 7 圖片尺寸）縮減為精選數種，降低每月 Cloudflare unique transformations 消耗。
+- **社群連結改伺服器渲染**：header 社群圖示改由 server 傳入（原為每頁 client 端 fetch `/api/settings`，且該路由每次讀取還會做 DB upsert）；消除每頁一次 DB 寫入與圖示的版面位移（CLS）。
+
+### 🐛 修正
+
+- **圖片轉換失敗回退原圖**：Cloudflare 轉換加入 `onerror=redirect`，免費額度用罄或轉換失敗時回退原圖而非破圖。
+- **搜尋競態**：header 快搜加入 `AbortController`，避免較早送出的請求較晚返回而覆蓋最新結果。
+- **地區匯入**：找不到匯入 code 時以名稱比對；建立時保留檔案的 code 以免誤路由。
+- **行程匯入**：免費行程建立時保留檔案的 productId。
+
 ## [1.5.0] - 2026-09-19
 
 全站 SEO 優化：結構化資料、meta／OG、sitemap、相關行程內部連結、前台資料快取，以及後台「SEO 設定」頁。

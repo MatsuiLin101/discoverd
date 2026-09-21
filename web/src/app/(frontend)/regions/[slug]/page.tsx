@@ -7,6 +7,7 @@ import CategoryList from "@/components/frontend/CategoryList";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbSchema } from "@/lib/structured-data";
 import { getRegionDetail } from "@/lib/frontend-queries";
+import { getSocialLinks } from "@/lib/site-setting";
 import { metaDescription } from "@/lib/seo-text";
 import { getSeoSettings, BRAND_SHORT } from "@/lib/seo-settings";
 
@@ -38,6 +39,8 @@ export default async function RegionPage({ params }: Props) {
   const region = await getRegionDetail(slug);
   if (!region) notFound();
 
+  const social = await getSocialLinks();
+
   const subCategories = region.subRegions.map((sr) => ({
     href: `/regions/${slug}/${sr.slug}`,
     name: sr.name,
@@ -56,7 +59,7 @@ export default async function RegionPage({ params }: Props) {
           { name: region.name, path: `/regions/${slug}` },
         ])}
       />
-      <SiteHeader />
+      <SiteHeader social={social} />
 
       <nav className="fh-page-bar">
         <div className="fh-page-bar-inner">

@@ -5,6 +5,7 @@ import SiteHeader from "@/components/frontend/SiteHeader";
 import SiteFooter from "@/components/frontend/SiteFooter";
 import SearchExperience from "@/components/frontend/SearchExperience";
 import { getSearchFilters, searchTours, SEARCH_MAX_LIMIT } from "@/lib/frontend-queries";
+import { getSocialLinks } from "@/lib/site-setting";
 import type { SearchFilters } from "@/lib/frontend-data";
 
 export const metadata: Metadata = {
@@ -45,9 +46,10 @@ export default async function SearchPage({ searchParams }: Props) {
     tagMode,
   };
 
-  const [facets, initial] = await Promise.all([
+  const [facets, initial, social] = await Promise.all([
     getSearchFilters(),
     searchTours(filters, SEARCH_MAX_LIMIT),
+    getSocialLinks(),
   ]);
 
   // Re-key on the incoming URL so a fresh navigation to /search?… (e.g. the
@@ -58,7 +60,7 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader social={social} />
 
       <nav className="fh-page-bar">
         <div className="fh-page-bar-inner">
