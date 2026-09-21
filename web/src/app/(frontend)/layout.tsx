@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
-import { Noto_Sans, Noto_Sans_TC } from "next/font/google";
+import { notoSans, notoSansTC } from "@/lib/frontend-fonts";
 import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager";
 import ContactClickTracker from "@/components/analytics/ContactClickTracker";
 import JsonLd from "@/components/JsonLd";
@@ -8,20 +8,6 @@ import { organizationSchema, websiteSchema } from "@/lib/structured-data";
 import { getSeoSettings } from "@/lib/seo-settings";
 import { getSiteSettingCached } from "@/lib/site-setting";
 import "./frontend.css";
-
-const notoSans = Noto_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
-  variable: "--font-noto-sans",
-  display: "swap",
-});
-
-const notoSansTC = Noto_Sans_TC({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
-  variable: "--font-noto-sans-tc",
-  display: "swap",
-});
 
 // Metadata is built at request time from the SEO settings (admin-editable, with
 // built-in fallbacks). Defaults declared here — the default OG image, the

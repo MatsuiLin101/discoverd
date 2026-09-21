@@ -760,6 +760,9 @@
 .fh-f-error { font-size: 11.5px; color: var(--accent); letter-spacing: 0.02em; min-height: 1em; opacity: 0; }
 .fh-f-field.invalid .fh-f-error { opacity: 1; }
 .fh-form-foot { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+/* Standalone submit-error message in the form footer (was Tailwind text-sm
+   text-rose-600 before the frontend stopped shipping the utility layer). */
+.fh-form-submit-error { font-size: 14px; color: #e11d48; }
 .fh-form-submit {
   flex: 1; border: 0; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
