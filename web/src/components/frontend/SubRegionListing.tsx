@@ -30,29 +30,31 @@ export default function SubRegionListing({ data, regionSlug, activeSlug, activeN
     <>
       <SiteHeader />
 
-      <nav className="fh-page-bar">
-        <div className="fh-page-bar-inner">
-          <span className="crumb">
-            <Link href="/">首頁</Link>
-            <span className="sep">／</span>
-            <Link href={`/regions/${regionSlug}`}>{data.region.name}</Link>
-            <span className="sep">／</span>
-            <span className="cur">{activeName}</span>
-          </span>
-        </div>
-      </nav>
+      <main>
+        <nav className="fh-page-bar">
+          <div className="fh-page-bar-inner">
+            <span className="crumb">
+              <Link href="/">首頁</Link>
+              <span className="sep">／</span>
+              <Link href={`/regions/${regionSlug}`}>{data.region.name}</Link>
+              <span className="sep">／</span>
+              <span className="cur">{activeName}</span>
+            </span>
+          </div>
+        </nav>
 
-      <section className="fh-listing">
-        <Suspense fallback={null}>
-          <TourSection
-            parent={{ name: data.region.name }}
-            regionSlug={regionSlug}
-            regions={data.subRegions}
-            initialSlug={activeSlug}
-            headingLevel={headingLevel}
-          />
-        </Suspense>
-      </section>
+        <section className="fh-listing">
+          <Suspense fallback={null}>
+            <TourSection
+              parent={{ name: data.region.name }}
+              regionSlug={regionSlug}
+              regions={data.subRegions}
+              initialSlug={activeSlug}
+              headingLevel={headingLevel}
+            />
+          </Suspense>
+        </section>
+      </main>
 
       <SiteFooter />
     </>

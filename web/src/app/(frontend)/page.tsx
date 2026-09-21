@@ -62,32 +62,34 @@ export default async function HomePage() {
         }}
       />
 
-      <HeroCarousel
-        slides={heroSlides}
-        mobileRatio={mobileHeroRatio}
-        layoutMode={layoutMode}
-        maxHeight={heroMaxHeight}
-        heroRatio={heroRatio}
-        pauseOnHover={heroPauseOnHover}
-      />
+      <main>
+        <HeroCarousel
+          slides={heroSlides}
+          mobileRatio={mobileHeroRatio}
+          layoutMode={layoutMode}
+          maxHeight={heroMaxHeight}
+          heroRatio={heroRatio}
+          pauseOnHover={heroPauseOnHover}
+        />
 
-      <nav className="fh-page-bar">
-        <div className="fh-page-bar-inner">
-          <span className="crumb">
-            <span className="cur">首頁</span>
-          </span>
-        </div>
-      </nav>
+        <nav className="fh-page-bar">
+          <div className="fh-page-bar-inner">
+            <span className="crumb">
+              <span className="cur">首頁</span>
+            </span>
+          </div>
+        </nav>
 
-      <CategoryList
-        headingLevel="h1"
-        title={`<em>挑一個方向</em> <span class="ph">開始你的下一段旅程</span>`}
-        stats={[
-          `<b>${regions.length}</b> 個系列`,
-          `共 <b>${totalTours}</b> 條路線`,
-        ]}
-        categories={HOME_CATEGORIES}
-      />
+        <CategoryList
+          headingLevel="h1"
+          title={`<em>挑一個方向</em> <span class="ph">開始你的下一段旅程</span>`}
+          stats={[
+            `<b>${regions.length}</b> 個系列`,
+            `共 <b>${totalTours}</b> 條路線`,
+          ]}
+          categories={HOME_CATEGORIES}
+        />
+      </main>
 
       <SiteFooter />
     </>
