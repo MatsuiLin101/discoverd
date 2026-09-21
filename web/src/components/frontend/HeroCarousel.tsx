@@ -2,6 +2,7 @@
 
 import { useState, useEffect, type CSSProperties } from "react";
 import Image from "next/image";
+import { cfImageUrl } from "@/lib/cf-image";
 
 interface Slide {
   img: string;
@@ -91,6 +92,11 @@ export default function HeroCarousel({
   // the container can size to it. A dedicated Image() loader is used (instead of
   // onLoad) so it also resolves for an already-cached image. Skipped when a
   // fixed heroRatio is set.
+  //
+  // The probe requests a tiny 64px Cloudflare-transformed variant rather than the
+  // raw source: `fit=scale-down` preserves the aspect ratio exactly, so a ~2 KB
+  // thumbnail yields the same ratio as the multi-MB original would. For sources
+  // not on our storage zone `cfImageUrl` returns the URL untouched.
   const firstSrc = slides[0]?.img;
   useEffect(() => {
     if (!isRatio || fixedRatio || !firstSrc) return;
@@ -101,7 +107,7 @@ export default function HeroCarousel({
       }
     };
     probe.onload = apply;
-    probe.src = firstSrc;
+    probe.src = cfImageUrl(firstSrc, 64, 30);
     if (probe.complete) apply();
   }, [isRatio, fixedRatio, firstSrc]);
 
@@ -139,6 +145,8 @@ export default function HeroCarousel({
               alt={slide.alt}
               fill
               priority={i === 0}
+              fetchPriority={i === 0 ? "high" : undefined}
+              quality={60}
               sizes="100vw"
             />
           </div>

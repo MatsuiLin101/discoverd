@@ -22,6 +22,18 @@ export function isAllowedContentType(contentType: string): boolean {
   return contentType in MIME_TO_EXT;
 }
 
+/**
+ * Cache-Control applied to server-side object writes. Object keys are
+ * content-addressed (a random hash per upload — see `buildKey`), so a given
+ * key's bytes never change and the file can be cached forever.
+ *
+ * Note: browser direct-to-R2 uploads (presigned PUT) intentionally do NOT send
+ * this — Cache-Control is not CORS-safelisted and would break the upload
+ * preflight. Those objects get their long-lived cache from an edge Cloudflare
+ * Cache Rule instead, which also covers pre-existing objects.
+ */
+export const STORAGE_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
 export interface UploadAuth {
   /** Object key the file will be stored under. */
   key: string;
@@ -107,13 +119,25 @@ class R2Driver implements StorageDriver {
   }
 
   async createUploadAuth(key: string, contentType: string): Promise<UploadAuth> {
+    // Only Content-Type is signed/sent. We deliberately do NOT set Cache-Control
+    // here: it is not a CORS-safelisted request header, so echoing it on the
+    // browser's direct-to-R2 PUT makes the preflight fail unless the bucket CORS
+    // policy explicitly allows it. The long-lived cache for stored assets is
+    // applied at the edge via a Cloudflare Cache Rule instead (which also covers
+    // objects uploaded before this change).
     const cmd = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType });
     const uploadUrl = await getSignedUrl(this.client, cmd, { expiresIn: 600 });
     return { key, uploadUrl, method: "PUT", headers: { "Content-Type": contentType } };
   }
 
   async put(key: string, body: Buffer, contentType: string): Promise<void> {
-    await this.client.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType }));
+    await this.client.send(new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: STORAGE_CACHE_CONTROL,
+    }));
   }
 
   async get(key: string): Promise<Buffer> {

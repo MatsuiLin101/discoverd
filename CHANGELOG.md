@@ -3,6 +3,32 @@
 本專案的所有重要變更皆記錄於此檔案。
 格式參考 [Keep a Changelog](https://keepachangelog.com/)，版本號遵循 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.7.0] - 2026-09-22
+
+前台效能深度優化（行動裝置 PageSpeed 約 57 → 85、電腦約 79 → 98）、無障礙達標，以及安全標頭強化。
+
+### ⚡ 效能
+
+- **系統字型取代 Noto Sans TC webfont**：前台改用原生系統字型堆疊（PingFang TC／Microsoft JhengHei／Noto Sans TC-if-installed），移除約 143KB 阻斷算繪的 CJK `@font-face` 清單與約 300KB 字型下載，行動 FCP／LCP 大幅改善。
+- **Tailwind 收斂至後台**：公開頁面不再載入後台專用的 Tailwind utilities，共用樣式僅保留 Preflight；後台改由 `admin.css` 載入完整 Tailwind 與 Geist 字型。
+- **Hero 輪播比例探針改用縮圖**：量測第一張圖比例改抓 64px Cloudflare 縮圖，取代下載多 MB 原圖（約 3MB → 2KB）。
+- **Hero 圖優化**：首圖標記 `fetchPriority="high"`，並以 quality 60 提供，縮短行動 LCP。
+- **靜態資源長快取**：伺服器端物件寫入加上 `immutable` 快取（搭配 Cloudflare Cache Rule 對邊緣資源設定長效快取）。
+- **GTM 延後載入**：Google Tag Manager 改於瀏覽器閒置時載入（`lazyOnload`），移出初始關鍵路徑。
+- **加入現代瀏覽器 browserslist**。
+
+### ♿ 無障礙
+
+- **加入 `<main>` 地標並修正標題階層**：公開頁面補上主要地標、footer 標題由 `h5` 調整為 `h2` 以維持遞減順序（PageSpeed 無障礙 97 → 100）。
+
+### 🔒 安全
+
+- **新增安全標頭**：Caddy 反向代理加入 `X-Frame-Options: SAMEORIGIN` 與 `Cross-Origin-Opener-Policy: same-origin-allow-popups`。
+
+### 🐛 修正
+
+- **修正圖片上傳 CORS**：presigned R2 PUT 不再夾帶非 CORS 安全清單的 `Cache-Control` 標頭，避免 preflight 失敗導致上傳中斷。
+
 ## [1.6.0] - 2026-09-21
 
 前台效能與體驗優化，以及地區 Excel 匯入匯出支援 slug 欄位。

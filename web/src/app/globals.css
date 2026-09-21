@@ -1,18 +1,15 @@
-@import "tailwindcss";
+/* Global base styles shared by every route (imported in the root layout).
+ *
+ * Only Tailwind's Preflight reset is loaded here — NOT the utility layer — so
+ * public (frontend) pages don't ship the admin panel's ~350 KiB of utilities.
+ * The admin panel imports the full Tailwind build separately (see admin.css).
+ * Preflight is kept globally so the frontend's hand-written CSS keeps the same
+ * box model and element resets it was authored against. */
+@import "tailwindcss/preflight.css" layer(base);
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-
-  --color-brand-coral: #E0506B;
-  --color-brand-violet: #7166D6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,8 +19,20 @@
   }
 }
 
+/* Plain-CSS equivalents of the `h-full antialiased` / `min-h-full flex flex-col`
+   utilities that used to sit on <html>/<body>, now that the utility layer no
+   longer loads on public pages. */
+html {
+  height: 100%;
+}
+
 body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
