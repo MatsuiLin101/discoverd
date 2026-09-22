@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import { Suspense } from "react";
 import { GTMNoScript, GTMScript } from "@/components/analytics/GoogleTagManager";
+import ListingUrlTracker from "@/components/frontend/ListingUrlTracker";
 import ContactClickTracker from "@/components/analytics/ContactClickTracker";
 import JsonLd from "@/components/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/structured-data";
@@ -86,6 +88,9 @@ export default async function FrontendLayout({
         data-layout={boxed ? "boxed" : undefined}
         style={rootStyle}
       >
+        <Suspense fallback={null}>
+          <ListingUrlTracker />
+        </Suspense>
         {children}
         {modal}
       </div>
