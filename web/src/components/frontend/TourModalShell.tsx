@@ -2,16 +2,23 @@
 
 import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { LISTING_URL_KEY } from "./ListingUrlTracker";
 
 /**
  * Client shell for the tour modal: dark overlay + close button + ESC /
  * backdrop-click to dismiss + body scroll lock. The card content is passed as
  * children (a server component).
  *
- * Closing prefers `router.back()` (intercepted soft navigation) so the URL
- * returns to the listing and forward/back behave naturally. On a hard-loaded
- * shared link there is no in-site history to go back to, so the standalone page
- * passes `closeHref` (the listing URL) and we navigate there instead.
+ * Closing dismisses the modal straight back to the listing behind it, rather
+ * than stepping back through any related-tour history. Related-tour links push
+ * onto the history stack (so the browser back/forward buttons still walk through
+ * the tours the visitor viewed), but the X / ESC / backdrop close jumps directly
+ * to that listing via a single `replace`.
+ *
+ * The target listing URL is, in order of preference:
+ *  1. `closeHref` — passed by the standalone page for a hard-loaded shared link.
+ *  2. The last listing URL recorded by ListingUrlTracker while browsing.
+ *  3. `router.back()` as a safe fallback if neither is available.
  */
 export default function TourModalShell({
   children,
@@ -23,7 +30,15 @@ export default function TourModalShell({
   const router = useRouter();
 
   const close = useCallback(() => {
-    if (closeHref) router.push(closeHref);
+    let target = closeHref;
+    if (!target) {
+      try {
+        target = window.sessionStorage.getItem(LISTING_URL_KEY) ?? undefined;
+      } catch {
+        target = undefined;
+      }
+    }
+    if (target) router.replace(target);
     else router.back();
   }, [router, closeHref]);
 
