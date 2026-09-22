@@ -12,8 +12,14 @@ import { LISTING_URL_KEY } from "./ListingUrlTracker";
  * Closing dismisses the modal straight back to the listing behind it, rather
  * than stepping back through any related-tour history. Related-tour links push
  * onto the history stack (so the browser back/forward buttons still walk through
- * the tours the visitor viewed), but the X / ESC / backdrop close jumps directly
- * to that listing via a single `replace`.
+ * the tours the visitor viewed), and the X / ESC / backdrop close pushes the
+ * listing on top in a single step.
+ *
+ * We push (rather than replace) so the closed tour entry survives underneath:
+ * the forward button stays disabled right after closing, and pressing back
+ * reopens the tour the visitor was viewing. Replacing would overwrite that entry
+ * and, when the entry below is the same listing, leave two identical adjacent
+ * history entries.
  *
  * The target listing URL is, in order of preference:
  *  1. `closeHref` — passed by the standalone page for a hard-loaded shared link.
@@ -38,7 +44,7 @@ export default function TourModalShell({
         target = undefined;
       }
     }
-    if (target) router.replace(target);
+    if (target) router.push(target);
     else router.back();
   }, [router, closeHref]);
 
